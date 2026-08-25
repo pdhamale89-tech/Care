@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Line, Bar, Doughnut } from 'react-chartjs-2'
 import {
   fmt, pct, varClass, arrow, genKpiValue, hashSeed, getWeeksForQuarter,
-  WEEK_DAYS, getIntradayIntervals,
+  WEEK_DAYS, getIntradayIntervals, VALUE_SCALE,
 } from '../data/mockGenerators.js'
 import { dualLineConfig, donutConfig, dualAxisBarLineConfig } from '../charts/chartConfigs.js'
 
@@ -86,7 +86,7 @@ export default function KpiPage({ kView, activeRegion, filters }) {
   )
 
   const trendChart = useMemo(() => {
-    const offered = periods.map((_, i) => Math.round(baseOffered * (0.85 + ((Math.sin((seed + i) * 2.3) + 1) / 2) * 0.3)))
+    const offered = periods.map((_, i) => Math.round(baseOffered * VALUE_SCALE * (0.85 + ((Math.sin((seed + i) * 2.3) + 1) / 2) * 0.3)))
     const handled = offered.map((o) => Math.round(o * 0.95))
     return dualLineConfig(
       periods,
@@ -98,13 +98,13 @@ export default function KpiPage({ kView, activeRegion, filters }) {
   const timeDistChart = useMemo(() => {
     const labels = ['Handled Time', 'Break', 'Training', 'Meetings', 'Idle/Available', 'Admin Work']
     const bases = [320, 45, 30, 20, 50, 15]
-    const data = bases.map((b, i) => Math.round(b * (0.85 + ((Math.sin((seed + i) * 3.1) + 1) / 2) * 0.3)))
+    const data = bases.map((b, i) => Math.round(b * VALUE_SCALE * (0.85 + ((Math.sin((seed + i) * 3.1) + 1) / 2) * 0.3)))
     return donutConfig(labels, data, ['#0076CE', '#F29900', '#5AB0EA', '#9AA1AC', '#1E8E3E', '#2B2E34'])
   }, [seed])
 
   const slaAhtChart = useMemo(() => {
-    const sla = periods.map((_, i) => Math.round(85 + ((Math.sin((seed + i) * 2.1) + 1) / 2) * 12))
-    const aht = periods.map((_, i) => Math.round((7 + ((Math.sin((seed + i) * 1.7) + 1) / 2) * 3) * 10) / 10)
+    const sla = periods.map((_, i) => Math.round((85 + ((Math.sin((seed + i) * 2.1) + 1) / 2) * 12) * VALUE_SCALE))
+    const aht = periods.map((_, i) => Math.round((7 + ((Math.sin((seed + i) * 1.7) + 1) / 2) * 3) * VALUE_SCALE * 10) / 10)
     return dualAxisBarLineConfig(periods, { label: 'SLA %', data: sla, color: '#0076CE' }, { label: 'AHT (min)', data: aht, color: '#D93025' })
   }, [periods, seed])
 
@@ -115,8 +115,8 @@ export default function KpiPage({ kView, activeRegion, filters }) {
         const offeredBase = 60 + Math.sin(i / 3) * 25
         const { actual: offered } = genKpiValue(offeredBase, seed + i * 3)
         const handled = Math.round(offered * 0.94)
-        const sla = Math.round(80 + ((Math.sin((seed + i) * 1.9) + 1) / 2) * 18)
-        const aht = Math.round((7 + ((Math.sin((seed + i) * 2.3) + 1) / 2) * 3) * 10) / 10
+        const sla = Math.round((80 + ((Math.sin((seed + i) * 1.9) + 1) / 2) * 18) * VALUE_SCALE)
+        const aht = Math.round((7 + ((Math.sin((seed + i) * 2.3) + 1) / 2) * 3) * VALUE_SCALE * 10) / 10
         const required = Math.round(offered / 12)
         const staffed = Math.round(required * (0.9 + ((Math.sin((seed + i) * 1.3) + 1) / 2) * 0.25))
         const occ = Math.min(100, Math.round((offered / (staffed * 12)) * 100))
@@ -126,7 +126,7 @@ export default function KpiPage({ kView, activeRegion, filters }) {
   )
 
   const intradayStaffChart = useMemo(() => {
-    const required = intervals.map((_, i) => Math.round((60 + Math.sin(i / 3) * 25) / 12))
+    const required = intervals.map((_, i) => Math.round(((60 + Math.sin(i / 3) * 25) * VALUE_SCALE) / 12))
     const staffed = required.map((r, i) => Math.round(r * (0.9 + ((Math.sin((seed + i) * 1.3) + 1) / 2) * 0.25)))
     return dualLineConfig(
       intervals,
@@ -136,7 +136,7 @@ export default function KpiPage({ kView, activeRegion, filters }) {
   }, [intervals, seed])
 
   const intradayVolumeChart = useMemo(() => {
-    const offered = intervals.map((_, i) => Math.round(60 + Math.sin(i / 3) * 25))
+    const offered = intervals.map((_, i) => Math.round((60 + Math.sin(i / 3) * 25) * VALUE_SCALE))
     const handled = offered.map((o) => Math.round(o * 0.94))
     return {
       data: { labels: intervals, datasets: [

@@ -2,7 +2,7 @@ import { Fragment, useMemo, useState } from 'react'
 import { Line, Bar, Doughnut } from 'react-chartjs-2'
 import {
   fmt, pct, varClass, arrow, genKpiValue, hashSeed, getWeeksForQuarter,
-  getMetricCols, metricLabels, WEEK_DAYS, issueLabels,
+  getMetricCols, metricLabels, WEEK_DAYS, issueLabels, VALUE_SCALE,
 } from '../data/mockGenerators.js'
 import SparklineCard from '../charts/SparklineCard.jsx'
 import SlaGaugeChart from '../charts/SlaGaugeChart.jsx'
@@ -81,8 +81,8 @@ export default function CcoPage({ view, activeRegion, filters }) {
   }, [periods, seed, explorerCfg, metricKey])
 
   const timeChart = useMemo(() => {
-    const actual = periods.map((_, i) => Math.round(2200 * (0.85 + ((Math.sin((seed + i) * 2.3) + 1) / 2) * 0.3)))
-    const forecast = periods.map((_, i) => Math.round(2200 * (0.95 + i * 0.01)))
+    const actual = periods.map((_, i) => Math.round(2200 * VALUE_SCALE * (0.85 + ((Math.sin((seed + i) * 2.3) + 1) / 2) * 0.3)))
+    const forecast = periods.map((_, i) => Math.round(2200 * VALUE_SCALE * (0.95 + i * 0.01)))
     return dualLineConfig(
       periods,
       { label: 'Actual', data: actual, color: '#0076CE', fill: true },
@@ -122,8 +122,8 @@ export default function CcoPage({ view, activeRegion, filters }) {
   const issueCharts = useMemo(
     () =>
       ISSUE_CHARTS.map(({ id, title, base }) => {
-        const actual = issueLabels.map((_, i) => Math.round(base * (0.8 + ((Math.sin((seed + i) * 2.7) + 1) / 2) * 0.5)))
-        const forecast = issueLabels.map((_, i) => Math.round(base * (0.9 + i * 0.01)))
+        const actual = issueLabels.map((_, i) => Math.round(base * VALUE_SCALE * (0.8 + ((Math.sin((seed + i) * 2.7) + 1) / 2) * 0.5)))
+        const forecast = issueLabels.map((_, i) => Math.round(base * VALUE_SCALE * (0.9 + i * 0.01)))
         const variance = actual.map((a, i) => a - forecast[i])
         return { id, title, config: issueComboConfig(issueLabels, actual, forecast, variance) }
       }),

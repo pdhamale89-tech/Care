@@ -53,10 +53,14 @@ export function seededRandom(seed) {
   return x - Math.floor(x)
 }
 
+// Global tuning knob: scales every generated metric value down by 15%.
+export const VALUE_SCALE = 0.85
+
 export function genKpiValue(base, seed) {
+  const scaledBase = base * VALUE_SCALE
   const jitter = (Math.sin(seed * 13.37) + 1) / 2
-  const actual = Math.round(base * (0.92 + jitter * 0.16) * 100) / 100
-  const forecast = Math.round(base * 100) / 100
+  const actual = Math.round(scaledBase * (0.92 + jitter * 0.16) * 100) / 100
+  const forecast = Math.round(scaledBase * 100) / 100
   return { actual, forecast }
 }
 
