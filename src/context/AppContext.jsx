@@ -7,9 +7,7 @@ export const NO_FILTER_TABS = ['home']
 
 const BREADCRUMBS = {
   home: 'Home',
-  'cco-daily': 'Performance Reports › Daily CCO Dashboard',
-  'cco-weekly': 'Performance Reports › Weekly CCO Dashboard',
-  'cco-quarterly': 'Performance Reports › Qtrly CCO Dashboard',
+  cco: 'Performance Reports › CCO Dashboard',
   outage: 'Workforce Reports › Outage Report',
   epicenter: 'Workforce Reports › Epicenter HC',
   'kpi-voice': 'KPI Reports › Voice Queue KPI',
@@ -26,6 +24,7 @@ export function AppProvider({ children }) {
   const [activeRegion, setActiveRegionState] = useState('APJC')
 
   const [ccoFilters, setCcoFilters] = useState({ subRegion: 'All', quarter: 'FQ1', week: 'All', classification: 'All' })
+  const [ccoView, setCcoView] = useState('daily')
   const [outageFilters, setOutageFilters] = useState({ country: 'All', quarter: 'FQ1', week: 'All', manager: 'All', status: 'All', search: '' })
   const [epicenterFilters, setEpicenterFilters] = useState({ country: 'All', manager: 'All', queue: 'All', dept: 'All', search: '' })
   const [kpiFilters, setKpiFilters] = useState({ country: 'All', quarter: 'FQ1', week: 'All', queue: 'Voice - Sales' })
@@ -72,7 +71,7 @@ export function AppProvider({ children }) {
   }, [])
 
   const clearFilters = useCallback(() => {
-    if (currentTab.startsWith('cco-')) setCcoFilters({ subRegion: 'All', quarter: 'FQ1', week: 'All', classification: 'All' })
+    if (currentTab === 'cco') { setCcoFilters({ subRegion: 'All', quarter: 'FQ1', week: 'All', classification: 'All' }); setCcoView('daily') }
     else if (currentTab === 'outage') setOutageFilters({ country: 'All', quarter: 'FQ1', week: 'All', manager: 'All', status: 'All', search: '' })
     else if (currentTab === 'epicenter') setEpicenterFilters({ country: 'All', manager: 'All', queue: 'All', dept: 'All', search: '' })
     else if (currentTab.startsWith('kpi-')) {
@@ -90,7 +89,7 @@ export function AppProvider({ children }) {
     theme, toggleTheme, lastUpdated,
     currentTab, navTo, breadcrumb, showFilters,
     activeRegion, setActiveRegion,
-    ccoFilters, setCcoFilter,
+    ccoFilters, setCcoFilter, ccoView, setCcoView,
     outageFilters, setOutageFilter,
     epicenterFilters, setEpicenterFilter,
     kpiFilters, setKpiFilter,
@@ -100,7 +99,7 @@ export function AppProvider({ children }) {
   }), [
     theme, toggleTheme, lastUpdated, currentTab, navTo, breadcrumb, showFilters,
     activeRegion, setActiveRegion,
-    ccoFilters, setCcoFilter, outageFilters, setOutageFilter,
+    ccoFilters, setCcoFilter, ccoView, outageFilters, setOutageFilter,
     epicenterFilters, setEpicenterFilter, kpiFilters, setKpiFilter,
     kpiTimeView, clearFilters, toast, showToast,
   ])

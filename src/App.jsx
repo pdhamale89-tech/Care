@@ -13,10 +13,8 @@ import KpiReports from './components/tabs/KpiReports.jsx'
 import { getColors } from './theme/colors.js'
 
 function TabRouter() {
-  const { currentTab } = useApp()
-  if (currentTab === 'cco-daily') return <CcoDashboard view="daily" />
-  if (currentTab === 'cco-weekly') return <CcoDashboard view="weekly" />
-  if (currentTab === 'cco-quarterly') return <CcoDashboard view="quarterly" />
+  const { currentTab, ccoView } = useApp()
+  if (currentTab === 'cco') return <CcoDashboard view={ccoView} />
   if (currentTab === 'outage') return <OutageReport />
   if (currentTab === 'epicenter') return <EpicenterHc />
   if (currentTab === 'kpi-voice') return <KpiReports kView="voice" />

@@ -1,18 +1,20 @@
-import { Fragment, useMemo } from 'react'
-import { Bar } from 'react-chartjs-2'
+import { Fragment, useMemo, useState } from 'react'
+import { Bar, Line } from 'react-chartjs-2'
 import { useApp } from '../../context/AppContext.jsx'
 import {
   fmt, pct, varClass, arrow, genKpiValue, hashSeed, getWeeksForQuarter,
   WEEK_DAYS, issueLabels,
 } from '../../data/mockGenerators.js'
 import { getColors } from '../../theme/colors.js'
-import { barDataLabels } from '../../charts/datalabels.js'
+import { barDataLabels, lineDataLabels } from '../../charts/datalabels.js'
 import DownloadBtn from '../common/DownloadBtn.jsx'
+import Modal from '../common/Modal.jsx'
 import { issueComboConfig } from '../../charts/chartConfigs.js'
 
 const VIEW_CONFIG = {
   daily: { title: 'Daily Performance Table', sub: 'Day-level performance (Sat–Fri week)' },
   weekly: { title: 'Weekly Performance Table', sub: 'Fiscal week-level performance' },
+  monthly: { title: 'Monthly Performance Table', sub: 'Month-level aggregated performance' },
   quarterly: { title: 'Quarterly Performance Table', sub: 'Quarter-level aggregated performance' },
 }
 
@@ -43,6 +45,7 @@ function getPeriodsForView(view, quarter, week) {
     return WEEK_DAYS.map((d) => `${wk} - ${d}`)
   }
   if (view === 'weekly') return getWeeksForQuarter(quarter)
+  if (view === 'monthly') return Array.from({ length: 12 }, (_, i) => 'FM' + String(i + 1).padStart(2, '0'))
   return ['FQ1', 'FQ2', 'FQ3', 'FQ4']
 }
 
@@ -75,6 +78,7 @@ export default function CcoDashboard({ view }) {
   const colors = getColors(theme)
   const cfg = VIEW_CONFIG[view]
   const { subRegion, quarter, week, classification } = ccoFilters
+  const [slaModalOpen, setSlaModalOpen] = useState(false)
 
   const seed = useMemo(
     () => hashSeed(subRegion + quarter + week + classification + activeRegion + view),
@@ -85,6 +89,7 @@ export default function CcoDashboard({ view }) {
   const tableTitle = {
     daily: `Daily View — ${quarter}, Week ${week === 'All' ? getWeeksForQuarter(quarter)[0] : week} (Sat–Fri)`,
     weekly: `Weekly View — ${quarter} (13 Weeks)`,
+    monthly: 'Monthly View — Full Fiscal Year (12 Months)',
     quarterly: 'Quarterly View — Full Fiscal Year (52 Weeks)',
   }[view]
 
@@ -105,13 +110,29 @@ export default function CcoDashboard({ view }) {
     return { actual, met: actual >= 90 }
   }, [seed])
 
-  const channelSla = useMemo(
-    () => CHANNELS.map((c, i) => {
-      const actual = genKpiValue(CHANNEL_SLA_BASES[i], seed + i * 11 + 300).actual
-      return { channel: c, actual, met: actual >= 90 }
-    }),
-    [seed],
-  )
+  const channelSlaTrendChart = useMemo(() => {
+    const labels = periods.map(shortPeriodLabel)
+    const seriesColors = [colors.accentBlue, colors.accentGreen, colors.accentOrange, colors.accentRed]
+    return {
+      data: {
+        labels,
+        datasets: CHANNELS.map((c, ci) => ({
+          label: c,
+          data: periods.map((_, i) => genKpiValue(CHANNEL_SLA_BASES[ci], seed + i * 13 + ci * 11 + 300).actual),
+          borderColor: seriesColors[ci],
+          backgroundColor: seriesColors[ci] + '1a',
+          tension: 0.35,
+          pointRadius: 3,
+          datalabels: lineDataLabels('%', seriesColors[ci]),
+        })),
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { min: 0, max: 100, ticks: { callback: (v) => v + '%' } } },
+      },
+    }
+  }, [periods, seed, colors])
 
   const tableRows = useMemo(
     () => periods.map((p, i) => ({
@@ -211,23 +232,16 @@ export default function CcoDashboard({ view }) {
         <h2>Overall SLA (Actual)</h2>
       </div>
       <div className="kpi-mini-grid">
-        <div className="kpi-mini-card sla-card" style={{ maxWidth: 300 }}>
+        <div
+          className="kpi-mini-card sla-card clickable"
+          style={{ maxWidth: 300 }}
+          onClick={() => setSlaModalOpen(true)}
+          title="Click to see SLA by Channel trend"
+        >
           <div className="kpi-mini-title">Overall SLA</div>
           <div className={'kpi-mini-value ' + (overallSla.met ? 'sla-met' : 'sla-miss')} style={{ fontSize: 32 }}>{fmt(overallSla.actual)}%</div>
-          <div className="kpi-mini-sub">Actual across all channels</div>
+          <div className="kpi-mini-sub">Actual across all channels · Click for channel trend</div>
         </div>
-      </div>
-
-      <div className="section-div">
-        <h2>SLA by Channel (Actual)</h2>
-      </div>
-      <div className="kpi-mini-grid">
-        {channelSla.map((c) => (
-          <div className="kpi-mini-card sla-card" key={c.channel}>
-            <div className="kpi-mini-title">{c.channel} SLA</div>
-            <div className={'kpi-mini-value ' + (c.met ? 'sla-met' : 'sla-miss')}>{fmt(c.actual)}%</div>
-          </div>
-        ))}
       </div>
 
       <div className="section-div">
@@ -387,6 +401,12 @@ export default function CcoDashboard({ view }) {
           </div>
         </div>
       </div>
+
+      <Modal open={slaModalOpen} onClose={() => setSlaModalOpen(false)} title="SLA by Channel — Trend Detail">
+        <div className="chart-container" style={{ height: 280 }}>
+          <Line data={channelSlaTrendChart.data} options={channelSlaTrendChart.options} />
+        </div>
+      </Modal>
     </div>
   )
 }

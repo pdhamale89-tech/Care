@@ -14,7 +14,7 @@ const KPI_QUEUE_OPTIONS = {
 export default function FilterBar() {
   const {
     currentTab, showFilters, activeRegion, setActiveRegion,
-    ccoFilters, setCcoFilter, outageFilters, setOutageFilter,
+    ccoFilters, setCcoFilter, ccoView, setCcoView, outageFilters, setOutageFilter,
     epicenterFilters, setEpicenterFilter, kpiFilters, setKpiFilter,
     kpiTimeView, setKpiTimeView,
     clearFilters,
@@ -24,7 +24,7 @@ export default function FilterBar() {
   if (!showFilters) return null
 
   const countries = regionCountryMap[activeRegion] || ['All']
-  const isCco = currentTab.startsWith('cco-')
+  const isCco = currentTab === 'cco'
   const isOutage = currentTab === 'outage'
   const isEpicenter = currentTab === 'epicenter'
   const isKpi = currentTab.startsWith('kpi-')
@@ -37,6 +37,13 @@ export default function FilterBar() {
           <span className="filter-panel-icon">🔎</span>Filters
           <span className={'filter-panel-caret' + (expanded ? '' : ' collapsed')}>▾</span>
         </div>
+        {isCco && (
+          <div className="period-bar">
+            {[['daily', 'Daily'], ['weekly', 'Weekly'], ['monthly', 'Monthly'], ['quarterly', 'Quarterly']].map(([v, label]) => (
+              <button key={v} type="button" className={'p-btn' + (ccoView === v ? ' active' : '')} onClick={() => setCcoView(v)}>{label}</button>
+            ))}
+          </div>
+        )}
         {isKpi && kview !== 'intraday' && (
           <div className="period-bar">
             {[['daily', 'Daily'], ['weekly', 'Weekly'], ['quarterly', 'Quarterly']].map(([v, label]) => (
