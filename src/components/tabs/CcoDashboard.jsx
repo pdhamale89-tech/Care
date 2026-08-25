@@ -105,11 +105,6 @@ export default function CcoDashboard({ view }) {
     return { metrics, crw, headcount }
   }, [periods, seed])
 
-  const overallSla = useMemo(() => {
-    const actual = genKpiValue(91, seed + 999).actual
-    return { actual, met: actual >= 90 }
-  }, [seed])
-
   const channelSlaTrendChart = useMemo(() => {
     const labels = periods.map(shortPeriodLabel)
     const seriesColors = [colors.accentBlue, colors.accentGreen, colors.accentOrange, colors.accentRed]
@@ -154,7 +149,7 @@ export default function CcoDashboard({ view }) {
           title: c.hf ? `${c.label} — Actual vs Forecast` : `${c.label} — Actual`,
           config: buildMetricComparisonConfig(c, shortLabels, actual, forecast, colors),
         }
-      })
+      }).filter((c) => c.key !== 'sla')
     },
     [periods, seed, colors],
   )
@@ -205,18 +200,34 @@ export default function CcoDashboard({ view }) {
         <h2>Key Metrics Summary</h2>
       </div>
       <div className="kpi-mini-grid">
-        {keyMetrics.metrics.filter((m) => m.key !== 'sla').map((m) => (
-          <div className="kpi-mini-card" key={m.key}>
-            <div className="kpi-mini-title">{m.label}</div>
-            <div className="kpi-mini-value">{fmt(m.actual)}{m.unit}</div>
-            {m.hf && (
-              <>
-                <div className="kpi-mini-forecast">Forecast: {fmt(m.forecast)}{m.unit}</div>
-                <div className="kpi-mini-sub"><span className={'badge ' + m.cls}>{arrow(m.variance)} {fmt(Math.abs(m.vp))}% variance</span></div>
-              </>
-            )}
-          </div>
-        ))}
+        {keyMetrics.metrics.map((m) => {
+          if (m.key === 'sla') {
+            return (
+              <div
+                className="kpi-mini-card sla-card clickable"
+                key={m.key}
+                onClick={() => setSlaModalOpen(true)}
+                title="Click to see SLA by Channel trend"
+              >
+                <div className="kpi-mini-title">{m.label}</div>
+                <div className={'kpi-mini-value ' + (m.actual >= 90 ? 'sla-met' : 'sla-miss')}>{fmt(m.actual)}{m.unit}</div>
+                <div className="kpi-mini-sub">Click for channel trend</div>
+              </div>
+            )
+          }
+          return (
+            <div className="kpi-mini-card" key={m.key}>
+              <div className="kpi-mini-title">{m.label}</div>
+              <div className="kpi-mini-value">{fmt(m.actual)}{m.unit}</div>
+              {m.hf && (
+                <>
+                  <div className="kpi-mini-forecast">Forecast: {fmt(m.forecast)}{m.unit}</div>
+                  <div className="kpi-mini-sub"><span className={'badge ' + m.cls}>{arrow(m.variance)} {fmt(Math.abs(m.vp))}% variance</span></div>
+                </>
+              )}
+            </div>
+          )
+        })}
         <div className="kpi-mini-card">
           <div className="kpi-mini-title">CRW</div>
           <div className="kpi-mini-value">{fmt(keyMetrics.crw)}</div>
@@ -226,22 +237,6 @@ export default function CcoDashboard({ view }) {
           <div className="kpi-mini-title">Headcount</div>
           <div className="kpi-mini-value">{fmt(keyMetrics.headcount)}</div>
           <div className="kpi-mini-sub">Actual only</div>
-        </div>
-      </div>
-
-      <div className="section-div">
-        <h2>Overall SLA (Actual)</h2>
-      </div>
-      <div className="kpi-mini-grid">
-        <div
-          className="kpi-mini-card sla-card clickable"
-          style={{ maxWidth: 300 }}
-          onClick={() => setSlaModalOpen(true)}
-          title="Click to see SLA by Channel trend"
-        >
-          <div className="kpi-mini-title">Overall SLA</div>
-          <div className={'kpi-mini-value ' + (overallSla.met ? 'sla-met' : 'sla-miss')} style={{ fontSize: 32 }}>{fmt(overallSla.actual)}%</div>
-          <div className="kpi-mini-sub">Actual across all channels · Click for channel trend</div>
         </div>
       </div>
 
