@@ -17,7 +17,6 @@ npm run build
 
 ## Deployment
 
-Pushes to `main` build and deploy automatically to GitHub Pages via `.github/workflows/deploy.yml`.
+Pushes to `Care-Branch` (the repo's default branch) build and deploy automatically to GitHub
+Pages via `.github/workflows/deploy.yml`.
 Live URL: https://pdhamale89-tech.github.io/Care/
-
-(One-time setup: in the repo's Settings → Pages, set Source to "GitHub Actions".)
