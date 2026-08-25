@@ -1,3 +1,5 @@
+import { barDataLabels, lineDataLabels, stackedBarDataLabels } from './datalabels.js'
+
 const LEGEND_BOTTOM = { legend: { position: 'bottom' } }
 
 export function donutConfig(labels, data, colors) {
@@ -7,13 +9,20 @@ export function donutConfig(labels, data, colors) {
   }
 }
 
-export function actualForecastConfig(labels, actual, forecast, title) {
+export function actualForecastConfig(labels, actual, forecast, title, unit = '') {
   return {
     data: {
       labels,
       datasets: [
-        { type: 'bar', label: 'Actual', data: actual, backgroundColor: '#0076CE', order: 2, borderRadius: 6 },
-        { type: 'line', label: 'Forecast', data: forecast, borderColor: '#D93025', borderWidth: 2, tension: 0.35, fill: false, order: 1, pointRadius: 3 },
+        {
+          type: 'bar', label: 'Actual', data: actual, backgroundColor: '#0076CE', order: 2, borderRadius: 6,
+          datalabels: barDataLabels(unit, '#0076CE'),
+        },
+        {
+          type: 'line', label: 'Forecast', data: forecast, borderColor: '#D93025', borderWidth: 2, tension: 0.35,
+          fill: false, order: 1, pointRadius: 3,
+          datalabels: lineDataLabels(unit, '#D93025'),
+        },
       ],
     },
     options: {
@@ -27,7 +36,7 @@ export function actualForecastConfig(labels, actual, forecast, title) {
   }
 }
 
-export function dualLineConfig(labels, seriesA, seriesB) {
+export function dualLineConfig(labels, seriesA, seriesB, unit = '') {
   return {
     data: {
       labels,
@@ -39,6 +48,7 @@ export function dualLineConfig(labels, seriesA, seriesB) {
           backgroundColor: seriesA.color + '1a',
           fill: !!seriesA.fill,
           tension: 0.35,
+          datalabels: lineDataLabels(unit, seriesA.color),
         },
         {
           label: seriesB.label,
@@ -48,6 +58,7 @@ export function dualLineConfig(labels, seriesA, seriesB) {
           borderDash: seriesB.dashed ? [6, 4] : undefined,
           fill: !!seriesB.fill,
           tension: 0.35,
+          datalabels: lineDataLabels(unit, seriesB.color),
         },
       ],
     },
@@ -60,8 +71,14 @@ export function dualAxisBarLineConfig(labels, bar, line) {
     data: {
       labels,
       datasets: [
-        { type: 'bar', label: bar.label, data: bar.data, backgroundColor: bar.color },
-        { type: 'line', label: line.label, data: line.data, borderColor: line.color, yAxisID: 'y1', tension: 0.3 },
+        {
+          type: 'bar', label: bar.label, data: bar.data, backgroundColor: bar.color,
+          datalabels: barDataLabels(bar.unit ?? '', bar.color),
+        },
+        {
+          type: 'line', label: line.label, data: line.data, borderColor: line.color, yAxisID: 'y1', tension: 0.3,
+          datalabels: lineDataLabels(line.unit ?? '', line.color),
+        },
       ],
     },
     options: {
@@ -75,14 +92,14 @@ export function dualAxisBarLineConfig(labels, bar, line) {
   }
 }
 
-export function issueComboConfig(labels, actual, forecast, variance) {
+export function issueComboConfig(labels, actual, forecast, variance, unit = '') {
   return {
     data: {
       labels,
       datasets: [
-        { type: 'bar', label: 'Actual', data: actual, backgroundColor: '#0076CE' },
-        { type: 'bar', label: 'Forecast', data: forecast, backgroundColor: '#C9D6E0' },
-        { type: 'line', label: 'Variance', data: variance, borderColor: '#D93025', yAxisID: 'y1', tension: 0.3 },
+        { type: 'bar', label: 'Actual', data: actual, backgroundColor: '#0076CE', datalabels: barDataLabels(unit, '#0076CE') },
+        { type: 'bar', label: 'Forecast', data: forecast, backgroundColor: '#C9D6E0', datalabels: barDataLabels(unit, '#5A5F68') },
+        { type: 'line', label: 'Variance', data: variance, borderColor: '#D93025', yAxisID: 'y1', tension: 0.3, datalabels: lineDataLabels(unit, '#D93025') },
       ],
     },
     options: {
@@ -97,9 +114,12 @@ export function issueComboConfig(labels, actual, forecast, variance) {
   }
 }
 
-export function stackedBarConfig(labels, datasets) {
+export function stackedBarConfig(labels, datasets, unit = '') {
   return {
-    data: { labels, datasets },
+    data: {
+      labels,
+      datasets: datasets.map((d) => ({ ...d, datalabels: stackedBarDataLabels(unit) })),
+    },
     options: {
       responsive: true,
       plugins: LEGEND_BOTTOM,
@@ -108,9 +128,9 @@ export function stackedBarConfig(labels, datasets) {
   }
 }
 
-export function barConfig(labels, label, data, color) {
+export function barConfig(labels, label, data, color, unit = '') {
   return {
-    data: { labels, datasets: [{ label, data, backgroundColor: color }] },
+    data: { labels, datasets: [{ label, data, backgroundColor: color, datalabels: barDataLabels(unit, color) }] },
     options: { responsive: true, plugins: LEGEND_BOTTOM, scales: { y: { beginAtZero: true } } },
   }
 }

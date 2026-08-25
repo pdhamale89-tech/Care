@@ -77,7 +77,7 @@ export default function CcoPage({ view, activeRegion, filters }) {
   const explorerChart = useMemo(() => {
     const actual = periods.map((_, i) => genKpiValue(explorerCfg.base, seed + i * 7).actual)
     const forecast = periods.map((_, i) => genKpiValue(explorerCfg.base, seed + i * 7).forecast)
-    return actualForecastConfig(periods, actual, forecast, `${metricLabels[metricKey]} — Actual (bars) vs Forecast (line)`)
+    return actualForecastConfig(periods, actual, forecast, `${metricLabels[metricKey]} — Actual (bars) vs Forecast (line)`, explorerCfg.unit)
   }, [periods, seed, explorerCfg, metricKey])
 
   const timeChart = useMemo(() => {

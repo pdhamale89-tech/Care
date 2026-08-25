@@ -5,6 +5,7 @@ import {
   WEEK_DAYS, getIntradayIntervals, VALUE_SCALE,
 } from '../data/mockGenerators.js'
 import { dualLineConfig, donutConfig, dualAxisBarLineConfig } from '../charts/chartConfigs.js'
+import { barDataLabels } from '../charts/datalabels.js'
 
 const KPI_VIEW_CONFIG = {
   voice: { title: 'Voice Queue KPI', subtitle: 'Voice queue performance — SLA, AHT, Occupancy, Handled/Offered, Agent Time Distribution' },
@@ -105,7 +106,11 @@ export default function KpiPage({ kView, activeRegion, filters }) {
   const slaAhtChart = useMemo(() => {
     const sla = periods.map((_, i) => Math.round((85 + ((Math.sin((seed + i) * 2.1) + 1) / 2) * 12) * VALUE_SCALE))
     const aht = periods.map((_, i) => Math.round((7 + ((Math.sin((seed + i) * 1.7) + 1) / 2) * 3) * VALUE_SCALE * 10) / 10)
-    return dualAxisBarLineConfig(periods, { label: 'SLA %', data: sla, color: '#0076CE' }, { label: 'AHT (min)', data: aht, color: '#D93025' })
+    return dualAxisBarLineConfig(
+      periods,
+      { label: 'SLA %', data: sla, color: '#0076CE', unit: '%' },
+      { label: 'AHT (min)', data: aht, color: '#D93025', unit: 'min' },
+    )
   }, [periods, seed])
 
   const intervals = useMemo(() => getIntradayIntervals(), [])
@@ -140,8 +145,8 @@ export default function KpiPage({ kView, activeRegion, filters }) {
     const handled = offered.map((o) => Math.round(o * 0.94))
     return {
       data: { labels: intervals, datasets: [
-        { label: 'Offered', data: offered, backgroundColor: '#0076CE' },
-        { label: 'Handled', data: handled, backgroundColor: '#1E8E3E' },
+        { label: 'Offered', data: offered, backgroundColor: '#0076CE', datalabels: barDataLabels('', '#0076CE') },
+        { label: 'Handled', data: handled, backgroundColor: '#1E8E3E', datalabels: barDataLabels('', '#1E8E3E') },
       ] },
       options: { responsive: true, plugins: { legend: { position: 'bottom' } } },
     }
