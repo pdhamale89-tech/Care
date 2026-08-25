@@ -1,12 +1,12 @@
 import { Fragment, useMemo, useState } from 'react'
-import { Bar, Line } from 'react-chartjs-2'
+import { Bar } from 'react-chartjs-2'
 import { useApp } from '../../context/AppContext.jsx'
 import {
   fmt, pct, varClass, arrow, genKpiValue, hashSeed, getWeeksForQuarter,
   WEEK_DAYS, issueLabels,
 } from '../../data/mockGenerators.js'
 import { getColors } from '../../theme/colors.js'
-import { barDataLabels, lineDataLabels } from '../../charts/datalabels.js'
+import { barDataLabels } from '../../charts/datalabels.js'
 import DownloadBtn from '../common/DownloadBtn.jsx'
 import Modal from '../common/Modal.jsx'
 import { issueComboConfig } from '../../charts/chartConfigs.js'
@@ -14,7 +14,6 @@ import { issueComboConfig } from '../../charts/chartConfigs.js'
 const VIEW_CONFIG = {
   daily: { title: 'Daily Performance Table', sub: 'Day-level performance (Sat–Fri week)' },
   weekly: { title: 'Weekly Performance Table', sub: 'Fiscal week-level performance' },
-  monthly: { title: 'Monthly Performance Table', sub: 'Month-level aggregated performance' },
   quarterly: { title: 'Quarterly Performance Table', sub: 'Quarter-level aggregated performance' },
 }
 
@@ -27,16 +26,26 @@ const METRIC_COLS = [
   { key: 'tcd', label: 'TCD', base: 48000, unit: '', hf: true },
 ]
 
+const EXTRA_METRIC_CHARTS = [
+  { key: 'cases', label: 'Cases', base: 3200, unit: '', hf: true },
+  { key: 'activities', label: 'Activities', base: 16000, unit: '', hf: true },
+  { key: 'apc', label: 'APC', base: 4.8, unit: '', hf: false },
+  { key: 'icw', label: 'ICW', base: 850, unit: '', hf: false },
+  { key: 'ccpd', label: 'CCpD', base: 42, unit: '', hf: false },
+]
+
 const CHANNELS = ['Voice', 'Email', 'Chat', 'W2C']
 const CHANNEL_BASES_1 = [6500, 4200, 3200, 1500]
-const CHANNEL_BASES_3 = [9.2, 6.1, 5.4, 7.8]
+const TCD_CHANNELS = ['Voice', 'Email', 'Chat']
+const TCD_CHANNEL_BASES = [9.2, 6.1, 5.4]
 const CHANNEL_SLA_BASES = [92, 88, 90, 85]
 const ISSUE_CHARTS = [
-  { id: 'issue1', title: 'Cases by Issue Type', base: 900 },
-  { id: 'issue2', title: 'Activities by Issue Type', base: 1400 },
-  { id: 'issue3', title: 'APC by Issue Type', base: 300 },
-  { id: 'issue4', title: 'TTC by Issue Type', base: 60 },
-  { id: 'issue5', title: 'Case Rate by Issue Type', base: 15 },
+  { id: 'issue1', title: 'Cases by Issue Type', base: 900, unit: '' },
+  { id: 'issue2', title: 'Activities by Issue Type', base: 1400, unit: '' },
+  { id: 'issue3', title: 'APC by Issue Type', base: 300, unit: '' },
+  { id: 'issue4', title: 'TTC by Issue Type', base: 60, unit: '' },
+  { id: 'issue5', title: 'Case Rate by Issue Type', base: 15, unit: '' },
+  { id: 'issue6', title: 'Ci1 by Issue Type', base: 20, unit: '%' },
 ]
 
 function getPeriodsForView(view, quarter, week) {
@@ -45,7 +54,6 @@ function getPeriodsForView(view, quarter, week) {
     return WEEK_DAYS.map((d) => `${wk} - ${d}`)
   }
   if (view === 'weekly') return getWeeksForQuarter(quarter)
-  if (view === 'monthly') return Array.from({ length: 12 }, (_, i) => 'FM' + String(i + 1).padStart(2, '0'))
   return ['FQ1', 'FQ2', 'FQ3', 'FQ4']
 }
 
@@ -58,7 +66,12 @@ function buildMetricComparisonConfig(col, labels, actual, forecast, colors) {
   if (!col.hf) {
     return {
       data: { labels, datasets: [{ label: 'Actual', data: actual, backgroundColor: colors.accentBlue, borderRadius: 4, datalabels: barDataLabels(col.unit, colors.accentBlue) }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { min: 75, max: 100 } } },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: col.unit === '%' ? { min: 75, max: 100 } : { beginAtZero: true } },
+      },
     }
   }
   return {
@@ -89,7 +102,6 @@ export default function CcoDashboard({ view }) {
   const tableTitle = {
     daily: `Daily View — ${quarter}, Week ${week === 'All' ? getWeeksForQuarter(quarter)[0] : week} (Sat–Fri)`,
     weekly: `Weekly View — ${quarter} (13 Weeks)`,
-    monthly: 'Monthly View — Full Fiscal Year (12 Months)',
     quarterly: 'Quarterly View — Full Fiscal Year (52 Weeks)',
   }[view]
 
@@ -114,11 +126,9 @@ export default function CcoDashboard({ view }) {
         datasets: CHANNELS.map((c, ci) => ({
           label: c,
           data: periods.map((_, i) => genKpiValue(CHANNEL_SLA_BASES[ci], seed + i * 13 + ci * 11 + 300).actual),
-          borderColor: seriesColors[ci],
-          backgroundColor: seriesColors[ci] + '1a',
-          tension: 0.35,
-          pointRadius: 3,
-          datalabels: lineDataLabels('%', seriesColors[ci]),
+          backgroundColor: seriesColors[ci],
+          borderRadius: 4,
+          datalabels: barDataLabels('%', seriesColors[ci]),
         })),
       },
       options: {
@@ -141,15 +151,17 @@ export default function CcoDashboard({ view }) {
   const metricCharts = useMemo(
     () => {
       const shortLabels = periods.map(shortPeriodLabel)
-      return METRIC_COLS.map((c, ci) => {
-        const actual = periods.map((_, i) => genKpiValue(c.base, seed + i * 7 + ci * 3).actual)
-        const forecast = periods.map((_, i) => genKpiValue(c.base, seed + i * 7 + ci * 3).forecast)
-        return {
-          key: c.key,
-          title: c.hf ? `${c.label} — Actual vs Forecast` : `${c.label} — Actual`,
-          config: buildMetricComparisonConfig(c, shortLabels, actual, forecast, colors),
-        }
-      }).filter((c) => c.key !== 'sla')
+      return [...METRIC_COLS, ...EXTRA_METRIC_CHARTS]
+        .map((c, ci) => {
+          const actual = periods.map((_, i) => genKpiValue(c.base, seed + i * 7 + ci * 3).actual)
+          const forecast = periods.map((_, i) => genKpiValue(c.base, seed + i * 7 + ci * 3).forecast)
+          return {
+            key: c.key,
+            title: c.hf ? `${c.label} — Actual vs Forecast` : `${c.label} — Actual`,
+            config: buildMetricComparisonConfig(c, shortLabels, actual, forecast, colors),
+          }
+        })
+        .filter((c) => c.key !== 'sla')
     },
     [periods, seed, colors],
   )
@@ -164,8 +176,8 @@ export default function CcoDashboard({ view }) {
   )
 
   const table3Rows = useMemo(
-    () => CHANNELS.map((c, i) => {
-      const { actual, forecast } = genKpiValue(CHANNEL_BASES_3[i], seed + i + 90)
+    () => TCD_CHANNELS.map((c, i) => {
+      const { actual, forecast } = genKpiValue(TCD_CHANNEL_BASES[i], seed + i + 90)
       const variance = actual - forecast
       return { channel: c, actual, forecast, variance, vp: pct(actual, forecast), cls: varClass(variance) }
     }),
@@ -173,11 +185,11 @@ export default function CcoDashboard({ view }) {
   )
 
   const issueCharts = useMemo(
-    () => ISSUE_CHARTS.map(({ id, title, base }) => {
+    () => ISSUE_CHARTS.map(({ id, title, base, unit }) => {
       const actual = issueLabels.map((_, i) => Math.round(base * (0.8 + ((Math.sin((seed + i) * 2.7) + 1) / 2) * 0.5)))
       const forecast = issueLabels.map((_, i) => Math.round(base * (0.9 + i * 0.01)))
       const variance = actual.map((a, i) => a - forecast[i])
-      return { id, title, config: issueComboConfig(issueLabels, actual, forecast, variance, '', colors) }
+      return { id, title, config: issueComboConfig(issueLabels, actual, forecast, variance, unit, colors) }
     }),
     [seed, colors],
   )
@@ -371,7 +383,7 @@ export default function CcoDashboard({ view }) {
           </div>
         ))}
       </div>
-      <div className="s-grid">
+      <div className="s-grid thirds">
         {issueCharts.slice(3).map((c) => (
           <div className="card" key={c.id}>
             <div className="card-header"><div className="card-title">{c.title}</div></div>
@@ -400,7 +412,7 @@ export default function CcoDashboard({ view }) {
 
       <Modal open={slaModalOpen} onClose={() => setSlaModalOpen(false)} title="SLA by Channel — Trend Detail">
         <div className="chart-container" style={{ height: 280 }}>
-          <Line data={channelSlaTrendChart.data} options={channelSlaTrendChart.options} />
+          <Bar data={channelSlaTrendChart.data} options={channelSlaTrendChart.options} />
         </div>
       </Modal>
     </div>
