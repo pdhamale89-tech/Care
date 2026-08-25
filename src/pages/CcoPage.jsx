@@ -158,7 +158,14 @@ export default function CcoPage({ view, activeRegion, filters }) {
       <div className="dashboard-title">{cfg.title}</div>
       <div className="dashboard-subtitle">{cfg.subtitle}</div>
 
-      <div className="section-title is-first">{cfg.sectionTitle}</div>
+      <div className="section-title is-first">Quick Trend Snapshot</div>
+      <div className="kpi-mini-grid">
+        {sparklines.map((s) => (
+          <SparklineCard key={s.key} title={metricLabels[s.key]} unit={s.unit} series={s.series} />
+        ))}
+      </div>
+
+      <div className="section-title">{cfg.sectionTitle}</div>
       <div className="card">
         <h3>{tableTitle}</h3>
         <div className="scroll-table">
@@ -197,13 +204,6 @@ export default function CcoPage({ view, activeRegion, filters }) {
             </tbody>
           </table>
         </div>
-      </div>
-
-      <div className="section-title">Quick Trend Snapshot</div>
-      <div className="kpi-mini-grid">
-        {sparklines.map((s) => (
-          <SparklineCard key={s.key} title={metricLabels[s.key]} unit={s.unit} series={s.series} />
-        ))}
       </div>
 
       <div className="grid-2" style={{ marginTop: 20 }}>
