@@ -220,7 +220,10 @@ export default function CcoDashboard({ view }) {
               <div className="kpi-label">{m.label}</div>
               <div className="kpi-value">{fmt(m.actual)}{m.unit}</div>
               {m.hf && (
-                <div className="kpi-sub">{arrow(m.variance)} {fmt(Math.abs(m.vp))}% vs forecast</div>
+                <>
+                  <div className="kpi-sub">Forecast: {fmt(m.forecast)}{m.unit}</div>
+                  <div className="kpi-sub">{arrow(m.variance)} {fmt(Math.abs(m.vp))}% variance</div>
+                </>
               )}
             </div>
           )

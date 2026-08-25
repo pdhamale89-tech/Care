@@ -213,6 +213,7 @@ body {
 .kpi-label { font-size: 10px; font-weight: 700; opacity: .9; text-transform: uppercase; letter-spacing: .3px; margin-bottom: 4px; }
 .kpi-value { font-size: 20px; font-weight: 800; letter-spacing: -.2px; margin-bottom: 4px; }
 .kpi-sub { font-size: 11px; opacity: .85; display: flex; align-items: center; gap: 4px; }
+.kpi-sub + .kpi-sub { margin-top: 2px; }
 .kpi-card:nth-child(4n+2) { background: linear-gradient(135deg, #0ea5e9, #2563eb); }
 .kpi-card:nth-child(4n+3) { background: linear-gradient(135deg, #10b981, #059669); }
 .kpi-card:nth-child(4n+4) { background: linear-gradient(135deg, #f59e0b, #ef4444); }
