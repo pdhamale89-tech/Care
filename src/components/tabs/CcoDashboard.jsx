@@ -37,7 +37,7 @@ const EXTRA_METRIC_CHARTS = [
 const CHANNELS = ['Voice', 'Email', 'Chat', 'W2C']
 const CHANNEL_BASES_1 = [6500, 4200, 3200, 1500]
 const TCD_CHANNELS = ['Voice', 'Email', 'Chat']
-const TCD_CHANNEL_BASES = [9.2, 6.1, 5.4]
+const TCD_CHANNEL_BASES = [9500, 7400, 8600]
 const CHANNEL_SLA_BASES = [92, 88, 90, 85]
 const ISSUE_CHARTS = [
   { id: 'issue1', title: 'Cases by Issue Type', base: 900, unit: '' },
@@ -177,7 +177,9 @@ export default function CcoDashboard({ view }) {
 
   const table3Rows = useMemo(
     () => TCD_CHANNELS.map((c, i) => {
-      const { actual, forecast } = genKpiValue(TCD_CHANNEL_BASES[i], seed + i + 90)
+      const raw = genKpiValue(TCD_CHANNEL_BASES[i], seed + i + 90)
+      const actual = Math.round(raw.actual)
+      const forecast = Math.round(raw.forecast)
       const variance = actual - forecast
       return { channel: c, actual, forecast, variance, vp: pct(actual, forecast), cls: varClass(variance) }
     }),
@@ -359,8 +361,8 @@ export default function CcoDashboard({ view }) {
               {table3Rows.map((r) => (
                 <tr key={r.channel}>
                   <td>{r.channel}</td>
-                  <td>{fmt(r.actual)} min</td>
-                  <td>{fmt(r.forecast)} min</td>
+                  <td>{fmt(r.actual)}</td>
+                  <td>{fmt(r.forecast)}</td>
                   <td><span className={'badge ' + r.cls}>{arrow(r.variance)} {fmt(Math.abs(r.variance))}</span></td>
                   <td><span className={'badge ' + r.cls}>{fmt(Math.abs(r.vp))}%</span></td>
                 </tr>
