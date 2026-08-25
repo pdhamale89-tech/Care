@@ -1,10 +1,10 @@
 import { REGIONS } from '../data/mockGenerators.js'
 
 const HEADER_TITLES = {
-  cco: 'SPOG Rohit — Customer Support Operations Dashboard',
-  outage: 'SPOG Rohit — Agent Outage Report',
-  epicenter: 'SPOG Rohit — Epicenter HC',
-  kpi: 'SPOG Rohit — KPI Reports',
+  cco: 'Care SPOG — Customer Support Operations Dashboard',
+  outage: 'Care SPOG — Agent Outage Report',
+  epicenter: 'Care SPOG — Epicenter HC',
+  kpi: 'Care SPOG — KPI Reports',
 }
 
 export default function Header({ currentPage, activeRegion, onRegionChange }) {

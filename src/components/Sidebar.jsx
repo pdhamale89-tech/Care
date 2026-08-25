@@ -35,7 +35,7 @@ export default function Sidebar({ currentPage, ccoView, kView, onSelect }) {
   return (
     <div className="sidebar">
       <div className="sidebar-logo">
-        SPOG Rohit
+        Care SPOG
         <span>Customer Support Operations</span>
       </div>
       {NAV_SECTIONS.map((section) => (
