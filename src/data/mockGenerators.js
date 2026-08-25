@@ -30,8 +30,6 @@ export const issueLabels = ['Concession', 'Doc Request', 'Exchange', 'Order Stat
 
 export const WEEK_DAYS = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri']
 
-export const metricLabels = { contacts: 'Contacts Offered', orders: 'Orders', caseRate: 'Case Rate', cpsr: 'CPSR', sla: 'Overall SLA', tcd: 'TCD' }
-
 export function fmt(n) {
   return n.toLocaleString('en-US', { maximumFractionDigits: 1 })
 }
@@ -78,26 +76,6 @@ export function getWeeksForQuarter(q) {
   const weeks = []
   for (let i = 0; i < 13; i++) weeks.push('FW' + String(startWeek + i).padStart(2, '0'))
   return weeks
-}
-
-export function getMetricCols() {
-  return [
-    { key: 'contacts', base: 2200, unit: '' },
-    { key: 'orders', base: 1150, unit: '' },
-    { key: 'caseRate', base: 12.5, unit: '%' },
-    { key: 'cpsr', base: 4.2, unit: '' },
-    { key: 'sla', base: 91, unit: '%' },
-    { key: 'tcd', base: 48000, unit: '' },
-  ]
-}
-
-export function getIntradayIntervals() {
-  const intervals = []
-  for (let h = 6; h < 22; h++) {
-    intervals.push(`${String(h).padStart(2, '0')}:00`)
-    intervals.push(`${String(h).padStart(2, '0')}:30`)
-  }
-  return intervals
 }
 
 export function generateAgentRoster(region) {

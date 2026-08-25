@@ -14,14 +14,6 @@ const NAV_SECTIONS = [
       { id: 'epicenter', label: 'Epicenter HC', icon: '👥' },
     ],
   },
-  {
-    label: 'KPI Reports',
-    items: [
-      { id: 'kpi-voice', label: 'Voice Queue KPI', icon: '📞' },
-      { id: 'kpi-digital', label: 'Chat and Email KPI', icon: '💬' },
-      { id: 'kpi-intraday', label: 'Intraday Performance', icon: '⏱️' },
-    ],
-  },
 ]
 
 export default function Sidebar() {

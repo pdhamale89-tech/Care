@@ -5,18 +5,12 @@ import { regionCountryMap, managers, queueNames, departments, getWeeksForQuarter
 const QUARTERS = ['FQ1', 'FQ2', 'FQ3', 'FQ4']
 const CLASSIFICATIONS = ['All', 'FED', 'Global Sales', 'Consumer']
 const STATUSES = ['All', 'Available', 'Unplanned Outage', 'Scheduled Off']
-const KPI_QUEUE_OPTIONS = {
-  voice: ['Voice - Sales', 'Voice - Support', 'Voice - Escalations'],
-  digital: ['Email', 'Chat'],
-  intraday: ['Voice', 'Email', 'Chat'],
-}
 
 export default function FilterBar() {
   const {
     currentTab, showFilters, activeRegion, setActiveRegion,
     ccoFilters, setCcoFilter, ccoView, setCcoView, outageFilters, setOutageFilter,
-    epicenterFilters, setEpicenterFilter, kpiFilters, setKpiFilter,
-    kpiTimeView, setKpiTimeView,
+    epicenterFilters, setEpicenterFilter,
     clearFilters,
   } = useApp()
   const [expanded, setExpanded] = useState(true)
@@ -27,8 +21,6 @@ export default function FilterBar() {
   const isCco = currentTab === 'cco'
   const isOutage = currentTab === 'outage'
   const isEpicenter = currentTab === 'epicenter'
-  const isKpi = currentTab.startsWith('kpi-')
-  const kview = isKpi ? currentTab.slice(4) : null
 
   return (
     <div className="filter-panel">
@@ -41,13 +33,6 @@ export default function FilterBar() {
           <div className="period-bar">
             {[['daily', 'Daily'], ['weekly', 'Weekly'], ['monthly', 'Monthly'], ['quarterly', 'Quarterly']].map(([v, label]) => (
               <button key={v} type="button" className={'p-btn' + (ccoView === v ? ' active' : '')} onClick={() => setCcoView(v)}>{label}</button>
-            ))}
-          </div>
-        )}
-        {isKpi && kview !== 'intraday' && (
-          <div className="period-bar">
-            {[['daily', 'Daily'], ['weekly', 'Weekly'], ['quarterly', 'Quarterly']].map(([v, label]) => (
-              <button key={v} type="button" className={'p-btn' + (kpiTimeView === v ? ' active' : '')} onClick={() => setKpiTimeView(v)}>{label}</button>
             ))}
           </div>
         )}
@@ -170,35 +155,6 @@ export default function FilterBar() {
               </>
             )}
 
-            {isKpi && (
-              <>
-                <div className="filter-group">
-                  <label>Sub Region / Country</label>
-                  <select value={kpiFilters.country} onChange={(e) => setKpiFilter('country', e.target.value)}>
-                    {countries.map((c) => <option key={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div className="filter-group">
-                  <label>Fiscal Quarter</label>
-                  <select value={kpiFilters.quarter} onChange={(e) => setKpiFilter('quarter', e.target.value)}>
-                    {QUARTERS.map((q) => <option key={q} value={q}>{q}</option>)}
-                  </select>
-                </div>
-                <div className="filter-group">
-                  <label>Fiscal Week (52 Weeks Total)</label>
-                  <select value={kpiFilters.week} onChange={(e) => setKpiFilter('week', e.target.value)}>
-                    <option value="All">All Weeks (13)</option>
-                    {getWeeksForQuarter(kpiFilters.quarter).map((w) => <option key={w} value={w}>{w}</option>)}
-                  </select>
-                </div>
-                <div className="filter-group">
-                  <label>Queue</label>
-                  <select value={kpiFilters.queue} onChange={(e) => setKpiFilter('queue', e.target.value)}>
-                    {KPI_QUEUE_OPTIONS[kview].map((q) => <option key={q}>{q}</option>)}
-                  </select>
-                </div>
-              </>
-            )}
           </div>
           <div className="filter-clear-row">
             <button type="button" className="clear-all-btn" onClick={clearFilters}>✕ Clear All</button>

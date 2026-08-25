@@ -10,12 +10,7 @@ const BREADCRUMBS = {
   cco: 'Performance Reports › CCO Dashboard',
   outage: 'Workforce Reports › Outage Report',
   epicenter: 'Workforce Reports › Epicenter HC',
-  'kpi-voice': 'KPI Reports › Voice Queue KPI',
-  'kpi-digital': 'KPI Reports › Chat and Email KPI',
-  'kpi-intraday': 'KPI Reports › Intraday Performance',
 }
-
-const KPI_QUEUE_DEFAULTS = { voice: 'Voice - Sales', digital: 'Email', intraday: 'Voice' }
 
 export function AppProvider({ children }) {
   const [theme, setTheme] = useState('light')
@@ -27,8 +22,6 @@ export function AppProvider({ children }) {
   const [ccoView, setCcoView] = useState('daily')
   const [outageFilters, setOutageFilters] = useState({ country: 'All', quarter: 'FQ1', week: 'All', manager: 'All', status: 'All', search: '' })
   const [epicenterFilters, setEpicenterFilters] = useState({ country: 'All', manager: 'All', queue: 'All', dept: 'All', search: '' })
-  const [kpiFilters, setKpiFilters] = useState({ country: 'All', quarter: 'FQ1', week: 'All', queue: 'Voice - Sales' })
-  const [kpiTimeView, setKpiTimeView] = useState('daily')
 
   const [toast, setToast] = useState({ show: false, msg: '', cls: '' })
 
@@ -40,10 +33,6 @@ export function AppProvider({ children }) {
 
   const navTo = useCallback((tabId) => {
     setCurrentTab(tabId)
-    if (tabId.startsWith('kpi-')) {
-      const kview = tabId.slice(4)
-      setKpiFilters((prev) => ({ ...prev, queue: KPI_QUEUE_DEFAULTS[kview] }))
-    }
   }, [])
 
   const breadcrumb = BREADCRUMBS[currentTab] || currentTab
@@ -54,7 +43,6 @@ export function AppProvider({ children }) {
     setCcoFilters((prev) => ({ ...prev, subRegion: 'All' }))
     setOutageFilters((prev) => ({ ...prev, country: 'All' }))
     setEpicenterFilters((prev) => ({ ...prev, country: 'All' }))
-    setKpiFilters((prev) => ({ ...prev, country: 'All' }))
   }, [])
 
   const setCcoFilter = useCallback((key, value) => {
@@ -66,18 +54,11 @@ export function AppProvider({ children }) {
   const setEpicenterFilter = useCallback((key, value) => {
     setEpicenterFilters((prev) => ({ ...prev, [key]: value }))
   }, [])
-  const setKpiFilter = useCallback((key, value) => {
-    setKpiFilters((prev) => ({ ...prev, [key]: value, ...(key === 'quarter' ? { week: 'All' } : {}) }))
-  }, [])
 
   const clearFilters = useCallback(() => {
     if (currentTab === 'cco') { setCcoFilters({ subRegion: 'All', quarter: 'FQ1', week: 'All', classification: 'All' }); setCcoView('daily') }
     else if (currentTab === 'outage') setOutageFilters({ country: 'All', quarter: 'FQ1', week: 'All', manager: 'All', status: 'All', search: '' })
     else if (currentTab === 'epicenter') setEpicenterFilters({ country: 'All', manager: 'All', queue: 'All', dept: 'All', search: '' })
-    else if (currentTab.startsWith('kpi-')) {
-      const kview = currentTab.slice(4)
-      setKpiFilters({ country: 'All', quarter: 'FQ1', week: 'All', queue: KPI_QUEUE_DEFAULTS[kview] })
-    }
   }, [currentTab])
 
   const showToast = useCallback((msg, cls) => {
@@ -92,16 +73,14 @@ export function AppProvider({ children }) {
     ccoFilters, setCcoFilter, ccoView, setCcoView,
     outageFilters, setOutageFilter,
     epicenterFilters, setEpicenterFilter,
-    kpiFilters, setKpiFilter,
-    kpiTimeView, setKpiTimeView,
     clearFilters,
     toast, showToast,
   }), [
     theme, toggleTheme, lastUpdated, currentTab, navTo, breadcrumb, showFilters,
     activeRegion, setActiveRegion,
     ccoFilters, setCcoFilter, ccoView, outageFilters, setOutageFilter,
-    epicenterFilters, setEpicenterFilter, kpiFilters, setKpiFilter,
-    kpiTimeView, clearFilters, toast, showToast,
+    epicenterFilters, setEpicenterFilter,
+    clearFilters, toast, showToast,
   ])
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

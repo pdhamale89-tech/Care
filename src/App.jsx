@@ -9,7 +9,6 @@ import HomeTab from './components/tabs/HomeTab.jsx'
 import CcoDashboard from './components/tabs/CcoDashboard.jsx'
 import OutageReport from './components/tabs/OutageReport.jsx'
 import EpicenterHc from './components/tabs/EpicenterHc.jsx'
-import KpiReports from './components/tabs/KpiReports.jsx'
 import { getColors } from './theme/colors.js'
 
 function TabRouter() {
@@ -17,9 +16,6 @@ function TabRouter() {
   if (currentTab === 'cco') return <CcoDashboard view={ccoView} />
   if (currentTab === 'outage') return <OutageReport />
   if (currentTab === 'epicenter') return <EpicenterHc />
-  if (currentTab === 'kpi-voice') return <KpiReports kView="voice" />
-  if (currentTab === 'kpi-digital') return <KpiReports kView="digital" />
-  if (currentTab === 'kpi-intraday') return <KpiReports kView="intraday" />
   return <HomeTab />
 }
 
