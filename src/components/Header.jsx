@@ -1,7 +1,7 @@
 import { REGIONS } from '../data/mockGenerators.js'
 
 const HEADER_TITLES = {
-  cco: 'Care SPOG — Customer Support Operations Dashboard',
+  cco: 'Care SPOG — Single Pane Of Glass Dashboard',
   outage: 'Care SPOG — Agent Outage Report',
   epicenter: 'Care SPOG — Epicenter HC',
   kpi: 'Care SPOG — KPI Reports',

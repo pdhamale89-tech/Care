@@ -36,7 +36,7 @@ export default function Sidebar({ currentPage, ccoView, kView, onSelect }) {
     <div className="sidebar">
       <div className="sidebar-logo">
         Care SPOG
-        <span>Customer Support Operations</span>
+        <span>Single Pane Of Glass</span>
       </div>
       {NAV_SECTIONS.map((section) => (
         <div key={section.label}>

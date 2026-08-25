@@ -77,7 +77,7 @@ export default function App() {
         {currentPage === 'epicenter' && <EpicenterPage activeRegion={activeRegion} filters={epicenterFilters} />}
         {currentPage === 'kpi' && <KpiPage kView={kView} activeRegion={activeRegion} filters={kpiFilters} />}
 
-        <footer>Care SPOG · Customer Support Operations Dashboard · Mock Data for Demonstration · Verify figures against source systems before executive reporting.</footer>
+        <footer>Care SPOG · Single Pane Of Glass Dashboard · Mock Data for Demonstration · Verify figures against source systems before executive reporting.</footer>
       </div>
     </>
   )

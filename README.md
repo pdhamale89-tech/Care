@@ -1,6 +1,6 @@
 # Care SPOG
 
-Customer Support Operations Dashboard — React + Vite + Chart.js.
+Single Pane Of Glass Dashboard — React + Vite + Chart.js.
 
 ## Development
 
