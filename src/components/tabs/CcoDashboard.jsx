@@ -199,44 +199,41 @@ export default function CcoDashboard({ view }) {
       <div className="section-div">
         <h2>Key Metrics Summary</h2>
       </div>
-      <div className="kpi-mini-grid">
+      <div className="kpi-grid">
         {keyMetrics.metrics.map((m) => {
           if (m.key === 'sla') {
             return (
               <div
-                className="kpi-mini-card sla-card clickable"
+                className="kpi-card clickable"
                 key={m.key}
                 onClick={() => setSlaModalOpen(true)}
                 title="Click to see SLA by Channel trend"
               >
-                <div className="kpi-mini-title">{m.label}</div>
-                <div className={'kpi-mini-value ' + (m.actual >= 90 ? 'sla-met' : 'sla-miss')}>{fmt(m.actual)}{m.unit}</div>
-                <div className="kpi-mini-sub">Click for channel trend</div>
+                <div className="kpi-label">{m.label}</div>
+                <div className="kpi-value">{fmt(m.actual)}{m.unit}</div>
+                <div className="kpi-sub">Click for channel trend</div>
               </div>
             )
           }
           return (
-            <div className="kpi-mini-card" key={m.key}>
-              <div className="kpi-mini-title">{m.label}</div>
-              <div className="kpi-mini-value">{fmt(m.actual)}{m.unit}</div>
+            <div className="kpi-card" key={m.key}>
+              <div className="kpi-label">{m.label}</div>
+              <div className="kpi-value">{fmt(m.actual)}{m.unit}</div>
               {m.hf && (
-                <>
-                  <div className="kpi-mini-forecast">Forecast: {fmt(m.forecast)}{m.unit}</div>
-                  <div className="kpi-mini-sub"><span className={'badge ' + m.cls}>{arrow(m.variance)} {fmt(Math.abs(m.vp))}% variance</span></div>
-                </>
+                <div className="kpi-sub">{arrow(m.variance)} {fmt(Math.abs(m.vp))}% vs forecast</div>
               )}
             </div>
           )
         })}
-        <div className="kpi-mini-card">
-          <div className="kpi-mini-title">CRW</div>
-          <div className="kpi-mini-value">{fmt(keyMetrics.crw)}</div>
-          <div className="kpi-mini-sub">Actual only</div>
+        <div className="kpi-card">
+          <div className="kpi-label">CRW</div>
+          <div className="kpi-value">{fmt(keyMetrics.crw)}</div>
+          <div className="kpi-sub">Actual only</div>
         </div>
-        <div className="kpi-mini-card">
-          <div className="kpi-mini-title">Headcount</div>
-          <div className="kpi-mini-value">{fmt(keyMetrics.headcount)}</div>
-          <div className="kpi-mini-sub">Actual only</div>
+        <div className="kpi-card">
+          <div className="kpi-label">Headcount</div>
+          <div className="kpi-value">{fmt(keyMetrics.headcount)}</div>
+          <div className="kpi-sub">Actual only</div>
         </div>
       </div>
 
