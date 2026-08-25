@@ -7,16 +7,13 @@ import {
   BarElement,
   PointElement,
   LineElement,
-  ArcElement,
   BarController,
   LineController,
-  DoughnutController,
   Tooltip,
   Legend,
-  Filler,
 } from 'chart.js'
 import ChartDataLabels from 'chartjs-plugin-datalabels'
-import './index.css'
+import './theme.css'
 import App from './App.jsx'
 
 ChartJS.register(
@@ -25,13 +22,10 @@ ChartJS.register(
   BarElement,
   PointElement,
   LineElement,
-  ArcElement,
   BarController,
   LineController,
-  DoughnutController,
   Tooltip,
   Legend,
-  Filler,
   ChartDataLabels,
 )
 

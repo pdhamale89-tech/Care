@@ -26,7 +26,7 @@ export const departments = [
 export const queueNames = ['Voice - Sales', 'Voice - Support', 'Voice - Escalations', 'Email', 'Chat', 'W2C']
 export const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-export const issueLabels = ['Concession /Save the Sale', 'Doc Request', 'Exchange', 'Order Status', 'Other', 'Provide Info', 'Refund', 'Rejected /Denied', 'Return']
+export const issueLabels = ['Concession', 'Doc Request', 'Exchange', 'Order Status', 'Other', 'Provide Info', 'Refund', 'Rejected', 'Return']
 
 export const WEEK_DAYS = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri']
 
@@ -114,19 +114,29 @@ export function generateAgentRoster(region) {
     let status = 'Available'
     let reason = '—'
     let duration = '—'
+    let plannedPct = 0
+    let unplannedPct = 0
+    const shiftMinutes = 480
     if (!isScheduled) {
       status = 'Scheduled Off'
+      plannedPct = 100
     } else {
       const isAvailable = seededRandom(seed + 5) > 0.18
       if (isAvailable) {
         status = 'Available'
+        plannedPct = Math.round((Math.floor(seededRandom(seed + 10) * 30) / shiftMinutes) * 1000) / 10
       } else {
         status = 'Unplanned Outage'
         reason = outageReasons[Math.floor(seededRandom(seed + 6) * outageReasons.length)]
-        duration = Math.floor(seededRandom(seed + 7) * 4) + 1 + 'h ' + Math.floor(seededRandom(seed + 8) * 59) + 'm'
+        const h = Math.floor(seededRandom(seed + 7) * 4) + 1
+        const m = Math.floor(seededRandom(seed + 8) * 59)
+        duration = h + 'h ' + m + 'm'
+        unplannedPct = Math.round(((h * 60 + m) / shiftMinutes) * 1000) / 10
+        plannedPct = Math.round((Math.floor(seededRandom(seed + 11) * 20) / shiftMinutes) * 1000) / 10
       }
     }
-    roster.push({ name: `${fn} ${ln}`, manager, country, isScheduled, status, reason, duration })
+    const totalPct = Math.round((plannedPct + unplannedPct) * 10) / 10
+    roster.push({ name: `${fn} ${ln}`, manager, country, isScheduled, status, reason, duration, plannedPct, unplannedPct, totalPct })
   }
   return roster
 }
