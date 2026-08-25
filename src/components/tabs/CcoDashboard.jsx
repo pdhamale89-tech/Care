@@ -58,7 +58,7 @@ function buildMetricComparisonConfig(col, labels, actual, forecast, colors) {
   if (!col.hf) {
     return {
       data: { labels, datasets: [{ label: 'Actual', data: actual, backgroundColor: colors.accentBlue, borderRadius: 4, datalabels: barDataLabels(col.unit, colors.accentBlue) }] },
-      options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { y: { min: 75, max: 100 } } },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { min: 75, max: 100 } } },
     }
   }
   return {
@@ -69,7 +69,7 @@ function buildMetricComparisonConfig(col, labels, actual, forecast, colors) {
         { label: 'Forecast', data: forecast, backgroundColor: colors.border, borderRadius: 4, datalabels: barDataLabels(col.unit, colors.textSecondary) },
       ],
     },
-    options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: col.key !== 'caseRate' } } },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: col.key !== 'caseRate' } } },
   }
 }
 
@@ -128,6 +128,7 @@ export default function CcoDashboard({ view }) {
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         plugins: { legend: { position: 'bottom' } },
         scales: { y: { min: 0, max: 100, ticks: { callback: (v) => v + '%' } } },
       },
@@ -204,7 +205,7 @@ export default function CcoDashboard({ view }) {
         <h2>Key Metrics Summary</h2>
       </div>
       <div className="kpi-mini-grid">
-        {keyMetrics.metrics.map((m) => (
+        {keyMetrics.metrics.filter((m) => m.key !== 'sla').map((m) => (
           <div className="kpi-mini-card" key={m.key}>
             <div className="kpi-mini-title">{m.label}</div>
             <div className="kpi-mini-value">{fmt(m.actual)}{m.unit}</div>

@@ -16,6 +16,7 @@ export function issueComboConfig(labels, actual, forecast, variance, unit = '', 
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: LEGEND_BOTTOM,
       scales: {
         x: { ticks: { maxRotation: 45, minRotation: 45, font: { size: 10 } } },
@@ -34,6 +35,7 @@ export function stackedBarConfig(labels, datasets, unit = '') {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: LEGEND_BOTTOM,
       scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
     },
