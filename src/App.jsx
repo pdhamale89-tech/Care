@@ -5,6 +5,7 @@ import Sidebar from './components/layout/Sidebar.jsx'
 import Topbar from './components/layout/Topbar.jsx'
 import FilterBar from './components/layout/FilterBar.jsx'
 import Toast from './components/common/Toast.jsx'
+import InfoTip from './components/common/InfoTip.jsx'
 import HomeTab from './components/tabs/HomeTab.jsx'
 import CcoDashboard from './components/tabs/CcoDashboard.jsx'
 import OutageReport from './components/tabs/OutageReport.jsx'
@@ -56,6 +57,7 @@ function DashboardShell() {
         </div>
       </div>
       <Toast />
+      <InfoTip />
     </div>
   )
 }

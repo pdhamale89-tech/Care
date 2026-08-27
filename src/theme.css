@@ -382,3 +382,10 @@ tr.group-row td { background: var(--table-header); font-weight: 800; color: var(
 
 .holiday-count { font-size: 10px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
 .holiday-tbl-wrap { max-height: 520px; overflow-y: auto; }
+
+/* ===== Global info tooltip (InfoBtn / InfoTip) ===== */
+.info-btn { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--accent-blue); display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: var(--accent-blue); cursor: help; flex-shrink: 0; font-style: italic; transition: all .2s; }
+.info-btn:hover { background: var(--accent-blue); color: #fff; transform: scale(1.1); }
+#globalInfoTip { display: none; position: fixed; z-index: 99999; width: 280px; padding: 10px 12px; background: var(--tooltip-bg); color: #e5e7eb; border-radius: 8px; font-size: 10px; line-height: 1.6; box-shadow: var(--shadow-lg); pointer-events: none; }
+#globalInfoTip.show { display: block; }
+#globalInfoTip strong { color: #fbbf24; display: block; margin-bottom: 2px; font-size: 9px; text-transform: uppercase; }

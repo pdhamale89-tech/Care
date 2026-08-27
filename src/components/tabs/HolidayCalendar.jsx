@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { HOLIDAY_CALENDAR } from '../../data/holidayCalendarData.js'
 import DownloadBtn from '../common/DownloadBtn.jsx'
+import InfoBtn from '../common/InfoBtn.jsx'
 
 const ALL = 'All'
 
@@ -51,7 +52,9 @@ export default function HolidayCalendar() {
   return (
     <div className="card">
       <div className="card-header">
-        <div className="card-title">🎉 Holiday Calendar</div>
+        <div className="card-title">
+          🎉 Holiday Calendar <InfoBtn tip="<strong>Purpose</strong>Region, sub region, country and fiscal year holiday detail." />
+        </div>
         <DownloadBtn
           filename="holiday-calendar"
           title="Download holiday calendar"
