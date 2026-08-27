@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Bar, Doughnut } from 'react-chartjs-2'
 import { useApp } from '../../context/AppContext.jsx'
-import { generateEpicenterRoster, fmt } from '../../data/mockGenerators.js'
+import { generateEpicenterRoster, fmt, EMP_STATUSES } from '../../data/mockGenerators.js'
 import { getColors } from '../../theme/colors.js'
 import { barDataLabels, hBarDataLabels, doughnutDataLabels } from '../../charts/datalabels.js'
 import DownloadBtn from '../common/DownloadBtn.jsx'
@@ -10,6 +10,14 @@ function countBy(rows, key) {
   const map = new Map()
   rows.forEach((r) => map.set(r[key], (map.get(r[key]) || 0) + 1))
   return [...map.entries()].sort((a, b) => b[1] - a[1])
+}
+
+// Like countBy, but always includes every category in `categories`, zero-filling
+// ones absent from `rows` (order preserved) so a rare category never drops its bar.
+function countByFixed(rows, key, categories) {
+  const map = new Map(categories.map((c) => [c, 0]))
+  rows.forEach((r) => map.set(r[key], (map.get(r[key]) || 0) + 1))
+  return categories.map((c) => [c, map.get(c)])
 }
 
 function buildHBarChart(entries, color, textColor) {
@@ -92,7 +100,7 @@ export default function EpicenterHc() {
   const titleChart = useMemo(() => buildDoughnutChart(countBy(filtered, 'title'), categoryColors), [filtered, categoryColors])
   const segmentChart = useMemo(() => buildHBarChart(countBy(filtered, 'dept'), colors.accentBlue, colors.textPrimary), [filtered, colors])
   const managerChart = useMemo(() => buildHBarChart(countBy(filtered, 'manager'), colors.accentBlue, colors.textPrimary), [filtered, colors])
-  const statusChart = useMemo(() => buildVBarChart(countBy(filtered, 'empStatus'), colors.accentBlue, colors.textPrimary), [filtered, colors])
+  const statusChart = useMemo(() => buildVBarChart(countByFixed(filtered, 'empStatus', EMP_STATUSES), colors.accentBlue, colors.textPrimary), [filtered, colors])
   const locationChart = useMemo(() => buildHBarChart(countBy(filtered, 'country'), colors.accentBlue, colors.textPrimary), [filtered, colors])
 
   return (

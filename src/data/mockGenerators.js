@@ -33,7 +33,7 @@ export const weekEndingDates = [
 ]
 
 const NON_AGENT_TITLES = ['Manager', 'Director', 'Coach', 'Program Manager', 'Area Manager', 'Project Manager', 'Non-Title Employee']
-const EMP_STATUSES = ['Normal', 'Temporary Duty Assignment', 'New Hire', 'Work From Home', 'Leave of Absence']
+export const EMP_STATUSES = ['Normal', 'Temporary Duty Assignment', 'New Hire', 'Work From Home', 'Leave of Absence']
 
 export const issueLabels = ['Concession', 'Doc Request', 'Exchange', 'Order Status', 'Other', 'Provide Info', 'Refund', 'Rejected', 'Return']
 
