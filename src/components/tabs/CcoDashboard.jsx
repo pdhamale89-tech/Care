@@ -41,20 +41,20 @@ const VIEW_CONFIG = {
 }
 
 const METRIC_COLS = [
-  { key: 'contacts', label: 'Contacts Offered', base: 2200, unit: '', hf: true },
-  { key: 'orders', label: 'Orders', base: 1150, unit: '', hf: true },
-  { key: 'caseRate', label: 'Case Rate', base: 12.5, unit: '%', hf: true },
-  { key: 'cpsr', label: 'CPSR', base: 4.2, unit: '', hf: true },
-  { key: 'sla', label: 'Overall SLA', base: 91, unit: '%', hf: false },
-  { key: 'tcd', label: 'TCD', base: 48000, unit: '', hf: true },
+  { key: 'contacts', label: 'Contacts Offered', base: 2200, unit: '', hf: true, decimals: 0 },
+  { key: 'orders', label: 'Orders', base: 1150, unit: '', hf: true, decimals: 0 },
+  { key: 'caseRate', label: 'Case Rate', base: 12.5, unit: '%', hf: true, decimals: 1 },
+  { key: 'cpsr', label: 'CPSR', base: 4.2, unit: '', hf: true, decimals: 1 },
+  { key: 'sla', label: 'Overall SLA', base: 91, unit: '%', hf: false, decimals: 1 },
+  { key: 'tcd', label: 'TCD', base: 48000, unit: '', hf: true, decimals: 0 },
 ]
 
 const EXTRA_METRIC_CHARTS = [
-  { key: 'cases', label: 'Cases', base: 3200, unit: '', hf: true },
-  { key: 'activities', label: 'Activities', base: 16000, unit: '', hf: true },
-  { key: 'apc', label: 'APC', base: 4.8, unit: '', hf: false },
-  { key: 'icw', label: 'ICW', base: 850, unit: '', hf: false },
-  { key: 'ccpd', label: 'CCpD', base: 42, unit: '', hf: false },
+  { key: 'cases', label: 'Cases', base: 3200, unit: '', hf: true, decimals: 0 },
+  { key: 'activities', label: 'Activities', base: 16000, unit: '', hf: true, decimals: 0 },
+  { key: 'apc', label: 'APC', base: 4.8, unit: '', hf: false, decimals: 1 },
+  { key: 'icw', label: 'ICW', base: 850, unit: '', hf: false, decimals: 0 },
+  { key: 'ccpd', label: 'CCpD', base: 42, unit: '', hf: false, decimals: 0 },
 ]
 
 const CHANNELS = ['Voice', 'Email', 'Chat', 'W2C']
@@ -63,12 +63,12 @@ const TCD_CHANNELS = ['Voice', 'Email', 'Chat']
 const TCD_CHANNEL_BASES = [9500, 7400, 8600]
 const CHANNEL_SLA_BASES = [92, 88, 90, 85]
 const ISSUE_CHARTS = [
-  { id: 'issue1', title: 'Cases by Issue Type', base: 900, unit: '' },
-  { id: 'issue2', title: 'Activities by Issue Type', base: 1400, unit: '' },
-  { id: 'issue3', title: 'APC by Issue Type', base: 300, unit: '' },
-  { id: 'issue4', title: 'TTC by Issue Type', base: 60, unit: '' },
-  { id: 'issue5', title: 'Case Rate by Issue Type', base: 15, unit: '' },
-  { id: 'issue6', title: 'Ci1 by Issue Type', base: 20, unit: '%' },
+  { id: 'issue1', title: 'Cases', base: 900, unit: '' },
+  { id: 'issue2', title: 'Activities', base: 1400, unit: '' },
+  { id: 'issue3', title: 'APC', base: 300, unit: '' },
+  { id: 'issue4', title: 'TTC', base: 60, unit: '' },
+  { id: 'issue5', title: 'Case Rate', base: 15, unit: '' },
+  { id: 'issue6', title: 'Ci1', base: 20, unit: '%' },
 ]
 
 function getPeriodsForView(view, quarter, week) {
@@ -143,7 +143,7 @@ export default function CcoDashboard({ view }) {
   const keyMetrics = useMemo(() => {
     const li = periods.length - 1
     const metrics = METRIC_COLS.map((c, ci) => {
-      const { actual, forecast } = genKpiValue(c.base, seed + li * 7 + ci * 3)
+      const { actual, forecast } = genKpiValue(c.base, seed + li * 7 + ci * 3, c.decimals)
       const variance = actual - forecast
       return { ...c, actual, forecast, variance, vp: pct(actual, forecast), cls: varClass(variance) }
     })
@@ -160,7 +160,7 @@ export default function CcoDashboard({ view }) {
         labels,
         datasets: CHANNELS.map((c, ci) => ({
           label: c,
-          data: periods.map((_, i) => genKpiValue(CHANNEL_SLA_BASES[ci], seed + i * 13 + ci * 11 + 300).actual),
+          data: periods.map((_, i) => genKpiValue(CHANNEL_SLA_BASES[ci], seed + i * 13 + ci * 11 + 300, 1).actual),
           backgroundColor: seriesColors[ci],
           borderRadius: 4,
           datalabels: barDataLabels('%', seriesColors[ci]),
@@ -178,7 +178,7 @@ export default function CcoDashboard({ view }) {
   const tableRows = useMemo(
     () => periods.map((p, i) => ({
       period: p,
-      cells: METRIC_COLS.map((c, ci) => genKpiValue(c.base, seed + i * 7 + ci * 3)),
+      cells: METRIC_COLS.map((c, ci) => genKpiValue(c.base, seed + i * 7 + ci * 3, c.decimals)),
     })),
     [periods, seed],
   )
@@ -188,8 +188,8 @@ export default function CcoDashboard({ view }) {
       const shortLabels = periods.map(shortPeriodLabel)
       return [...METRIC_COLS, ...EXTRA_METRIC_CHARTS]
         .map((c, ci) => {
-          const actual = periods.map((_, i) => genKpiValue(c.base, seed + i * 7 + ci * 3).actual)
-          const forecast = periods.map((_, i) => genKpiValue(c.base, seed + i * 7 + ci * 3).forecast)
+          const actual = periods.map((_, i) => genKpiValue(c.base, seed + i * 7 + ci * 3, c.decimals).actual)
+          const forecast = periods.map((_, i) => genKpiValue(c.base, seed + i * 7 + ci * 3, c.decimals).forecast)
           return {
             key: c.key,
             title: c.hf ? `${c.label} — Actual vs Forecast` : `${c.label} — Actual`,
@@ -237,7 +237,7 @@ export default function CcoDashboard({ view }) {
       const max = Math.max(...c.actual)
       return {
         id: c.id,
-        label: c.title.replace(' by Issue Type', ''),
+        label: c.title,
         unit: c.unit,
         cells: c.actual.map((v) => ({ value: v, pct: max === min ? 0.5 : (v - min) / (max - min) })),
       }
@@ -255,7 +255,7 @@ export default function CcoDashboard({ view }) {
       const max = Math.max(...values)
       return { label, cells: values.map((v) => ({ value: v, pct: max === min ? 0.5 : (v - min) / (max - min) })) }
     })
-    return { metricLabel: col.title.replace(' by Issue Type', ''), unit: col.unit, rows }
+    return { metricLabel: col.title, unit: col.unit, rows }
   }, [heatmapDrill, periods, seed])
 
   const backlog = useMemo(() => {
