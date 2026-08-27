@@ -21,7 +21,7 @@ export function AppProvider({ children }) {
   const [ccoFilters, setCcoFilters] = useState({ subRegion: 'All', quarter: 'FQ1', week: 'All', classification: 'All' })
   const [ccoView, setCcoView] = useState('daily')
   const [outageFilters, setOutageFilters] = useState({ country: 'All', quarter: 'FQ1', week: 'All', manager: 'All', status: 'All', search: '' })
-  const [epicenterFilters, setEpicenterFilters] = useState({ country: 'All', manager: 'All', queue: 'All', dept: 'All', search: '' })
+  const [epicenterFilters, setEpicenterFilters] = useState({ weekEnding: 'All', vendor: 'All', manager: 'All', dbOsp: 'All' })
 
   const [toast, setToast] = useState({ show: false, msg: '', cls: '' })
 
@@ -42,7 +42,6 @@ export function AppProvider({ children }) {
     setActiveRegionState(region)
     setCcoFilters((prev) => ({ ...prev, subRegion: 'All' }))
     setOutageFilters((prev) => ({ ...prev, country: 'All' }))
-    setEpicenterFilters((prev) => ({ ...prev, country: 'All' }))
   }, [])
 
   const setCcoFilter = useCallback((key, value) => {
@@ -58,7 +57,7 @@ export function AppProvider({ children }) {
   const clearFilters = useCallback(() => {
     if (currentTab === 'cco') { setCcoFilters({ subRegion: 'All', quarter: 'FQ1', week: 'All', classification: 'All' }); setCcoView('daily') }
     else if (currentTab === 'outage') setOutageFilters({ country: 'All', quarter: 'FQ1', week: 'All', manager: 'All', status: 'All', search: '' })
-    else if (currentTab === 'epicenter') setEpicenterFilters({ country: 'All', manager: 'All', queue: 'All', dept: 'All', search: '' })
+    else if (currentTab === 'epicenter') setEpicenterFilters({ weekEnding: 'All', vendor: 'All', manager: 'All', dbOsp: 'All' })
   }, [currentTab])
 
   const showToast = useCallback((msg, cls) => {

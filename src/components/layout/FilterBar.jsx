@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useApp } from '../../context/AppContext.jsx'
-import { regionCountryMap, managers, queueNames, departments, getWeeksForQuarter, REGIONS } from '../../data/mockGenerators.js'
+import { regionCountryMap, managers, getWeeksForQuarter, REGIONS, vendors, weekEndingDates } from '../../data/mockGenerators.js'
 
 const QUARTERS = ['FQ1', 'FQ2', 'FQ3', 'FQ4']
 const CLASSIFICATIONS = ['All', 'FED', 'Global Sales', 'Consumer']
@@ -122,9 +122,17 @@ export default function FilterBar() {
             {isEpicenter && (
               <>
                 <div className="filter-group">
-                  <label>Sub Region / Country</label>
-                  <select value={epicenterFilters.country} onChange={(e) => setEpicenterFilter('country', e.target.value)}>
-                    {countries.map((c) => <option key={c}>{c}</option>)}
+                  <label>Week Ending</label>
+                  <select value={epicenterFilters.weekEnding} onChange={(e) => setEpicenterFilter('weekEnding', e.target.value)}>
+                    <option>All</option>
+                    {weekEndingDates.map((w) => <option key={w}>{w}</option>)}
+                  </select>
+                </div>
+                <div className="filter-group">
+                  <label>Vendor</label>
+                  <select value={epicenterFilters.vendor} onChange={(e) => setEpicenterFilter('vendor', e.target.value)}>
+                    <option>All</option>
+                    {vendors.map((v) => <option key={v}>{v}</option>)}
                   </select>
                 </div>
                 <div className="filter-group">
@@ -135,22 +143,12 @@ export default function FilterBar() {
                   </select>
                 </div>
                 <div className="filter-group">
-                  <label>Queue Name</label>
-                  <select value={epicenterFilters.queue} onChange={(e) => setEpicenterFilter('queue', e.target.value)}>
+                  <label>DB/OSP</label>
+                  <select value={epicenterFilters.dbOsp} onChange={(e) => setEpicenterFilter('dbOsp', e.target.value)}>
                     <option>All</option>
-                    {queueNames.map((q) => <option key={q}>{q}</option>)}
+                    <option>DB</option>
+                    <option>OSP</option>
                   </select>
-                </div>
-                <div className="filter-group">
-                  <label>Department</label>
-                  <select value={epicenterFilters.dept} onChange={(e) => setEpicenterFilter('dept', e.target.value)}>
-                    <option>All</option>
-                    {departments.map((d) => <option key={d.name}>{d.name}</option>)}
-                  </select>
-                </div>
-                <div className="filter-group">
-                  <label>Search Agent / Badge ID</label>
-                  <input type="text" placeholder="Type name or badge ID..." value={epicenterFilters.search} onChange={(e) => setEpicenterFilter('search', e.target.value)} />
                 </div>
               </>
             )}

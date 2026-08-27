@@ -26,6 +26,12 @@ export const departments = [
 export const queueNames = ['Voice - Sales', 'Voice - Support', 'Voice - Escalations', 'Email', 'Chat', 'W2C']
 export const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
+export const vendors = ['Concentrix', 'TaskUs', 'Foundever', 'Alorica', 'Teleperformance']
+export const weekEndingDates = [
+  'Aug 22, 2026', 'Aug 15, 2026', 'Aug 08, 2026', 'Aug 01, 2026',
+  'Jul 25, 2026', 'Jul 18, 2026', 'Jul 11, 2026', 'Jul 04, 2026',
+]
+
 export const issueLabels = ['Concession', 'Doc Request', 'Exchange', 'Order Status', 'Other', 'Provide Info', 'Refund', 'Rejected', 'Return']
 
 export const WEEK_DAYS = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri']
@@ -138,7 +144,10 @@ export function generateEpicenterRoster(region) {
     const dept = departments[Math.floor(seededRandom(seed + 7) * departments.length)]
     const manager = managers[Math.floor(seededRandom(seed + 8) * managers.length)]
     const country = countries[Math.floor(seededRandom(seed + 9) * countries.length)]
-    roster.push({ name, badgeId, email, hireDate, queue, dept: dept.name, deptCode: dept.code, manager, country })
+    const dbOsp = seededRandom(seed + 10) > 0.35 ? 'OSP' : 'DB'
+    const vendor = dbOsp === 'OSP' ? vendors[Math.floor(seededRandom(seed + 11) * vendors.length)] : 'Internal'
+    const weekEnding = weekEndingDates[Math.floor(seededRandom(seed + 12) * weekEndingDates.length)]
+    roster.push({ name, badgeId, email, hireDate, queue, dept: dept.name, deptCode: dept.code, manager, country, dbOsp, vendor, weekEnding })
   }
   return roster
 }
