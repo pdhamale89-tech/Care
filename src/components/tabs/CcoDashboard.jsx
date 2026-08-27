@@ -230,18 +230,21 @@ export default function CcoDashboard({ view }) {
     [seed, colors],
   )
 
+  const heatmapPeriodLabels = useMemo(() => periods.map(shortPeriodLabel), [periods])
+
   const issueHeatmap = useMemo(
-    () => issueCharts.map((c) => {
-      const min = Math.min(...c.actual)
-      const max = Math.max(...c.actual)
+    () => ISSUE_CHARTS.map((c, ci) => {
+      const values = periods.map((_, i) => genKpiValue(c.base, seed + i * 7 + ci * 3 + 500).actual)
+      const min = Math.min(...values)
+      const max = Math.max(...values)
       return {
         id: c.id,
         label: c.title.replace(' by Issue Type', ''),
         unit: c.unit,
-        cells: c.actual.map((v) => ({ value: v, pct: max === min ? 0.5 : (v - min) / (max - min) })),
+        cells: values.map((v) => ({ value: v, pct: max === min ? 0.5 : (v - min) / (max - min) })),
       }
     }),
-    [issueCharts],
+    [periods, seed],
   )
 
   const backlog = useMemo(() => {
@@ -465,7 +468,7 @@ export default function CcoDashboard({ view }) {
         <div className="card">
           <div className="card-header">
             <div className="card-title">
-              Issue Type Metrics Heatmap <InfoBtn tip="<strong>Purpose</strong>Actual values for Cases, Activities, APC, TTC, Case Rate and Ci1 across all issue types in one view — color intensity shows relative magnitude within each metric row." />
+              Issue Type Metrics Heatmap <InfoBtn tip={`<strong>Purpose</strong>Actual values for Cases, Activities, APC, TTC, Case Rate and Ci1 over time — ${view} view — color intensity shows relative magnitude within each metric row.`} />
             </div>
           </div>
           <div className="heatmap-wrap">
@@ -473,7 +476,7 @@ export default function CcoDashboard({ view }) {
               <thead>
                 <tr>
                   <th></th>
-                  {issueLabels.map((l) => <th key={l}>{l}</th>)}
+                  {heatmapPeriodLabels.map((l, i) => <th key={i}>{l}</th>)}
                 </tr>
               </thead>
               <tbody>
