@@ -10,7 +10,7 @@ import { barDataLabels } from '../../charts/datalabels.js'
 import DownloadBtn from '../common/DownloadBtn.jsx'
 import Modal from '../common/Modal.jsx'
 import InfoBtn from '../common/InfoBtn.jsx'
-import { issueComboConfig } from '../../charts/chartConfigs.js'
+import { issueTypeBarConfig } from '../../charts/chartConfigs.js'
 
 const METRIC_CHART_TIPS = {
   contacts: 'Contacts Offered, Actual vs Forecast, by period.',
@@ -26,12 +26,12 @@ const METRIC_CHART_TIPS = {
 }
 
 const ISSUE_CHART_TIPS = {
-  issue1: 'Case volume broken down by issue type, Actual vs Forecast with variance.',
-  issue2: 'Activity volume broken down by issue type, Actual vs Forecast with variance.',
-  issue3: 'Activities Per Case broken down by issue type, Actual vs Forecast with variance.',
-  issue4: 'Time To Close broken down by issue type, Actual vs Forecast with variance.',
-  issue5: 'Case Rate (%) broken down by issue type, Actual vs Forecast with variance.',
-  issue6: 'Ci1 (%) broken down by issue type, Actual vs Forecast with variance.',
+  issue1: 'Case volume (Actual), broken down by issue type.',
+  issue2: 'Activity volume (Actual), broken down by issue type.',
+  issue3: 'Activities Per Case (Actual), broken down by issue type.',
+  issue4: 'Time To Close (Actual), broken down by issue type.',
+  issue5: 'Case Rate (%, Actual), broken down by issue type.',
+  issue6: 'Ci1 (%, Actual), broken down by issue type.',
 }
 
 const VIEW_CONFIG = {
@@ -224,9 +224,7 @@ export default function CcoDashboard({ view }) {
   const issueCharts = useMemo(
     () => ISSUE_CHARTS.map(({ id, title, base, unit }) => {
       const actual = issueLabels.map((_, i) => Math.round(base * (0.8 + ((Math.sin((seed + i) * 2.7) + 1) / 2) * 0.5)))
-      const forecast = issueLabels.map((_, i) => Math.round(base * (0.9 + i * 0.01)))
-      const variance = actual.map((a, i) => a - forecast[i])
-      return { id, title, unit, actual, config: issueComboConfig(issueLabels, actual, forecast, variance, unit, colors) }
+      return { id, title, unit, actual, config: issueTypeBarConfig(issueLabels, actual, unit, colors) }
     }),
     [seed, colors],
   )
