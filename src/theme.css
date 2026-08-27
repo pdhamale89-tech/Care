@@ -379,3 +379,6 @@ tr.group-row td { background: var(--table-header); font-weight: 800; color: var(
 #holTip .ht-name { color: #fff; }
 #holTip .ht-meta { color: #9ca3af; font-size: 9px; }
 #holTip .ht-none { color: #6b7280; font-style: italic; }
+
+.holiday-count { font-size: 10px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
+.holiday-tbl-wrap { max-height: 520px; overflow-y: auto; }
