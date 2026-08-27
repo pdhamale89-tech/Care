@@ -29,7 +29,7 @@ const ISSUE_CHART_TIPS = {
   issue1: 'Case volume (Actual), broken down by issue type.',
   issue2: 'Activity volume (Actual), broken down by issue type.',
   issue3: 'Activities Per Case (Actual), broken down by issue type.',
-  issue4: 'Time To Close (Actual), broken down by issue type.',
+  issue4: 'TCD (Actual), broken down by issue type.',
   issue5: 'Case Rate (%, Actual), broken down by issue type.',
   issue6: 'Ci1 (%, Actual), broken down by issue type.',
 }
@@ -82,7 +82,7 @@ const ISSUE_CHARTS = [
   { id: 'issue1', title: 'Cases', base: 900, unit: '' },
   { id: 'issue2', title: 'Activities', base: 1400, unit: '' },
   { id: 'issue3', title: 'APC', base: 300, unit: '' },
-  { id: 'issue4', title: 'TTC', base: 60, unit: '' },
+  { id: 'issue4', title: 'TCD', base: 60, unit: '' },
   { id: 'issue5', title: 'Case Rate', base: 15, unit: '' },
   { id: 'issue6', title: 'Ci1', base: 20, unit: '%' },
 ]
@@ -567,7 +567,7 @@ export default function CcoDashboard({ view }) {
               <InfoBtn
                 tip={heatmapDrill
                   ? `<strong>Purpose</strong>${heatmapDrillData.metricLabel} for every issue type, broken down by period (${view} view). Use the Daily / Weekly / Quarterly buttons above to change granularity.`
-                  : '<strong>Purpose</strong>Actual values for Cases, Activities, APC, TTC, Case Rate and Ci1 across all 9 issue types. Use the Drill Down button on a row to see that metric broken down by issue type and period.'}
+                  : '<strong>Purpose</strong>Actual values for Cases, Activities, APC, TCD, Case Rate and Ci1 across all 9 issue types. Use the Drill Down button on a row to see that metric broken down by issue type and period.'}
               />
             </div>
           </div>
