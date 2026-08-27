@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Bar } from 'react-chartjs-2'
 import { useApp } from '../../context/AppContext.jsx'
 import {
@@ -156,14 +156,6 @@ export default function CcoDashboard({ view }) {
   )
   const periods = useMemo(() => getPeriodsForView(view, quarter, week), [view, quarter, week])
 
-  const quarterLabel = quarter.includes('All') || quarter.length === 0 ? 'All Quarters' : quarter.join(', ')
-  const weekLabel = week.includes('All') || week.length === 0 ? 'All Weeks' : week.join(', ')
-  const tableTitle = {
-    daily: `Daily View — ${quarterLabel}, Week ${weekLabel} (${periods.length} Days)`,
-    weekly: `Weekly View — ${quarterLabel} (${periods.length} Weeks)`,
-    quarterly: `Quarterly View — ${quarterLabel} (${periods.length} Quarters)`,
-  }[view]
-
   const keyMetrics = useMemo(() => {
     const li = periods.length - 1
     const metrics = METRIC_COLS.map((c, ci) => {
@@ -237,14 +229,6 @@ export default function CcoDashboard({ view }) {
       },
     }
   }, [channelModalKey, periods, seed, colors])
-
-  const tableRows = useMemo(
-    () => periods.map((p, i) => ({
-      period: p,
-      cells: METRIC_COLS.map((c, ci) => genKpiValue(c.base, seed + i * 7 + ci * 3, c.decimals)),
-    })),
-    [periods, seed],
-  )
 
   const metricCharts = useMemo(
     () => {
@@ -391,60 +375,6 @@ export default function CcoDashboard({ view }) {
           <div className="kpi-label">Headcount</div>
           <div className="kpi-value">{fmt(keyMetrics.headcount)}</div>
           <div className="kpi-sub">Actual only</div>
-        </div>
-      </div>
-
-      <div className="section-div">
-        <h2>{cfg.title}</h2>
-      </div>
-      <div className="card">
-        <div className="card-header">
-          <div className="card-title">
-            {tableTitle} <InfoBtn tip="<strong>Purpose</strong>Period-by-period Actual vs Forecast for Contacts Offered, Orders, Case Rate, CPSR, Overall SLA and TCD." />
-          </div>
-          <DownloadBtn
-            filename={`cco-${view}-table`}
-            rows={[
-              ['Period', ...METRIC_COLS.flatMap((c) => (c.hf ? [c.label + ' (Actual)', c.label + ' (Forecast)'] : [c.label + ' (Actual)']))],
-              ...tableRows.map((row) => [row.period, ...row.cells.flatMap((cell, ci) => (METRIC_COLS[ci].hf ? [cell.actual, cell.forecast] : [cell.actual]))]),
-            ]}
-          />
-        </div>
-        <div className="tw scroll">
-          <table>
-            <thead>
-              <tr>
-                <th rowSpan={2}>Period</th>
-                <th colSpan={2}>Contacts Offered</th>
-                <th colSpan={2}>Orders</th>
-                <th colSpan={2}>Case Rate</th>
-                <th colSpan={2}>CPSR</th>
-                <th>Overall SLA</th>
-                <th colSpan={2}>TCD</th>
-              </tr>
-              <tr>
-                <th>Actual</th><th>Forecast</th>
-                <th>Actual</th><th>Forecast</th>
-                <th>Actual</th><th>Forecast</th>
-                <th>Actual</th><th>Forecast</th>
-                <th>Actual</th>
-                <th>Actual</th><th>Forecast</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tableRows.map((row) => (
-                <tr key={row.period}>
-                  <td>{row.period}</td>
-                  {row.cells.map((cell, ci) => (
-                    <Fragment key={METRIC_COLS[ci].key}>
-                      <td>{fmt(cell.actual)}{METRIC_COLS[ci].unit}</td>
-                      {METRIC_COLS[ci].hf && <td className="fcst-cell">{fmt(cell.forecast)}{METRIC_COLS[ci].unit}</td>}
-                    </Fragment>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
 
@@ -668,7 +598,7 @@ export default function CcoDashboard({ view }) {
           <>
             {channelTrendChart.label} by Channel — Trend Detail
             {' '}
-            <InfoBtn onDark tip={`<strong>Purpose</strong>${channelTrendChart.label} Actual vs Forecast by channel, ${view} view. Uses the same numbers shown in the ${cfg.title}.`} />
+            <InfoBtn onDark tip={`<strong>Purpose</strong>${channelTrendChart.label} Actual vs Forecast by channel, ${view} view — split from the same period-level numbers used across this dashboard.`} />
           </>
         )}
       >
