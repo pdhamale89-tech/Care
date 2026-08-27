@@ -167,7 +167,7 @@ export default function EpicenterHc() {
       </div>
       <div className="card">
         <div className="card-header">
-          <div className="card-title">Roster ({filtered.length})</div>
+          <div className="card-title"></div>
           <DownloadBtn
             filename="epicenter-roster"
             rows={[
