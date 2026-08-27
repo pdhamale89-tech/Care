@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Bar, Doughnut } from 'react-chartjs-2'
 import { useApp } from '../../context/AppContext.jsx'
-import { generateEpicenterRoster, fmt, EMP_STATUSES } from '../../data/mockGenerators.js'
+import { generateEpicenterRoster, fmt, EMP_STATUSES, SEGMENTS } from '../../data/mockGenerators.js'
 import { getColors } from '../../theme/colors.js'
 import { barDataLabels, hBarDataLabels, doughnutDataLabels } from '../../charts/datalabels.js'
 import DownloadBtn from '../common/DownloadBtn.jsx'
@@ -98,10 +98,10 @@ export default function EpicenterHc() {
   )
 
   const titleChart = useMemo(() => buildDoughnutChart(countBy(filtered, 'title'), categoryColors), [filtered, categoryColors])
-  const segmentChart = useMemo(() => buildHBarChart(countBy(filtered, 'dept'), colors.accentBlue, colors.textPrimary), [filtered, colors])
+  const segmentChart = useMemo(() => buildHBarChart(countByFixed(filtered, 'segment', SEGMENTS), colors.accentBlue, colors.textPrimary), [filtered, colors])
   const managerChart = useMemo(() => buildHBarChart(countBy(filtered, 'manager'), colors.accentBlue, colors.textPrimary), [filtered, colors])
   const statusChart = useMemo(() => buildVBarChart(countByFixed(filtered, 'empStatus', EMP_STATUSES), colors.accentBlue, colors.textPrimary), [filtered, colors])
-  const locationChart = useMemo(() => buildHBarChart(countBy(filtered, 'country'), colors.accentBlue, colors.textPrimary), [filtered, colors])
+  const locationChart = useMemo(() => buildHBarChart(countBy(filtered, 'location'), colors.accentBlue, colors.textPrimary), [filtered, colors])
 
   return (
     <div className="tab-panel active">
@@ -171,8 +171,16 @@ export default function EpicenterHc() {
           <DownloadBtn
             filename="epicenter-roster"
             rows={[
-              ['Name', 'Badge ID', 'Email', 'Hire Date', 'Week Ending', 'Vendor', 'DB/OSP', 'Queue', 'Dept', 'Code', 'Manager'],
-              ...filtered.map((a) => [a.name, a.badgeId, a.email, a.hireDate, a.weekEnding, a.vendor, a.dbOsp, a.queue, a.dept, a.deptCode, a.manager]),
+              [
+                'Name', 'Badge ID', 'Email', 'Hire Date', 'Week Ending', 'Vendor', 'DB/OSP', 'Queue', 'Dept', 'Code', 'Manager',
+                'Business Unit', 'Region', 'Segment', 'Location', 'Sub Queue Description', 'Title',
+                'EWFM Dept Code', 'EWFM Dept Name', 'EWFM Team Code', 'EWFM Team Name', 'ACD/Extension', 'Switch',
+              ],
+              ...filtered.map((a) => [
+                a.name, a.badgeId, a.email, a.hireDate, a.weekEnding, a.vendor, a.dbOsp, a.queue, a.dept, a.deptCode, a.manager,
+                a.businessUnit, a.region, a.segment, a.location, a.subQueueDesc, a.title,
+                a.ewfmDeptCode, a.ewfmDeptName, a.ewfmTeamCode, a.ewfmTeamName, a.acdExtension, a.switchCode,
+              ]),
             ]}
           />
         </div>
@@ -183,6 +191,11 @@ export default function EpicenterHc() {
                 <th>Name</th><th>Badge ID</th><th>Email</th><th>Hire Date</th>
                 <th>Week Ending</th><th>Vendor</th><th>DB/OSP</th>
                 <th>Queue</th><th>Dept</th><th>Code</th><th>Manager</th>
+                <th>Business Unit</th><th>Region</th><th>Segment</th><th>Location</th>
+                <th>Sub Queue Description</th><th>Title</th>
+                <th>EWFM Dept Code</th><th>EWFM Dept Name</th>
+                <th>EWFM Team Code</th><th>EWFM Team Name</th>
+                <th>ACD/Extension</th><th>Switch</th>
               </tr>
             </thead>
             <tbody>
@@ -199,6 +212,18 @@ export default function EpicenterHc() {
                   <td>{a.dept}</td>
                   <td><span className="pill-tag">{a.deptCode}</span></td>
                   <td>{a.manager}</td>
+                  <td>{a.businessUnit}</td>
+                  <td>{a.region}</td>
+                  <td>{a.segment}</td>
+                  <td>{a.location}</td>
+                  <td>{a.subQueueDesc}</td>
+                  <td>{a.title}</td>
+                  <td>{a.ewfmDeptCode}</td>
+                  <td>{a.ewfmDeptName}</td>
+                  <td>{a.ewfmTeamCode}</td>
+                  <td>{a.ewfmTeamName}</td>
+                  <td>{a.acdExtension}</td>
+                  <td>{a.switchCode}</td>
                 </tr>
               ))}
             </tbody>

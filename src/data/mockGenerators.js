@@ -35,6 +35,17 @@ export const weekEndingDates = [
 const NON_AGENT_TITLES = ['Manager', 'Director', 'Coach', 'Program Manager', 'Area Manager', 'Project Manager', 'Non-Title Employee']
 export const EMP_STATUSES = ['Normal', 'Temporary Duty Assignment', 'New Hire', 'Work From Home', 'Leave of Absence']
 
+export const SEGMENTS = ['Customer Care', 'Central', 'Executive Escalations', 'Help a Customer', 'Federal', 'OMS Case Management', 'Automation & Processes']
+export const LOCATIONS = ['Bangalore', 'Pune', 'Hyderabad', 'Cairo', 'Twin Falls', 'Bratislava', 'Manila', 'Dalian', 'Casablanca', 'Panama City']
+const BUSINESS_UNIT = 'GBS- QIM(Care)'
+const EWFM_DEPTS = [
+  { code: 'Not Assigned', name: 'Not Assigned' },
+  { code: 'CMAM.CESGB.DEMENM', name: 'Consumer Care - EMEA' },
+  { code: 'CPAJ.CESGB.DPQENM', name: 'Consumer Care - APJ' },
+  { code: '06TFED', name: 'TF Fed (was L2)' },
+]
+const SWITCHES = ['DCEC01', 'DCEC02', 'DCEC03', 'DCEC04']
+
 export const issueLabels = ['Concession', 'Doc Request', 'Exchange', 'Order Status', 'Other', 'Provide Info', 'Refund', 'Rejected', 'Return']
 
 export const WEEK_DAYS = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri']
@@ -157,7 +168,28 @@ export function generateEpicenterRoster(region) {
       : statusRoll > 0.05 ? EMP_STATUSES[2]
       : statusRoll > 0.02 ? EMP_STATUSES[3]
       : EMP_STATUSES[4]
-    roster.push({ name, badgeId, email, hireDate, queue, dept: dept.name, deptCode: dept.code, manager, country, dbOsp, vendor, weekEnding, title, empStatus })
+    const segRoll = seededRandom(seed + 16)
+    const segment = segRoll > 0.14 ? SEGMENTS[0]
+      : segRoll > 0.115 ? SEGMENTS[1]
+      : segRoll > 0.085 ? SEGMENTS[2]
+      : segRoll > 0.06 ? SEGMENTS[3]
+      : segRoll > 0.035 ? SEGMENTS[4]
+      : segRoll > 0.015 ? SEGMENTS[5]
+      : SEGMENTS[6]
+    const location = LOCATIONS[Math.floor(seededRandom(seed + 17) * LOCATIONS.length)]
+    const ewfmDept = seededRandom(seed + 18) > 0.5
+      ? EWFM_DEPTS[0]
+      : EWFM_DEPTS[1 + Math.floor(seededRandom(seed + 19) * (EWFM_DEPTS.length - 1))]
+    const acdExtension = seededRandom(seed + 20) > 0.6 ? 6000000 + Math.floor(seededRandom(seed + 21) * 999999) : 0
+    const switchCode = acdExtension ? SWITCHES[Math.floor(seededRandom(seed + 22) * SWITCHES.length)] : ''
+    const subQueueDesc = `${queue.replace(/[^A-Za-z]/g, '').toUpperCase().slice(0, 3)}${dept.name.replace(/[^A-Za-z]/g, '').toUpperCase().slice(0, 3)}.XXXXX.XXX.${location.toUpperCase().replace(/\s/g, '')}XXXX`
+    roster.push({
+      name, badgeId, email, hireDate, queue, dept: dept.name, deptCode: dept.code, manager, country, dbOsp, vendor, weekEnding, title, empStatus,
+      businessUnit: BUSINESS_UNIT, region, segment, location, subQueueDesc,
+      ewfmDeptCode: ewfmDept.code, ewfmDeptName: ewfmDept.name,
+      ewfmTeamCode: `Care.${region}`, ewfmTeamName: `Care.${region}`,
+      acdExtension, switchCode,
+    })
   }
   return roster
 }
