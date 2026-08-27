@@ -9,7 +9,30 @@ import { getColors } from '../../theme/colors.js'
 import { barDataLabels } from '../../charts/datalabels.js'
 import DownloadBtn from '../common/DownloadBtn.jsx'
 import Modal from '../common/Modal.jsx'
+import InfoBtn from '../common/InfoBtn.jsx'
 import { issueComboConfig } from '../../charts/chartConfigs.js'
+
+const METRIC_CHART_TIPS = {
+  contacts: 'Contacts Offered, Actual vs Forecast, by period.',
+  orders: 'Orders processed, Actual vs Forecast, by period.',
+  caseRate: 'Case Rate (%), Actual vs Forecast, by period.',
+  cpsr: 'Contacts Per Service Request, Actual vs Forecast, by period.',
+  tcd: 'Total Contact Duration, Actual vs Forecast, by period.',
+  cases: 'Cases handled, Actual vs Forecast, by period.',
+  activities: 'Activities logged, Actual vs Forecast, by period.',
+  apc: 'Activities Per Case (decimal), Actual only, by period.',
+  icw: 'ICW volume, Actual only, by period.',
+  ccpd: 'Cases Closed per Day, Actual only, by period.',
+}
+
+const ISSUE_CHART_TIPS = {
+  issue1: 'Case volume broken down by issue type, Actual vs Forecast with variance.',
+  issue2: 'Activity volume broken down by issue type, Actual vs Forecast with variance.',
+  issue3: 'Activities Per Case broken down by issue type, Actual vs Forecast with variance.',
+  issue4: 'Time To Close broken down by issue type, Actual vs Forecast with variance.',
+  issue5: 'Case Rate (%) broken down by issue type, Actual vs Forecast with variance.',
+  issue6: 'Ci1 (%) broken down by issue type, Actual vs Forecast with variance.',
+}
 
 const VIEW_CONFIG = {
   daily: { title: 'Daily Performance Table', sub: 'Day-level performance (Sat–Fri week)' },
@@ -259,7 +282,9 @@ export default function CcoDashboard({ view }) {
       </div>
       <div className="card">
         <div className="card-header">
-          <div className="card-title">{tableTitle}</div>
+          <div className="card-title">
+            {tableTitle} <InfoBtn tip="<strong>Purpose</strong>Period-by-period Actual vs Forecast for Contacts Offered, Orders, Case Rate, CPSR, Overall SLA and TCD." />
+          </div>
           <DownloadBtn
             filename={`cco-${view}-table`}
             rows={[
@@ -312,7 +337,11 @@ export default function CcoDashboard({ view }) {
       <div className="s-grid">
         {metricCharts.map((c) => (
           <div className="card" key={c.key}>
-            <div className="card-header"><div className="card-title">{c.title}</div></div>
+            <div className="card-header">
+              <div className="card-title">
+                {c.title} <InfoBtn tip={`<strong>Purpose</strong>${METRIC_CHART_TIPS[c.key] || ''}`} />
+              </div>
+            </div>
             <div className="chart-container">
               <Bar data={c.config.data} options={c.config.options} />
             </div>
@@ -325,7 +354,9 @@ export default function CcoDashboard({ view }) {
       </div>
       <div className="card">
         <div className="card-header">
-          <div className="card-title">Channel Volume</div>
+          <div className="card-title">
+            Channel Volume <InfoBtn tip="<strong>Purpose</strong>Contacts offered per channel (Voice, Email, Chat, W2C), Actual vs Forecast." />
+          </div>
           <DownloadBtn filename="cco-channel-table" rows={[['Channel', 'Actual', 'Forecast', 'Variance', 'Variance %'], ...table1Rows.map((r) => [r.channel, r.actual, r.forecast, r.variance, r.vp.toFixed(1) + '%'])]} />
         </div>
         <div className="tw">
@@ -351,7 +382,9 @@ export default function CcoDashboard({ view }) {
       </div>
       <div className="card">
         <div className="card-header">
-          <div className="card-title">Contact Type Duration</div>
+          <div className="card-title">
+            Contact Type Duration <InfoBtn tip="<strong>Purpose</strong>Total Contact Duration per channel (Voice, Email, Chat), Actual vs Forecast." />
+          </div>
           <DownloadBtn filename="cco-tcd-table" rows={[['Channel', 'Actual', 'Forecast', 'Variance', 'Var %'], ...table3Rows.map((r) => [r.channel, r.actual, r.forecast, r.variance, r.vp.toFixed(1) + '%'])]} />
         </div>
         <div className="tw">
@@ -378,7 +411,11 @@ export default function CcoDashboard({ view }) {
       <div className="s-grid thirds">
         {issueCharts.slice(0, 3).map((c) => (
           <div className="card" key={c.id}>
-            <div className="card-header"><div className="card-title">{c.title}</div></div>
+            <div className="card-header">
+              <div className="card-title">
+                {c.title} <InfoBtn tip={`<strong>Purpose</strong>${ISSUE_CHART_TIPS[c.id] || ''}`} />
+              </div>
+            </div>
             <div className="chart-container">
               <Bar data={c.config.data} options={c.config.options} />
             </div>
@@ -388,7 +425,11 @@ export default function CcoDashboard({ view }) {
       <div className="s-grid thirds">
         {issueCharts.slice(3).map((c) => (
           <div className="card" key={c.id}>
-            <div className="card-header"><div className="card-title">{c.title}</div></div>
+            <div className="card-header">
+              <div className="card-title">
+                {c.title} <InfoBtn tip={`<strong>Purpose</strong>${ISSUE_CHART_TIPS[c.id] || ''}`} />
+              </div>
+            </div>
             <div className="chart-container">
               <Bar data={c.config.data} options={c.config.options} />
             </div>
@@ -412,7 +453,11 @@ export default function CcoDashboard({ view }) {
         </div>
       </div>
 
-      <Modal open={slaModalOpen} onClose={() => setSlaModalOpen(false)} title="SLA by Channel — Trend Detail">
+      <Modal
+        open={slaModalOpen}
+        onClose={() => setSlaModalOpen(false)}
+        title={<>SLA by Channel — Trend Detail <InfoBtn onDark tip="<strong>Purpose</strong>SLA % by channel (Voice, Email, Chat, W2C) across the selected period range." /></>}
+      >
         <div className="chart-container" style={{ height: 280 }}>
           <Bar data={channelSlaTrendChart.data} options={channelSlaTrendChart.options} />
         </div>

@@ -5,6 +5,7 @@ import { generateEpicenterRoster, fmt, EMP_STATUSES, SEGMENTS } from '../../data
 import { getColors } from '../../theme/colors.js'
 import { barDataLabels, hBarDataLabels, doughnutDataLabels } from '../../charts/datalabels.js'
 import DownloadBtn from '../common/DownloadBtn.jsx'
+import InfoBtn from '../common/InfoBtn.jsx'
 
 function countBy(rows, key) {
   const map = new Map()
@@ -129,13 +130,21 @@ export default function EpicenterHc() {
       </div>
       <div className="s-grid">
         <div className="card">
-          <div className="card-header"><div className="card-title">Title wise Employee Count</div></div>
+          <div className="card-header">
+            <div className="card-title">
+              Title wise Employee Count <InfoBtn tip="<strong>Purpose</strong>Headcount split by employee title/role for the filtered team." />
+            </div>
+          </div>
           <div className="chart-container">
             <Doughnut data={titleChart.data} options={titleChart.options} />
           </div>
         </div>
         <div className="card">
-          <div className="card-header"><div className="card-title">Segment wise Employee Count</div></div>
+          <div className="card-header">
+            <div className="card-title">
+              Segment wise Employee Count <InfoBtn tip="<strong>Purpose</strong>Headcount split by business segment for the filtered team." />
+            </div>
+          </div>
           <div className="chart-container">
             <Bar data={segmentChart.data} options={segmentChart.options} />
           </div>
@@ -143,19 +152,31 @@ export default function EpicenterHc() {
       </div>
       <div className="s-grid thirds">
         <div className="card">
-          <div className="card-header"><div className="card-title">Manager wise Employee Count</div></div>
+          <div className="card-header">
+            <div className="card-title">
+              Manager wise Employee Count <InfoBtn tip="<strong>Purpose</strong>Headcount split by reporting manager for the filtered team." />
+            </div>
+          </div>
           <div className="chart-container">
             <Bar data={managerChart.data} options={managerChart.options} />
           </div>
         </div>
         <div className="card">
-          <div className="card-header"><div className="card-title">Status wise Employee Count</div></div>
+          <div className="card-header">
+            <div className="card-title">
+              Status wise Employee Count <InfoBtn tip="<strong>Purpose</strong>Headcount split by current employment status (Normal, Temporary Duty, New Hire, Work From Home, Leave of Absence)." />
+            </div>
+          </div>
           <div className="chart-container">
             <Bar data={statusChart.data} options={statusChart.options} />
           </div>
         </div>
         <div className="card">
-          <div className="card-header"><div className="card-title">Location wise Employee Count</div></div>
+          <div className="card-header">
+            <div className="card-title">
+              Location wise Employee Count <InfoBtn tip="<strong>Purpose</strong>Headcount split by work location for the filtered team." />
+            </div>
+          </div>
           <div className="chart-container">
             <Bar data={locationChart.data} options={locationChart.options} />
           </div>
@@ -167,7 +188,9 @@ export default function EpicenterHc() {
       </div>
       <div className="card">
         <div className="card-header">
-          <div className="card-title"></div>
+          <div className="card-title">
+            <InfoBtn tip="<strong>Purpose</strong>Full roster detail — business unit, segment, location, EWFM and ACD assignment for the filtered team." />
+          </div>
           <DownloadBtn
             filename="epicenter-roster"
             rows={[

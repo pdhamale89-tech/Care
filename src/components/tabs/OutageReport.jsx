@@ -5,6 +5,7 @@ import { generateAgentRoster } from '../../data/mockGenerators.js'
 import { getColors } from '../../theme/colors.js'
 import { stackedBarConfig } from '../../charts/chartConfigs.js'
 import DownloadBtn from '../common/DownloadBtn.jsx'
+import InfoBtn from '../common/InfoBtn.jsx'
 
 const STATUS_CLASS = {
   Available: 'available',
@@ -113,7 +114,9 @@ export default function OutageReport() {
       {view === 'agent' && (
         <div className="card">
           <div className="card-header">
-            <div className="card-title">Agent Status</div>
+            <div className="card-title">
+              Agent Status <InfoBtn tip="<strong>Purpose</strong>Agent-level schedule adherence and outage detail for the selected filters." />
+            </div>
             <DownloadBtn
               filename="outage-agent-wise"
               rows={[
@@ -161,7 +164,9 @@ export default function OutageReport() {
         <>
           <div className="card">
             <div className="card-header">
-              <div className="card-title">Manager Status</div>
+              <div className="card-title">
+                Manager Status <InfoBtn tip="<strong>Purpose</strong>Planned, Unplanned and Total outage % rolled up by manager, averaged across their agents." />
+              </div>
               <DownloadBtn
                 filename="outage-manager-wise"
                 rows={[
@@ -205,7 +210,11 @@ export default function OutageReport() {
           </div>
 
           <div className="card">
-            <div className="card-header"><div className="card-title">Outage Breakdown by Manager</div></div>
+            <div className="card-header">
+              <div className="card-title">
+                Outage Breakdown by Manager <InfoBtn tip="<strong>Purpose</strong>Available, Unplanned Outage and Scheduled Off agent counts stacked by manager." />
+              </div>
+            </div>
             <div className="chart-container">
               <Bar data={chart.data} options={chart.options} />
             </div>

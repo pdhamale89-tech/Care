@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { FISCAL_QUARTERS } from '../../data/fiscalCalendar.js'
 import { getHolidaysForWeek } from '../../data/holidays.js'
 import HolidayCalendar from './HolidayCalendar.jsx'
+import InfoBtn from '../common/InfoBtn.jsx'
 
 export default function FiscalCalendar() {
   const [view, setView] = useState('calendar')
@@ -25,7 +26,10 @@ export default function FiscalCalendar() {
   return (
     <div className="tab-panel active">
       <div className="section-div" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h2>{view === 'calendar' ? 'Fiscal Calendar' : 'Holiday Calendar'}</h2>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          {view === 'calendar' ? 'Fiscal Calendar' : 'Holiday Calendar'}
+          {view === 'calendar' && <InfoBtn tip="<strong>Purpose</strong>4-13-4 fiscal calendar with Quarter Weeks (QWKS), Fiscal Weeks (WKS), SCO, Holiday and Pay Date markers for FY2027." />}
+        </h2>
         <div className="plan-sel">
           <button type="button" className={'plan-btn' + (view === 'calendar' ? ' active' : '')} onClick={() => setView('calendar')}>Fiscal Calendar</button>
           <button type="button" className={'plan-btn' + (view === 'holidays' ? ' active' : '')} onClick={() => setView('holidays')}>Holiday Calendar</button>
