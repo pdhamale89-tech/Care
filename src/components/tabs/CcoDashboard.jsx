@@ -126,6 +126,7 @@ export default function CcoDashboard({ view }) {
   const cfg = VIEW_CONFIG[view]
   const { subRegion, quarter, week, classification } = ccoFilters
   const [slaModalOpen, setSlaModalOpen] = useState(false)
+  const [heatmapDrill, setHeatmapDrill] = useState(null)
 
   const seed = useMemo(
     () => hashSeed(subRegion + quarter + week + classification + activeRegion + view),
@@ -246,20 +247,19 @@ export default function CcoDashboard({ view }) {
     [issueCharts],
   )
 
-  const issuePeriodHeatmap = useMemo(
-    () => ISSUE_CHARTS.map((c, ci) => {
-      const values = periods.map((_, i) => genKpiValue(c.base, seed + i * 7 + ci * 3 + 500).actual)
-      const min = Math.min(...values)
-      const max = Math.max(...values)
-      return {
-        id: c.id,
-        label: c.title.replace(' by Issue Type', ''),
-        unit: c.unit,
-        cells: values.map((v) => ({ value: v, pct: max === min ? 0.5 : (v - min) / (max - min) })),
-      }
-    }),
-    [periods, seed],
-  )
+  const heatmapDrillSeries = useMemo(() => {
+    if (!heatmapDrill) return null
+    const ci = ISSUE_CHARTS.findIndex((c) => c.id === heatmapDrill.metricId)
+    const col = ISSUE_CHARTS[ci]
+    const values = periods.map((_, i) => genKpiValue(col.base, seed + i * 7 + ci * 3 + heatmapDrill.issueIndex * 41 + 500).actual)
+    const min = Math.min(...values)
+    const max = Math.max(...values)
+    return {
+      label: col.title.replace(' by Issue Type', ''),
+      unit: col.unit,
+      cells: values.map((v) => ({ value: v, pct: max === min ? 0.5 : (v - min) / (max - min) })),
+    }
+  }, [heatmapDrill, periods, seed])
 
   const backlog = useMemo(() => {
     const assigned = genKpiValue(2800, seed + 401).actual
@@ -482,66 +482,68 @@ export default function CcoDashboard({ view }) {
         <div className="card">
           <div className="card-header">
             <div className="card-title">
-              Issue Type Metrics Heatmap — by Issue Type <InfoBtn tip="<strong>Purpose</strong>Actual values for Cases, Activities, APC, TTC, Case Rate and Ci1 across all 9 issue types in one view — color intensity shows relative magnitude within each metric row." />
+              {heatmapDrill && (
+                <button type="button" className="heatmap-back-btn" onClick={() => setHeatmapDrill(null)}>← Back</button>
+              )}
+              {heatmapDrill
+                ? `${heatmapDrillSeries.label} — ${heatmapDrill.issueLabel} — by Period`
+                : 'Issue Type Metrics Heatmap'}
+              {' '}
+              <InfoBtn
+                tip={heatmapDrill
+                  ? `<strong>Purpose</strong>${heatmapDrillSeries.label} for ${heatmapDrill.issueLabel} over time — ${view} view — color intensity shows relative magnitude across periods.`
+                  : '<strong>Purpose</strong>Actual values for Cases, Activities, APC, TTC, Case Rate and Ci1 across all 9 issue types. Click any cell to drill into that metric\'s trend by period.'}
+              />
             </div>
           </div>
           <div className="heatmap-wrap">
-            <table className="heatmap-tbl">
-              <thead>
-                <tr>
-                  <th></th>
-                  {issueLabels.map((l) => <th key={l}>{l}</th>)}
-                </tr>
-              </thead>
-              <tbody>
-                {issueTypeHeatmap.map((row) => (
-                  <tr key={row.id}>
-                    <td className="heatmap-rowlbl">{row.label}</td>
-                    {row.cells.map((cell, i) => (
+            {heatmapDrill ? (
+              <table className="heatmap-tbl">
+                <thead>
+                  <tr>
+                    <th></th>
+                    {heatmapPeriodLabels.map((l, i) => <th key={i}>{l}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="heatmap-rowlbl">{heatmapDrillSeries.label}</td>
+                    {heatmapDrillSeries.cells.map((cell, i) => (
                       <td key={i} className="heatmap-cell" style={heatCellStyle(cell.pct, colors)}>
-                        {fmt(cell.value)}{row.unit}
+                        {fmt(cell.value)}{heatmapDrillSeries.unit}
                       </td>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="heatmap-legend">
-            <span>Low</span>
-            <div className="heatmap-legend-bar" style={{ background: `linear-gradient(90deg, rgba(${hexToRgb(colors.accentBlue)}, .12), rgba(${hexToRgb(colors.accentBlue)}, .9))` }}></div>
-            <span>High</span>
-          </div>
-        </div>
-      </div>
-      <div className="s-grid full">
-        <div className="card">
-          <div className="card-header">
-            <div className="card-title">
-              Issue Type Metrics Heatmap — by Period <InfoBtn tip={`<strong>Purpose</strong>Actual values for Cases, Activities, APC, TTC, Case Rate and Ci1 over time — ${view} view — color intensity shows relative magnitude within each metric row.`} />
-            </div>
-          </div>
-          <div className="heatmap-wrap">
-            <table className="heatmap-tbl">
-              <thead>
-                <tr>
-                  <th></th>
-                  {heatmapPeriodLabels.map((l, i) => <th key={i}>{l}</th>)}
-                </tr>
-              </thead>
-              <tbody>
-                {issuePeriodHeatmap.map((row) => (
-                  <tr key={row.id}>
-                    <td className="heatmap-rowlbl">{row.label}</td>
-                    {row.cells.map((cell, i) => (
-                      <td key={i} className="heatmap-cell" style={heatCellStyle(cell.pct, colors)}>
-                        {fmt(cell.value)}{row.unit}
-                      </td>
-                    ))}
+                </tbody>
+              </table>
+            ) : (
+              <table className="heatmap-tbl">
+                <thead>
+                  <tr>
+                    <th></th>
+                    {issueLabels.map((l) => <th key={l}>{l}</th>)}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {issueTypeHeatmap.map((row) => (
+                    <tr key={row.id}>
+                      <td className="heatmap-rowlbl">{row.label}</td>
+                      {row.cells.map((cell, i) => (
+                        <td
+                          key={i}
+                          className="heatmap-cell heatmap-cell-clickable"
+                          style={heatCellStyle(cell.pct, colors)}
+                          onClick={() => setHeatmapDrill({ metricId: row.id, issueIndex: i, issueLabel: issueLabels[i] })}
+                          title={`Click to see ${row.label} by period for ${issueLabels[i]}`}
+                        >
+                          {fmt(cell.value)}{row.unit}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
           <div className="heatmap-legend">
             <span>Low</span>
