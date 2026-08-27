@@ -1,12 +1,10 @@
 import { useApp } from '../../context/AppContext.jsx'
 
 const REPORTS = [
-  { name: 'Agent Performance', icon: '🧑‍💻', category: 'Performance', description: 'Agent-level productivity, quality and adherence metrics.', url: null },
-  { name: 'Forecast Accuracy', icon: '📈', category: 'Forecast', description: 'Plan vs actual accuracy trends across regions.', url: null },
-  { name: 'Capacity Planning', icon: '📊', category: 'Capacity', description: 'Headcount, hiring and gap analysis by planner.', url: null },
-  { name: 'Outage Analytics', icon: '⚠️', category: 'Outage', description: 'Schedule adherence and unplanned-outage breakdowns.', url: null },
-  { name: 'Epicenter Health', icon: '👥', category: 'Epicenter', description: 'Headcount roster trends across managers and vendors.', url: null },
-  { name: 'Queue Performance', icon: '🎯', category: 'Operations', description: 'Queue-level SLA and volume vs actual.', url: null },
+  { name: 'Voice Queue KPI', icon: '📞', category: 'Voice', description: 'Queue-level SLA, AHT and abandonment KPIs for voice.', url: null },
+  { name: 'Voice Queue Intraday', icon: '⏱️', category: 'Voice', description: 'Intraday voice queue volume and staffing vs plan.', url: null },
+  { name: 'Voice Agent KPI', icon: '🎧', category: 'Voice', description: 'Agent-level voice KPIs — AHT, occupancy and quality.', url: null },
+  { name: 'Genesys Skill Data', icon: '🧩', category: 'Genesys', description: 'Skill-based routing configuration and skill group volumes.', url: null },
 ]
 
 export default function Reports() {
