@@ -14,6 +14,27 @@ const NAV_SECTIONS = [
       { id: 'epicenter', label: 'Epicenter HC', icon: '👥' },
     ],
   },
+  {
+    label: 'Tools',
+    items: [
+      { id: 'reports', label: 'Reports', icon: '📄' },
+      {
+        id: 'calendar',
+        label: 'Calendar',
+        icon: '📅',
+        children: [
+          { id: 'planningCalendar', label: 'Planning Calendar' },
+          { id: 'fiscalCalendar', label: 'Fiscal Calendar' },
+        ],
+      },
+      { id: 'glossary', label: 'Glossary', icon: '📖' },
+    ],
+  },
+]
+
+const SYSTEM_ITEMS = [
+  { id: 'notifications', label: 'Notifications', icon: '🔔' },
+  { id: 'settings', label: 'Settings', icon: '⚙️' },
 ]
 
 export default function Sidebar() {
@@ -34,10 +55,30 @@ export default function Sidebar() {
           <div key={section.label}>
             <div className="sidebar-section-label">{section.label}</div>
             {section.items.map((item) => (
-              <div key={item.id} className={itemClass(item.id)} onClick={() => navTo(item.id)}>
-                <span className="ic">{item.icon}</span>{item.label}
+              <div key={item.id}>
+                <div className={itemClass(item.id)} onClick={() => navTo(item.id)}>
+                  <span className="ic">{item.icon}</span>{item.label}
+                </div>
+                {item.children && (
+                  <div className="sb-sub">
+                    {item.children.map((child) => (
+                      <div key={child.id} className={itemClass(child.id)} onClick={() => navTo(child.id)}>
+                        {child.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
+          </div>
+        ))}
+      </div>
+
+      <div className="sidebar-bottom">
+        <div className="sidebar-section-label">System</div>
+        {SYSTEM_ITEMS.map((item) => (
+          <div key={item.id} className={itemClass(item.id)} onClick={() => navTo(item.id)}>
+            <span className="ic">{item.icon}</span>{item.label}
           </div>
         ))}
       </div>

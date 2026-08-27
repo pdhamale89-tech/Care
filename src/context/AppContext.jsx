@@ -3,13 +3,20 @@ import { formatIST } from '../utils/dateUtils.js'
 
 const AppContext = createContext(null)
 
-export const NO_FILTER_TABS = ['home']
+export const NO_FILTER_TABS = ['home', 'reports', 'calendar', 'planningCalendar', 'fiscalCalendar', 'glossary', 'notifications', 'settings']
 
 const BREADCRUMBS = {
   home: 'Home',
   cco: 'Performance Reports › CCO Dashboard',
   outage: 'Workforce Reports › Outage Report',
   epicenter: 'Workforce Reports › Epicenter HC',
+  reports: 'Tools › Reports',
+  calendar: 'Tools › Calendar',
+  planningCalendar: 'Tools › Calendar › Planning Calendar',
+  fiscalCalendar: 'Tools › Calendar › Fiscal Calendar',
+  glossary: 'Tools › Glossary',
+  notifications: 'System › Notifications',
+  settings: 'System › Settings',
 }
 
 export function AppProvider({ children }) {
