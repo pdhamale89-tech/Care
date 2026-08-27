@@ -4,7 +4,7 @@ const NAV_SECTIONS = [
   {
     label: 'Performance Reports',
     items: [
-      { id: 'cco', label: 'CCO Dashboard', icon: '📊' },
+      { id: 'cco', label: 'CCO Overview', icon: '📊' },
     ],
   },
   {

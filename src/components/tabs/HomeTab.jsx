@@ -1,7 +1,7 @@
 import { useApp } from '../../context/AppContext.jsx'
 
 const SECTIONS = [
-  { key: 'cco', tab: 'cco', icon: '📊', title: 'CCO Dashboard', tag: 'Daily, weekly, and quarterly SLA, volume, and backlog performance.' },
+  { key: 'cco', tab: 'cco', icon: '📊', title: 'CCO Overview', tag: 'Daily, weekly, and quarterly SLA, volume, and backlog performance.' },
   { key: 'outage', tab: 'outage', icon: '⚠️', title: 'Outage Report', tag: 'Agent schedule adherence and unplanned-outage breakdowns by manager.' },
   { key: 'epicenter', tab: 'epicenter', icon: '👥', title: 'Epicenter HC', tag: 'Headcount roster across departments, queues, and managers.' },
 ]

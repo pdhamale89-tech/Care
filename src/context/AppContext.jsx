@@ -7,7 +7,7 @@ export const NO_FILTER_TABS = ['home', 'reports', 'calendar', 'planningCalendar'
 
 const BREADCRUMBS = {
   home: 'Home',
-  cco: 'Performance Reports › CCO Dashboard',
+  cco: 'Performance Reports › CCO Overview',
   outage: 'Workforce Reports › Outage Report',
   epicenter: 'Workforce Reports › Epicenter HC',
   reports: 'Tools › Reports',
