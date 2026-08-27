@@ -85,6 +85,17 @@ function shortPeriodLabel(p) {
   return parts.length > 1 ? parts[1] : p
 }
 
+function hexToRgb(hex) {
+  const n = parseInt(hex.replace('#', ''), 16)
+  return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`
+}
+
+function heatCellStyle(pct, colors) {
+  const rgb = hexToRgb(colors.accentBlue)
+  const alpha = 0.12 + pct * 0.78
+  return { background: `rgba(${rgb}, ${alpha})`, color: pct > 0.55 ? '#fff' : colors.textPrimary }
+}
+
 function buildMetricComparisonConfig(col, labels, actual, forecast, colors) {
   if (!col.hf) {
     return {
@@ -214,9 +225,23 @@ export default function CcoDashboard({ view }) {
       const actual = issueLabels.map((_, i) => Math.round(base * (0.8 + ((Math.sin((seed + i) * 2.7) + 1) / 2) * 0.5)))
       const forecast = issueLabels.map((_, i) => Math.round(base * (0.9 + i * 0.01)))
       const variance = actual.map((a, i) => a - forecast[i])
-      return { id, title, config: issueComboConfig(issueLabels, actual, forecast, variance, unit, colors) }
+      return { id, title, unit, actual, config: issueComboConfig(issueLabels, actual, forecast, variance, unit, colors) }
     }),
     [seed, colors],
+  )
+
+  const issueHeatmap = useMemo(
+    () => issueCharts.map((c) => {
+      const min = Math.min(...c.actual)
+      const max = Math.max(...c.actual)
+      return {
+        id: c.id,
+        label: c.title.replace(' by Issue Type', ''),
+        unit: c.unit,
+        cells: c.actual.map((v) => ({ value: v, pct: max === min ? 0.5 : (v - min) / (max - min) })),
+      }
+    }),
+    [issueCharts],
   )
 
   const backlog = useMemo(() => {
@@ -435,6 +460,42 @@ export default function CcoDashboard({ view }) {
             </div>
           </div>
         ))}
+      </div>
+      <div className="s-grid full">
+        <div className="card">
+          <div className="card-header">
+            <div className="card-title">
+              Issue Type Metrics Heatmap <InfoBtn tip="<strong>Purpose</strong>Actual values for Cases, Activities, APC, TTC, Case Rate and Ci1 across all issue types in one view — color intensity shows relative magnitude within each metric row." />
+            </div>
+          </div>
+          <div className="heatmap-wrap">
+            <table className="heatmap-tbl">
+              <thead>
+                <tr>
+                  <th></th>
+                  {issueLabels.map((l) => <th key={l}>{l}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {issueHeatmap.map((row) => (
+                  <tr key={row.id}>
+                    <td className="heatmap-rowlbl">{row.label}</td>
+                    {row.cells.map((cell, i) => (
+                      <td key={i} className="heatmap-cell" style={heatCellStyle(cell.pct, colors)}>
+                        {fmt(cell.value)}{row.unit}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="heatmap-legend">
+            <span>Low</span>
+            <div className="heatmap-legend-bar" style={{ background: `linear-gradient(90deg, rgba(${hexToRgb(colors.accentBlue)}, .12), rgba(${hexToRgb(colors.accentBlue)}, .9))` }}></div>
+            <span>High</span>
+          </div>
+        </div>
       </div>
 
       <div className="section-div">
