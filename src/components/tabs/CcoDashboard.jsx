@@ -71,13 +71,18 @@ const ISSUE_CHARTS = [
   { id: 'issue6', title: 'Ci1', base: 20, unit: '%' },
 ]
 
-function getPeriodsForView(view, quarter, week) {
+function getPeriodsForView(view, quarters, weeks) {
+  const qList = (quarters || []).filter((q) => q !== 'All')
+  const activeQuarters = qList.length ? qList : ['FQ1', 'FQ2', 'FQ3', 'FQ4']
+  const allWeeks = activeQuarters.flatMap((q) => getWeeksForQuarter(q))
+  const wList = (weeks || []).filter((w) => w !== 'All')
+
   if (view === 'daily') {
-    const wk = week === 'All' ? getWeeksForQuarter(quarter)[0] : week
-    return WEEK_DAYS.map((d) => `${wk} - ${d}`)
+    const weekPool = wList.length ? wList : [allWeeks[0]]
+    return weekPool.flatMap((wk) => WEEK_DAYS.map((d) => `${wk} - ${d}`))
   }
-  if (view === 'weekly') return getWeeksForQuarter(quarter)
-  return ['FQ1', 'FQ2', 'FQ3', 'FQ4']
+  if (view === 'weekly') return wList.length ? wList : allWeeks
+  return activeQuarters
 }
 
 function shortPeriodLabel(p) {
@@ -121,7 +126,7 @@ function buildMetricComparisonConfig(col, labels, actual, forecast, colors) {
 }
 
 export default function CcoDashboard({ view }) {
-  const { theme, activeRegion, ccoFilters } = useApp()
+  const { theme, activeRegions, ccoFilters } = useApp()
   const colors = getColors(theme)
   const cfg = VIEW_CONFIG[view]
   const { subRegion, quarter, week, classification } = ccoFilters
@@ -129,15 +134,17 @@ export default function CcoDashboard({ view }) {
   const [heatmapDrill, setHeatmapDrill] = useState(null)
 
   const seed = useMemo(
-    () => hashSeed(subRegion + quarter + week + classification + activeRegion + view),
-    [subRegion, quarter, week, classification, activeRegion, view],
+    () => hashSeed(subRegion.join(',') + quarter.join(',') + week.join(',') + classification.join(',') + activeRegions.join(',') + view),
+    [subRegion, quarter, week, classification, activeRegions, view],
   )
   const periods = useMemo(() => getPeriodsForView(view, quarter, week), [view, quarter, week])
 
+  const quarterLabel = quarter.includes('All') || quarter.length === 0 ? 'All Quarters' : quarter.join(', ')
+  const weekLabel = week.includes('All') || week.length === 0 ? 'All Weeks' : week.join(', ')
   const tableTitle = {
-    daily: `Daily View — ${quarter}, Week ${week === 'All' ? getWeeksForQuarter(quarter)[0] : week} (Sat–Fri)`,
-    weekly: `Weekly View — ${quarter} (13 Weeks)`,
-    quarterly: 'Quarterly View — Full Fiscal Year (52 Weeks)',
+    daily: `Daily View — ${quarterLabel}, Week ${weekLabel} (${periods.length} Days)`,
+    weekly: `Weekly View — ${quarterLabel} (${periods.length} Weeks)`,
+    quarterly: `Quarterly View — ${quarterLabel} (${periods.length} Quarters)`,
   }[view]
 
   const keyMetrics = useMemo(() => {

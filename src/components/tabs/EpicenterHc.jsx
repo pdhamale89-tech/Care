@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Bar, Doughnut } from 'react-chartjs-2'
 import { useApp } from '../../context/AppContext.jsx'
-import { generateEpicenterRoster, fmt, EMP_STATUSES, SEGMENTS } from '../../data/mockGenerators.js'
+import { generateEpicenterRoster, fmt, EMP_STATUSES, SEGMENTS, matchesMulti, REGIONS } from '../../data/mockGenerators.js'
 import { getColors } from '../../theme/colors.js'
 import { barDataLabels, hBarDataLabels, doughnutDataLabels } from '../../charts/datalabels.js'
 import DownloadBtn from '../common/DownloadBtn.jsx'
@@ -73,16 +73,19 @@ function buildDoughnutChart(entries, categoryColors) {
 }
 
 export default function EpicenterHc() {
-  const { theme, activeRegion, epicenterFilters } = useApp()
+  const { theme, activeRegions, epicenterFilters } = useApp()
   const colors = getColors(theme)
-  const roster = useMemo(() => generateEpicenterRoster(activeRegion), [activeRegion])
+  const roster = useMemo(() => {
+    const regions = activeRegions.includes('All') ? REGIONS : activeRegions
+    return regions.flatMap((r) => generateEpicenterRoster(r))
+  }, [activeRegions])
 
   const filtered = useMemo(() => {
     return roster.filter((a) => {
-      if (epicenterFilters.weekEnding !== 'All' && a.weekEnding !== epicenterFilters.weekEnding) return false
-      if (epicenterFilters.vendor !== 'All' && a.vendor !== epicenterFilters.vendor) return false
-      if (epicenterFilters.manager !== 'All' && a.manager !== epicenterFilters.manager) return false
-      if (epicenterFilters.dbOsp !== 'All' && a.dbOsp !== epicenterFilters.dbOsp) return false
+      if (!matchesMulti(epicenterFilters.weekEnding, a.weekEnding)) return false
+      if (!matchesMulti(epicenterFilters.vendor, a.vendor)) return false
+      if (!matchesMulti(epicenterFilters.manager, a.manager)) return false
+      if (!matchesMulti(epicenterFilters.dbOsp, a.dbOsp)) return false
       return true
     })
   }, [roster, epicenterFilters])
@@ -223,7 +226,7 @@ export default function EpicenterHc() {
             </thead>
             <tbody>
               {filtered.map((a) => (
-                <tr key={a.badgeId}>
+                <tr key={a.region + a.badgeId}>
                   <td>{a.name}</td>
                   <td>{a.badgeId}</td>
                   <td>{a.email}</td>

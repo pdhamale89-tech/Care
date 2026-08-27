@@ -19,16 +19,20 @@ const BREADCRUMBS = {
   settings: 'System › Settings',
 }
 
+const CCO_FILTERS_DEFAULT = { subRegion: ['All'], quarter: ['FQ1'], week: ['All'], classification: ['All'] }
+const OUTAGE_FILTERS_DEFAULT = { country: ['All'], quarter: ['FQ1'], week: ['All'], manager: ['All'], status: ['All'], search: '' }
+const EPICENTER_FILTERS_DEFAULT = { weekEnding: ['All'], vendor: ['All'], manager: ['All'], dbOsp: ['All'] }
+
 export function AppProvider({ children }) {
   const [theme, setTheme] = useState('light')
   const [currentTab, setCurrentTab] = useState('home')
   const [lastUpdated] = useState(() => formatIST(new Date()))
-  const [activeRegion, setActiveRegionState] = useState('APJC')
+  const [activeRegions, setActiveRegionsState] = useState(['APJC'])
 
-  const [ccoFilters, setCcoFilters] = useState({ subRegion: 'All', quarter: 'FQ1', week: 'All', classification: 'All' })
+  const [ccoFilters, setCcoFilters] = useState(CCO_FILTERS_DEFAULT)
   const [ccoView, setCcoView] = useState('daily')
-  const [outageFilters, setOutageFilters] = useState({ country: 'All', quarter: 'FQ1', week: 'All', manager: 'All', status: 'All', search: '' })
-  const [epicenterFilters, setEpicenterFilters] = useState({ weekEnding: 'All', vendor: 'All', manager: 'All', dbOsp: 'All' })
+  const [outageFilters, setOutageFilters] = useState(OUTAGE_FILTERS_DEFAULT)
+  const [epicenterFilters, setEpicenterFilters] = useState(EPICENTER_FILTERS_DEFAULT)
 
   const [toast, setToast] = useState({ show: false, msg: '', cls: '' })
 
@@ -45,26 +49,26 @@ export function AppProvider({ children }) {
   const breadcrumb = BREADCRUMBS[currentTab] || currentTab
   const showFilters = !NO_FILTER_TABS.includes(currentTab)
 
-  const setActiveRegion = useCallback((region) => {
-    setActiveRegionState(region)
-    setCcoFilters((prev) => ({ ...prev, subRegion: 'All' }))
-    setOutageFilters((prev) => ({ ...prev, country: 'All' }))
+  const setActiveRegions = useCallback((regions) => {
+    setActiveRegionsState(regions)
+    setCcoFilters((prev) => ({ ...prev, subRegion: ['All'] }))
+    setOutageFilters((prev) => ({ ...prev, country: ['All'] }))
   }, [])
 
   const setCcoFilter = useCallback((key, value) => {
-    setCcoFilters((prev) => ({ ...prev, [key]: value, ...(key === 'quarter' ? { week: 'All' } : {}) }))
+    setCcoFilters((prev) => ({ ...prev, [key]: value, ...(key === 'quarter' ? { week: ['All'] } : {}) }))
   }, [])
   const setOutageFilter = useCallback((key, value) => {
-    setOutageFilters((prev) => ({ ...prev, [key]: value, ...(key === 'quarter' ? { week: 'All' } : {}) }))
+    setOutageFilters((prev) => ({ ...prev, [key]: value, ...(key === 'quarter' ? { week: ['All'] } : {}) }))
   }, [])
   const setEpicenterFilter = useCallback((key, value) => {
     setEpicenterFilters((prev) => ({ ...prev, [key]: value }))
   }, [])
 
   const clearFilters = useCallback(() => {
-    if (currentTab === 'cco') { setCcoFilters({ subRegion: 'All', quarter: 'FQ1', week: 'All', classification: 'All' }); setCcoView('daily') }
-    else if (currentTab === 'outage') setOutageFilters({ country: 'All', quarter: 'FQ1', week: 'All', manager: 'All', status: 'All', search: '' })
-    else if (currentTab === 'epicenter') setEpicenterFilters({ weekEnding: 'All', vendor: 'All', manager: 'All', dbOsp: 'All' })
+    if (currentTab === 'cco') { setCcoFilters(CCO_FILTERS_DEFAULT); setCcoView('daily') }
+    else if (currentTab === 'outage') setOutageFilters(OUTAGE_FILTERS_DEFAULT)
+    else if (currentTab === 'epicenter') setEpicenterFilters(EPICENTER_FILTERS_DEFAULT)
   }, [currentTab])
 
   const showToast = useCallback((msg, cls) => {
@@ -75,7 +79,7 @@ export function AppProvider({ children }) {
   const value = useMemo(() => ({
     theme, toggleTheme, lastUpdated,
     currentTab, navTo, breadcrumb, showFilters,
-    activeRegion, setActiveRegion,
+    activeRegions, setActiveRegions,
     ccoFilters, setCcoFilter, ccoView, setCcoView,
     outageFilters, setOutageFilter,
     epicenterFilters, setEpicenterFilter,
@@ -83,7 +87,7 @@ export function AppProvider({ children }) {
     toast, showToast,
   }), [
     theme, toggleTheme, lastUpdated, currentTab, navTo, breadcrumb, showFilters,
-    activeRegion, setActiveRegion,
+    activeRegions, setActiveRegions,
     ccoFilters, setCcoFilter, ccoView, outageFilters, setOutageFilter,
     epicenterFilters, setEpicenterFilter,
     clearFilters, toast, showToast,

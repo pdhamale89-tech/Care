@@ -1,14 +1,21 @@
 import { useState } from 'react'
 import { useApp } from '../../context/AppContext.jsx'
-import { regionCountryMap, managers, getWeeksForQuarter, REGIONS, vendors, weekEndingDates } from '../../data/mockGenerators.js'
+import { countriesForRegions, managers, getWeeksForQuarter, REGIONS, vendors, weekEndingDates } from '../../data/mockGenerators.js'
+import MultiSelectDropdown from '../common/MultiSelectDropdown.jsx'
 
 const QUARTERS = ['FQ1', 'FQ2', 'FQ3', 'FQ4']
-const CLASSIFICATIONS = ['All', 'FED', 'Global Sales', 'Consumer']
-const STATUSES = ['All', 'Available', 'Unplanned Outage', 'Scheduled Off']
+const CLASSIFICATIONS = ['FED', 'Global Sales', 'Consumer']
+const STATUSES = ['Available', 'Unplanned Outage', 'Scheduled Off']
+
+function weeksForQuarters(quarters) {
+  const list = (quarters || []).filter((q) => q !== 'All')
+  const source = list.length ? list : QUARTERS
+  return [...new Set(source.flatMap((q) => getWeeksForQuarter(q)))]
+}
 
 export default function FilterBar() {
   const {
-    currentTab, showFilters, activeRegion, setActiveRegion,
+    currentTab, showFilters, activeRegions, setActiveRegions,
     ccoFilters, setCcoFilter, ccoView, setCcoView, outageFilters, setOutageFilter,
     epicenterFilters, setEpicenterFilter,
     clearFilters,
@@ -17,7 +24,7 @@ export default function FilterBar() {
 
   if (!showFilters) return null
 
-  const countries = regionCountryMap[activeRegion] || ['All']
+  const countries = countriesForRegions(activeRegions)
   const isCco = currentTab === 'cco'
   const isOutage = currentTab === 'outage'
   const isEpicenter = currentTab === 'epicenter'
@@ -43,37 +50,26 @@ export default function FilterBar() {
           <div className="filter-grid">
             <div className="filter-group">
               <label>Region</label>
-              <select value={activeRegion} onChange={(e) => setActiveRegion(e.target.value)}>
-                {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
-              </select>
+              <MultiSelectDropdown options={REGIONS} selected={activeRegions} onChange={setActiveRegions} />
             </div>
 
             {isCco && (
               <>
                 <div className="filter-group">
                   <label>Sub Region / Country</label>
-                  <select value={ccoFilters.subRegion} onChange={(e) => setCcoFilter('subRegion', e.target.value)}>
-                    {countries.map((c) => <option key={c}>{c}</option>)}
-                  </select>
+                  <MultiSelectDropdown options={countries} selected={ccoFilters.subRegion} onChange={(v) => setCcoFilter('subRegion', v)} />
                 </div>
                 <div className="filter-group">
                   <label>Fiscal Quarter</label>
-                  <select value={ccoFilters.quarter} onChange={(e) => setCcoFilter('quarter', e.target.value)}>
-                    {QUARTERS.map((q) => <option key={q} value={q}>{q}</option>)}
-                  </select>
+                  <MultiSelectDropdown options={QUARTERS} selected={ccoFilters.quarter} onChange={(v) => setCcoFilter('quarter', v)} />
                 </div>
                 <div className="filter-group">
                   <label>Fiscal Week (52 Weeks Total)</label>
-                  <select value={ccoFilters.week} onChange={(e) => setCcoFilter('week', e.target.value)}>
-                    <option value="All">All Weeks (13)</option>
-                    {getWeeksForQuarter(ccoFilters.quarter).map((w) => <option key={w} value={w}>{w}</option>)}
-                  </select>
+                  <MultiSelectDropdown options={weeksForQuarters(ccoFilters.quarter)} selected={ccoFilters.week} onChange={(v) => setCcoFilter('week', v)} allLabel="All Weeks" />
                 </div>
                 <div className="filter-group">
                   <label>Classification</label>
-                  <select value={ccoFilters.classification} onChange={(e) => setCcoFilter('classification', e.target.value)}>
-                    {CLASSIFICATIONS.map((c) => <option key={c}>{c}</option>)}
-                  </select>
+                  <MultiSelectDropdown options={CLASSIFICATIONS} selected={ccoFilters.classification} onChange={(v) => setCcoFilter('classification', v)} />
                 </div>
               </>
             )}
@@ -82,35 +78,23 @@ export default function FilterBar() {
               <>
                 <div className="filter-group">
                   <label>Sub Region / Country</label>
-                  <select value={outageFilters.country} onChange={(e) => setOutageFilter('country', e.target.value)}>
-                    {countries.map((c) => <option key={c}>{c}</option>)}
-                  </select>
+                  <MultiSelectDropdown options={countries} selected={outageFilters.country} onChange={(v) => setOutageFilter('country', v)} />
                 </div>
                 <div className="filter-group">
                   <label>Fiscal Quarter</label>
-                  <select value={outageFilters.quarter} onChange={(e) => setOutageFilter('quarter', e.target.value)}>
-                    {QUARTERS.map((q) => <option key={q} value={q}>{q}</option>)}
-                  </select>
+                  <MultiSelectDropdown options={QUARTERS} selected={outageFilters.quarter} onChange={(v) => setOutageFilter('quarter', v)} />
                 </div>
                 <div className="filter-group">
                   <label>Fiscal Week (52 Weeks Total)</label>
-                  <select value={outageFilters.week} onChange={(e) => setOutageFilter('week', e.target.value)}>
-                    <option value="All">All Weeks (13)</option>
-                    {getWeeksForQuarter(outageFilters.quarter).map((w) => <option key={w} value={w}>{w}</option>)}
-                  </select>
+                  <MultiSelectDropdown options={weeksForQuarters(outageFilters.quarter)} selected={outageFilters.week} onChange={(v) => setOutageFilter('week', v)} allLabel="All Weeks" />
                 </div>
                 <div className="filter-group">
                   <label>Manager</label>
-                  <select value={outageFilters.manager} onChange={(e) => setOutageFilter('manager', e.target.value)}>
-                    <option>All</option>
-                    {managers.map((m) => <option key={m}>{m}</option>)}
-                  </select>
+                  <MultiSelectDropdown options={managers} selected={outageFilters.manager} onChange={(v) => setOutageFilter('manager', v)} />
                 </div>
                 <div className="filter-group">
                   <label>Agent Status</label>
-                  <select value={outageFilters.status} onChange={(e) => setOutageFilter('status', e.target.value)}>
-                    {STATUSES.map((s) => <option key={s}>{s}</option>)}
-                  </select>
+                  <MultiSelectDropdown options={STATUSES} selected={outageFilters.status} onChange={(v) => setOutageFilter('status', v)} />
                 </div>
                 <div className="filter-group">
                   <label>Search Agent</label>
@@ -123,32 +107,19 @@ export default function FilterBar() {
               <>
                 <div className="filter-group">
                   <label>Week Ending</label>
-                  <select value={epicenterFilters.weekEnding} onChange={(e) => setEpicenterFilter('weekEnding', e.target.value)}>
-                    <option>All</option>
-                    {weekEndingDates.map((w) => <option key={w}>{w}</option>)}
-                  </select>
+                  <MultiSelectDropdown options={weekEndingDates} selected={epicenterFilters.weekEnding} onChange={(v) => setEpicenterFilter('weekEnding', v)} />
                 </div>
                 <div className="filter-group">
                   <label>Vendor</label>
-                  <select value={epicenterFilters.vendor} onChange={(e) => setEpicenterFilter('vendor', e.target.value)}>
-                    <option>All</option>
-                    {vendors.map((v) => <option key={v}>{v}</option>)}
-                  </select>
+                  <MultiSelectDropdown options={vendors} selected={epicenterFilters.vendor} onChange={(v) => setEpicenterFilter('vendor', v)} />
                 </div>
                 <div className="filter-group">
                   <label>Manager</label>
-                  <select value={epicenterFilters.manager} onChange={(e) => setEpicenterFilter('manager', e.target.value)}>
-                    <option>All</option>
-                    {managers.map((m) => <option key={m}>{m}</option>)}
-                  </select>
+                  <MultiSelectDropdown options={managers} selected={epicenterFilters.manager} onChange={(v) => setEpicenterFilter('manager', v)} />
                 </div>
                 <div className="filter-group">
                   <label>DB/OSP</label>
-                  <select value={epicenterFilters.dbOsp} onChange={(e) => setEpicenterFilter('dbOsp', e.target.value)}>
-                    <option>All</option>
-                    <option>DB</option>
-                    <option>OSP</option>
-                  </select>
+                  <MultiSelectDropdown options={['DB', 'OSP']} selected={epicenterFilters.dbOsp} onChange={(v) => setEpicenterFilter('dbOsp', v)} />
                 </div>
               </>
             )}

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Bar } from 'react-chartjs-2'
 import { useApp } from '../../context/AppContext.jsx'
-import { generateAgentRoster } from '../../data/mockGenerators.js'
+import { generateAgentRoster, matchesMulti, REGIONS } from '../../data/mockGenerators.js'
 import { getColors } from '../../theme/colors.js'
 import { stackedBarConfig } from '../../charts/chartConfigs.js'
 import DownloadBtn from '../common/DownloadBtn.jsx'
@@ -21,17 +21,20 @@ function avg(list, pick) {
 }
 
 export default function OutageReport() {
-  const { theme, activeRegion, outageFilters } = useApp()
+  const { theme, activeRegions, outageFilters } = useApp()
   const colors = getColors(theme)
   const [view, setView] = useState('agent')
-  const roster = useMemo(() => generateAgentRoster(activeRegion), [activeRegion])
+  const roster = useMemo(() => {
+    const regions = activeRegions.includes('All') ? REGIONS : activeRegions
+    return regions.flatMap((r) => generateAgentRoster(r).map((a) => ({ ...a, region: r })))
+  }, [activeRegions])
 
   const filtered = useMemo(() => {
     const search = outageFilters.search.toLowerCase()
     return roster.filter((a) => {
-      if (outageFilters.country !== 'All' && a.country !== outageFilters.country) return false
-      if (outageFilters.manager !== 'All' && a.manager !== outageFilters.manager) return false
-      if (outageFilters.status !== 'All' && a.status !== outageFilters.status) return false
+      if (!matchesMulti(outageFilters.country, a.country)) return false
+      if (!matchesMulti(outageFilters.manager, a.manager)) return false
+      if (!matchesMulti(outageFilters.status, a.status)) return false
       if (search && !a.name.toLowerCase().includes(search)) return false
       return true
     })
@@ -135,7 +138,7 @@ export default function OutageReport() {
               </thead>
               <tbody>
                 {filtered.map((a) => (
-                  <tr key={a.name + a.manager}>
+                  <tr key={a.region + a.name + a.manager}>
                     <td>{a.name}</td>
                     <td>{a.manager}</td>
                     <td>{a.country}</td>

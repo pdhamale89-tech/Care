@@ -11,6 +11,19 @@ export const regionCountryMap = {
 
 export const REGIONS = Object.keys(regionCountryMap)
 
+// `selected` is a multi-select filter value: ['All'] (or empty) means no filter applied.
+export function matchesMulti(selected, value) {
+  return !selected || selected.length === 0 || selected.includes('All') || selected.includes(value)
+}
+
+export function countriesForRegions(regions) {
+  const list = (regions || []).filter((r) => r !== 'All')
+  const source = list.length ? list : REGIONS
+  const set = new Set()
+  source.forEach((r) => (regionCountryMap[r] || []).forEach((c) => c !== 'All' && set.add(c)))
+  return [...set].sort()
+}
+
 export const firstNames = ['Alex', 'Priya', 'Chen', 'Maria', 'Sam', 'Wei', 'Nina', 'Raj', 'Yuki', 'Carlos', 'Emma', 'Liam', 'Sofia', 'Kenji', 'Amara', 'Noah', 'Ling', 'Diego', 'Fatima', 'Tom']
 export const lastNames = ['Sharma', 'Wang', 'Silva', 'Khan', 'Lopez', 'Muller', 'Nakamura', 'Costa', 'Patel', 'Kim', 'Rossi', 'Dubois', 'Tanaka', 'Santos', 'Ali']
 export const managers = ['J. Anderson', 'P. Menon', 'L. Zhang', 'R. Fernandes', 'K. Suzuki']
@@ -105,7 +118,7 @@ export function generateAgentRoster(region) {
   const totalAgents = 60
   const roster = []
   for (let i = 0; i < totalAgents; i++) {
-    const seed = i * 13 + region.length * 7
+    const seed = i * 13 + hashSeed(region) * 7
     const fn = firstNames[Math.floor(seededRandom(seed) * firstNames.length)]
     const ln = lastNames[Math.floor(seededRandom(seed + 1) * lastNames.length)]
     const manager = managers[Math.floor(seededRandom(seed + 2) * managers.length)]
@@ -146,7 +159,7 @@ export function generateEpicenterRoster(region) {
   const totalAgents = 60
   const roster = []
   for (let i = 0; i < totalAgents; i++) {
-    const seed = i * 17 + region.length * 11
+    const seed = i * 17 + hashSeed(region) * 11
     const fn = firstNames[Math.floor(seededRandom(seed) * firstNames.length)]
     const ln = lastNames[Math.floor(seededRandom(seed + 1) * lastNames.length)]
     const name = `${fn} ${ln}`

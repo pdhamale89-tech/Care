@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
 import { HOLIDAY_CALENDAR } from '../../data/holidayCalendarData.js'
+import { matchesMulti } from '../../data/mockGenerators.js'
 import DownloadBtn from '../common/DownloadBtn.jsx'
 import InfoBtn from '../common/InfoBtn.jsx'
+import MultiSelectDropdown from '../common/MultiSelectDropdown.jsx'
 
-const ALL = 'All'
+const ALL = ['All']
 
 function uniqueSorted(values) {
   return [...new Set(values)].sort()
@@ -22,11 +24,11 @@ export default function HolidayCalendar() {
 
   const regionOptions = useMemo(() => uniqueSorted(HOLIDAY_CALENDAR.map((h) => h.region)), [])
   const subRegionOptions = useMemo(
-    () => uniqueSorted(HOLIDAY_CALENDAR.filter((h) => region === ALL || h.region === region).map((h) => h.subRegion)),
+    () => uniqueSorted(HOLIDAY_CALENDAR.filter((h) => matchesMulti(region, h.region)).map((h) => h.subRegion)),
     [region],
   )
   const countryOptions = useMemo(
-    () => uniqueSorted(HOLIDAY_CALENDAR.filter((h) => (region === ALL || h.region === region) && (subRegion === ALL || h.subRegion === subRegion)).map((h) => h.country)),
+    () => uniqueSorted(HOLIDAY_CALENDAR.filter((h) => matchesMulti(region, h.region) && matchesMulti(subRegion, h.subRegion)).map((h) => h.country)),
     [region, subRegion],
   )
   const fiscalYearOptions = useMemo(() => uniqueSorted(HOLIDAY_CALENDAR.map((h) => h.fiscalYear)), [])
@@ -42,10 +44,10 @@ export default function HolidayCalendar() {
   }
 
   const rows = useMemo(() => HOLIDAY_CALENDAR
-    .filter((h) => region === ALL || h.region === region)
-    .filter((h) => subRegion === ALL || h.subRegion === subRegion)
-    .filter((h) => country === ALL || h.country === country)
-    .filter((h) => fiscalYear === ALL || h.fiscalYear === fiscalYear)
+    .filter((h) => matchesMulti(region, h.region))
+    .filter((h) => matchesMulti(subRegion, h.subRegion))
+    .filter((h) => matchesMulti(country, h.country))
+    .filter((h) => matchesMulti(fiscalYear, h.fiscalYear))
     .slice()
     .sort((a, b) => a.date.localeCompare(b.date)), [region, subRegion, country, fiscalYear])
 
@@ -68,31 +70,19 @@ export default function HolidayCalendar() {
       <div className="filter-grid" style={{ marginBottom: 10 }}>
         <div className="filter-group">
           <label>Region</label>
-          <select value={region} onChange={(e) => handleRegionChange(e.target.value)}>
-            <option value={ALL}>All Regions</option>
-            {regionOptions.map((r) => <option key={r} value={r}>{r}</option>)}
-          </select>
+          <MultiSelectDropdown options={regionOptions} selected={region} onChange={handleRegionChange} allLabel="All Regions" />
         </div>
         <div className="filter-group">
           <label>Sub Region</label>
-          <select value={subRegion} onChange={(e) => handleSubRegionChange(e.target.value)}>
-            <option value={ALL}>All Sub-Regions</option>
-            {subRegionOptions.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
+          <MultiSelectDropdown options={subRegionOptions} selected={subRegion} onChange={handleSubRegionChange} allLabel="All Sub-Regions" />
         </div>
         <div className="filter-group">
           <label>Country</label>
-          <select value={country} onChange={(e) => setCountry(e.target.value)}>
-            <option value={ALL}>All Countries</option>
-            {countryOptions.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <MultiSelectDropdown options={countryOptions} selected={country} onChange={setCountry} allLabel="All Countries" />
         </div>
         <div className="filter-group">
           <label>Fiscal Year</label>
-          <select value={fiscalYear} onChange={(e) => setFiscalYear(e.target.value)}>
-            <option value={ALL}>All Fiscal Years</option>
-            {fiscalYearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
-          </select>
+          <MultiSelectDropdown options={fiscalYearOptions} selected={fiscalYear} onChange={setFiscalYear} allLabel="All Fiscal Years" />
         </div>
       </div>
 
