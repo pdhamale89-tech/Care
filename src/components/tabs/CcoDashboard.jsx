@@ -232,7 +232,21 @@ export default function CcoDashboard({ view }) {
 
   const heatmapPeriodLabels = useMemo(() => periods.map(shortPeriodLabel), [periods])
 
-  const issueHeatmap = useMemo(
+  const issueTypeHeatmap = useMemo(
+    () => issueCharts.map((c) => {
+      const min = Math.min(...c.actual)
+      const max = Math.max(...c.actual)
+      return {
+        id: c.id,
+        label: c.title.replace(' by Issue Type', ''),
+        unit: c.unit,
+        cells: c.actual.map((v) => ({ value: v, pct: max === min ? 0.5 : (v - min) / (max - min) })),
+      }
+    }),
+    [issueCharts],
+  )
+
+  const issuePeriodHeatmap = useMemo(
     () => ISSUE_CHARTS.map((c, ci) => {
       const values = periods.map((_, i) => genKpiValue(c.base, seed + i * 7 + ci * 3 + 500).actual)
       const min = Math.min(...values)
@@ -468,7 +482,43 @@ export default function CcoDashboard({ view }) {
         <div className="card">
           <div className="card-header">
             <div className="card-title">
-              Issue Type Metrics Heatmap <InfoBtn tip={`<strong>Purpose</strong>Actual values for Cases, Activities, APC, TTC, Case Rate and Ci1 over time — ${view} view — color intensity shows relative magnitude within each metric row.`} />
+              Issue Type Metrics Heatmap — by Issue Type <InfoBtn tip="<strong>Purpose</strong>Actual values for Cases, Activities, APC, TTC, Case Rate and Ci1 across all 9 issue types in one view — color intensity shows relative magnitude within each metric row." />
+            </div>
+          </div>
+          <div className="heatmap-wrap">
+            <table className="heatmap-tbl">
+              <thead>
+                <tr>
+                  <th></th>
+                  {issueLabels.map((l) => <th key={l}>{l}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {issueTypeHeatmap.map((row) => (
+                  <tr key={row.id}>
+                    <td className="heatmap-rowlbl">{row.label}</td>
+                    {row.cells.map((cell, i) => (
+                      <td key={i} className="heatmap-cell" style={heatCellStyle(cell.pct, colors)}>
+                        {fmt(cell.value)}{row.unit}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="heatmap-legend">
+            <span>Low</span>
+            <div className="heatmap-legend-bar" style={{ background: `linear-gradient(90deg, rgba(${hexToRgb(colors.accentBlue)}, .12), rgba(${hexToRgb(colors.accentBlue)}, .9))` }}></div>
+            <span>High</span>
+          </div>
+        </div>
+      </div>
+      <div className="s-grid full">
+        <div className="card">
+          <div className="card-header">
+            <div className="card-title">
+              Issue Type Metrics Heatmap — by Period <InfoBtn tip={`<strong>Purpose</strong>Actual values for Cases, Activities, APC, TTC, Case Rate and Ci1 over time — ${view} view — color intensity shows relative magnitude within each metric row.`} />
             </div>
           </div>
           <div className="heatmap-wrap">
@@ -480,7 +530,7 @@ export default function CcoDashboard({ view }) {
                 </tr>
               </thead>
               <tbody>
-                {issueHeatmap.map((row) => (
+                {issuePeriodHeatmap.map((row) => (
                   <tr key={row.id}>
                     <td className="heatmap-rowlbl">{row.label}</td>
                     {row.cells.map((cell, i) => (
