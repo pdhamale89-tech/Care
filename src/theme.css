@@ -390,12 +390,13 @@ tr.group-row td { background: var(--table-header); font-weight: 800; color: var(
 .heatmap-rowlbl { font-size: 10px; font-weight: 700; color: var(--text-primary); text-align: right; padding: 6px 10px 6px 2px; white-space: nowrap; }
 .heatmap-cell { text-align: center; padding: 9px 6px; border-radius: 6px; font-weight: 700; font-size: 10px; white-space: nowrap; transition: transform .15s; }
 .heatmap-cell:hover { transform: scale(1.07); }
-.heatmap-cell-clickable { cursor: pointer; }
-.heatmap-cell-clickable:hover { outline: 2px solid var(--accent-blue); outline-offset: -2px; }
 .heatmap-legend { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 10px; color: var(--text-secondary); }
 .heatmap-legend-bar { width: 120px; height: 10px; border-radius: 5px; }
 .heatmap-back-btn { border: none; background: none; color: var(--accent-blue); font-size: 11px; font-weight: 700; cursor: pointer; padding: 0; margin-right: 4px; }
 .heatmap-back-btn:hover { text-decoration: underline; }
+.heatmap-drill-cell { padding-left: 6px !important; }
+.heatmap-drill-btn { border: 1px solid var(--accent-blue); background: transparent; color: var(--accent-blue); font-size: 9px; font-weight: 700; padding: 5px 8px; border-radius: 6px; cursor: pointer; white-space: nowrap; transition: all .15s; }
+.heatmap-drill-btn:hover { background: var(--accent-blue); color: #fff; }
 
 /* ===== Global info tooltip (InfoBtn / InfoTip) ===== */
 .info-btn { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--accent-blue); display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: var(--accent-blue); cursor: help; flex-shrink: 0; font-style: italic; transition: all .2s; }

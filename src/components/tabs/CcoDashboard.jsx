@@ -247,18 +247,17 @@ export default function CcoDashboard({ view }) {
     [issueCharts],
   )
 
-  const heatmapDrillSeries = useMemo(() => {
+  const heatmapDrillData = useMemo(() => {
     if (!heatmapDrill) return null
     const ci = ISSUE_CHARTS.findIndex((c) => c.id === heatmapDrill.metricId)
     const col = ISSUE_CHARTS[ci]
-    const values = periods.map((_, i) => genKpiValue(col.base, seed + i * 7 + ci * 3 + heatmapDrill.issueIndex * 41 + 500).actual)
-    const min = Math.min(...values)
-    const max = Math.max(...values)
-    return {
-      label: col.title.replace(' by Issue Type', ''),
-      unit: col.unit,
-      cells: values.map((v) => ({ value: v, pct: max === min ? 0.5 : (v - min) / (max - min) })),
-    }
+    const rows = issueLabels.map((label, ii) => {
+      const values = periods.map((_, i) => genKpiValue(col.base, seed + i * 7 + ci * 3 + ii * 41 + 500).actual)
+      const min = Math.min(...values)
+      const max = Math.max(...values)
+      return { label, cells: values.map((v) => ({ value: v, pct: max === min ? 0.5 : (v - min) / (max - min) })) }
+    })
+    return { metricLabel: col.title.replace(' by Issue Type', ''), unit: col.unit, rows }
   }, [heatmapDrill, periods, seed])
 
   const backlog = useMemo(() => {
@@ -486,13 +485,13 @@ export default function CcoDashboard({ view }) {
                 <button type="button" className="heatmap-back-btn" onClick={() => setHeatmapDrill(null)}>← Back</button>
               )}
               {heatmapDrill
-                ? `${heatmapDrillSeries.label} — ${heatmapDrill.issueLabel} — by Period`
+                ? `${heatmapDrillData.metricLabel} by Issue Type — ${cfg.title.replace(' Performance Table', '')}`
                 : 'Issue Type Metrics Heatmap'}
               {' '}
               <InfoBtn
                 tip={heatmapDrill
-                  ? `<strong>Purpose</strong>${heatmapDrillSeries.label} for ${heatmapDrill.issueLabel} over time — ${view} view — color intensity shows relative magnitude across periods.`
-                  : '<strong>Purpose</strong>Actual values for Cases, Activities, APC, TTC, Case Rate and Ci1 across all 9 issue types. Click any cell to drill into that metric\'s trend by period.'}
+                  ? `<strong>Purpose</strong>${heatmapDrillData.metricLabel} for every issue type, broken down by period (${view} view). Use the Daily / Weekly / Quarterly buttons above to change granularity.`
+                  : '<strong>Purpose</strong>Actual values for Cases, Activities, APC, TTC, Case Rate and Ci1 across all 9 issue types. Use the Drill Down button on a row to see that metric broken down by issue type and period.'}
               />
             </div>
           </div>
@@ -506,14 +505,16 @@ export default function CcoDashboard({ view }) {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td className="heatmap-rowlbl">{heatmapDrillSeries.label}</td>
-                    {heatmapDrillSeries.cells.map((cell, i) => (
-                      <td key={i} className="heatmap-cell" style={heatCellStyle(cell.pct, colors)}>
-                        {fmt(cell.value)}{heatmapDrillSeries.unit}
-                      </td>
-                    ))}
-                  </tr>
+                  {heatmapDrillData.rows.map((row) => (
+                    <tr key={row.label}>
+                      <td className="heatmap-rowlbl">{row.label}</td>
+                      {row.cells.map((cell, i) => (
+                        <td key={i} className="heatmap-cell" style={heatCellStyle(cell.pct, colors)}>
+                          {fmt(cell.value)}{heatmapDrillData.unit}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             ) : (
@@ -522,6 +523,7 @@ export default function CcoDashboard({ view }) {
                   <tr>
                     <th></th>
                     {issueLabels.map((l) => <th key={l}>{l}</th>)}
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -529,16 +531,20 @@ export default function CcoDashboard({ view }) {
                     <tr key={row.id}>
                       <td className="heatmap-rowlbl">{row.label}</td>
                       {row.cells.map((cell, i) => (
-                        <td
-                          key={i}
-                          className="heatmap-cell heatmap-cell-clickable"
-                          style={heatCellStyle(cell.pct, colors)}
-                          onClick={() => setHeatmapDrill({ metricId: row.id, issueIndex: i, issueLabel: issueLabels[i] })}
-                          title={`Click to see ${row.label} by period for ${issueLabels[i]}`}
-                        >
+                        <td key={i} className="heatmap-cell" style={heatCellStyle(cell.pct, colors)}>
                           {fmt(cell.value)}{row.unit}
                         </td>
                       ))}
+                      <td className="heatmap-drill-cell">
+                        <button
+                          type="button"
+                          className="heatmap-drill-btn"
+                          onClick={() => setHeatmapDrill({ metricId: row.id })}
+                          title={`Drill down: ${row.label} by issue type and period`}
+                        >
+                          Drill Down ▸
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
