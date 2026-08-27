@@ -20,6 +20,36 @@ export function barDataLabels(unit = '', color = '#2B2E34') {
   }
 }
 
+// Horizontal bar series: label just past the end of each bar.
+export function hBarDataLabels(unit = '', color = '#2B2E34') {
+  return {
+    display: 'auto',
+    anchor: 'end',
+    align: 'end',
+    clamp: true,
+    font: LABEL_FONT,
+    color,
+    formatter: (v) => fmtOrEmpty(v, unit),
+  }
+}
+
+// Doughnut/pie slices: percentage of the whole, hidden on slivers too thin to read.
+export function doughnutDataLabels() {
+  return {
+    display: (ctx) => {
+      const data = ctx.dataset.data
+      const total = data.reduce((a, b) => a + b, 0)
+      return total && data[ctx.dataIndex] / total >= 0.03 ? 'auto' : false
+    },
+    color: '#fff',
+    font: { size: 10, weight: 700 },
+    formatter: (v, ctx) => {
+      const total = ctx.dataset.data.reduce((a, b) => a + b, 0)
+      return total ? ((v / total) * 100).toFixed(1) + '%' : ''
+    },
+  }
+}
+
 // Line series: label above each point, same auto-collision handling.
 export function lineDataLabels(unit = '', color) {
   return {

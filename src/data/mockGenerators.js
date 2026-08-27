@@ -32,6 +32,9 @@ export const weekEndingDates = [
   'Jul 25, 2026', 'Jul 18, 2026', 'Jul 11, 2026', 'Jul 04, 2026',
 ]
 
+const NON_AGENT_TITLES = ['Manager', 'Director', 'Coach', 'Program Manager', 'Area Manager', 'Project Manager', 'Non-Title Employee']
+const EMP_STATUSES = ['Normal', 'Temporary Duty Assignment', 'New Hire', 'Work From Home', 'Leave of Absence']
+
 export const issueLabels = ['Concession', 'Doc Request', 'Exchange', 'Order Status', 'Other', 'Provide Info', 'Refund', 'Rejected', 'Return']
 
 export const WEEK_DAYS = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri']
@@ -147,7 +150,14 @@ export function generateEpicenterRoster(region) {
     const dbOsp = seededRandom(seed + 10) > 0.35 ? 'OSP' : 'DB'
     const vendor = dbOsp === 'OSP' ? vendors[Math.floor(seededRandom(seed + 11) * vendors.length)] : 'Internal'
     const weekEnding = weekEndingDates[Math.floor(seededRandom(seed + 12) * weekEndingDates.length)]
-    roster.push({ name, badgeId, email, hireDate, queue, dept: dept.name, deptCode: dept.code, manager, country, dbOsp, vendor, weekEnding })
+    const title = seededRandom(seed + 13) > 0.12 ? 'Agent' : NON_AGENT_TITLES[Math.floor(seededRandom(seed + 14) * NON_AGENT_TITLES.length)]
+    const statusRoll = seededRandom(seed + 15)
+    const empStatus = statusRoll > 0.18 ? EMP_STATUSES[0]
+      : statusRoll > 0.10 ? EMP_STATUSES[1]
+      : statusRoll > 0.05 ? EMP_STATUSES[2]
+      : statusRoll > 0.02 ? EMP_STATUSES[3]
+      : EMP_STATUSES[4]
+    roster.push({ name, badgeId, email, hireDate, queue, dept: dept.name, deptCode: dept.code, manager, country, dbOsp, vendor, weekEnding, title, empStatus })
   }
   return roster
 }

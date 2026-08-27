@@ -1,10 +1,71 @@
 import { useMemo } from 'react'
+import { Bar, Doughnut } from 'react-chartjs-2'
 import { useApp } from '../../context/AppContext.jsx'
 import { generateEpicenterRoster, fmt } from '../../data/mockGenerators.js'
+import { getColors } from '../../theme/colors.js'
+import { barDataLabels, hBarDataLabels, doughnutDataLabels } from '../../charts/datalabels.js'
 import DownloadBtn from '../common/DownloadBtn.jsx'
 
+function countBy(rows, key) {
+  const map = new Map()
+  rows.forEach((r) => map.set(r[key], (map.get(r[key]) || 0) + 1))
+  return [...map.entries()].sort((a, b) => b[1] - a[1])
+}
+
+function buildHBarChart(entries, color, textColor) {
+  return {
+    data: {
+      labels: entries.map(([k]) => k),
+      datasets: [{ data: entries.map(([, v]) => v), backgroundColor: color, borderRadius: 4, barThickness: 14, datalabels: hBarDataLabels('', textColor) }],
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { beginAtZero: true }, y: { ticks: { font: { size: 10 } } } },
+    },
+  }
+}
+
+function buildVBarChart(entries, color, textColor) {
+  return {
+    data: {
+      labels: entries.map(([k]) => k),
+      datasets: [{ data: entries.map(([, v]) => v), backgroundColor: color, borderRadius: 4, datalabels: barDataLabels('', textColor) }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { ticks: { font: { size: 9 }, maxRotation: 20, minRotation: 0 } }, y: { beginAtZero: true } },
+    },
+  }
+}
+
+function buildDoughnutChart(entries, categoryColors) {
+  return {
+    data: {
+      labels: entries.map(([k]) => k),
+      datasets: [{
+        data: entries.map(([, v]) => v),
+        backgroundColor: entries.map((_, i) => categoryColors[i % categoryColors.length]),
+        borderWidth: 0,
+        datalabels: doughnutDataLabels(),
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } },
+    },
+  }
+}
+
 export default function EpicenterHc() {
-  const { activeRegion, epicenterFilters } = useApp()
+  const { theme, activeRegion, epicenterFilters } = useApp()
+  const colors = getColors(theme)
   const roster = useMemo(() => generateEpicenterRoster(activeRegion), [activeRegion])
 
   const filtered = useMemo(() => {
@@ -22,6 +83,17 @@ export default function EpicenterHc() {
     const totalManagers = new Set(filtered.map((a) => a.manager)).size
     return { totalTSEs, totalManagers }
   }, [filtered])
+
+  const categoryColors = useMemo(
+    () => [colors.accentBlue, colors.accentGreen, colors.accentOrange, colors.accentRed, colors.accentPurple],
+    [colors],
+  )
+
+  const titleChart = useMemo(() => buildDoughnutChart(countBy(filtered, 'title'), categoryColors), [filtered, categoryColors])
+  const segmentChart = useMemo(() => buildHBarChart(countBy(filtered, 'dept'), colors.accentBlue, colors.textPrimary), [filtered, colors])
+  const managerChart = useMemo(() => buildHBarChart(countBy(filtered, 'manager'), colors.accentBlue, colors.textPrimary), [filtered, colors])
+  const statusChart = useMemo(() => buildVBarChart(countBy(filtered, 'empStatus'), colors.accentBlue, colors.textPrimary), [filtered, colors])
+  const locationChart = useMemo(() => buildHBarChart(countBy(filtered, 'country'), colors.accentBlue, colors.textPrimary), [filtered, colors])
 
   return (
     <div className="tab-panel active">
@@ -41,6 +113,44 @@ export default function EpicenterHc() {
         <div className="kpi-card">
           <div className="kpi-label">Total TSEs</div>
           <div className="kpi-value">{fmt(summary.totalTSEs)}</div>
+        </div>
+      </div>
+
+      <div className="section-div">
+        <h2>Employee Distribution</h2>
+      </div>
+      <div className="s-grid">
+        <div className="card">
+          <div className="card-header"><div className="card-title">Title wise Employee Count</div></div>
+          <div className="chart-container">
+            <Doughnut data={titleChart.data} options={titleChart.options} />
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-header"><div className="card-title">Segment wise Employee Count</div></div>
+          <div className="chart-container">
+            <Bar data={segmentChart.data} options={segmentChart.options} />
+          </div>
+        </div>
+      </div>
+      <div className="s-grid thirds">
+        <div className="card">
+          <div className="card-header"><div className="card-title">Manager wise Employee Count</div></div>
+          <div className="chart-container">
+            <Bar data={managerChart.data} options={managerChart.options} />
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-header"><div className="card-title">Status wise Employee Count</div></div>
+          <div className="chart-container">
+            <Bar data={statusChart.data} options={statusChart.options} />
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-header"><div className="card-title">Location wise Employee Count</div></div>
+          <div className="chart-container">
+            <Bar data={locationChart.data} options={locationChart.options} />
+          </div>
         </div>
       </div>
 
