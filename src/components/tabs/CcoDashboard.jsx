@@ -62,6 +62,22 @@ const CHANNEL_BASES_1 = [6500, 4200, 3200, 1500]
 const TCD_CHANNELS = ['Voice', 'Email', 'Chat']
 const TCD_CHANNEL_BASES = [9500, 7400, 8600]
 const CHANNEL_SLA_BASES = [92, 88, 90, 85]
+
+function normalizeWeights(bases) {
+  const total = bases.reduce((a, b) => a + b, 0)
+  return bases.map((b) => b / total)
+}
+
+// Metrics that support a "by Channel" trend drill-down from their Key Metrics Summary card.
+// `additive` profiles split the metric's total across channels (weights sum to 1, e.g. volumes).
+// Non-additive (rate/ratio) profiles keep each channel near the overall value (weights average ~1).
+const CHANNEL_TREND_PROFILES = {
+  contacts: { channels: CHANNELS, weights: normalizeWeights(CHANNEL_BASES_1) },
+  orders: { channels: CHANNELS, weights: normalizeWeights(CHANNEL_BASES_1) },
+  tcd: { channels: TCD_CHANNELS, weights: normalizeWeights(TCD_CHANNEL_BASES) },
+  caseRate: { channels: CHANNELS, weights: [1.08, 0.95, 1.02, 0.90] },
+  cpsr: { channels: CHANNELS, weights: [1.05, 0.92, 1.08, 0.95] },
+}
 const ISSUE_CHARTS = [
   { id: 'issue1', title: 'Cases', base: 900, unit: '' },
   { id: 'issue2', title: 'Activities', base: 1400, unit: '' },
@@ -131,6 +147,7 @@ export default function CcoDashboard({ view }) {
   const cfg = VIEW_CONFIG[view]
   const { subRegion, quarter, week, classification } = ccoFilters
   const [slaModalOpen, setSlaModalOpen] = useState(false)
+  const [channelModalKey, setChannelModalKey] = useState(null)
   const [heatmapDrill, setHeatmapDrill] = useState(null)
 
   const seed = useMemo(
@@ -181,6 +198,42 @@ export default function CcoDashboard({ view }) {
       },
     }
   }, [periods, seed, colors])
+
+  const channelTrendChart = useMemo(() => {
+    if (!channelModalKey) return null
+    const ci = METRIC_COLS.findIndex((c) => c.key === channelModalKey)
+    const col = METRIC_COLS[ci]
+    const profile = CHANNEL_TREND_PROFILES[channelModalKey]
+    const labels = periods.map(shortPeriodLabel)
+    const seriesColors = [colors.accentBlue, colors.accentGreen, colors.accentOrange, colors.accentRed]
+    const factor = Math.pow(10, col.decimals)
+    const datasets = profile.channels.flatMap((ch, chi) => {
+      const color = seriesColors[chi]
+      const actualData = []
+      const forecastData = []
+      periods.forEach((_, i) => {
+        const { actual, forecast } = genKpiValue(col.base, seed + i * 7 + ci * 3, col.decimals)
+        const w = profile.weights[chi]
+        actualData.push(Math.round(actual * w * factor) / factor)
+        forecastData.push(Math.round(forecast * w * factor) / factor)
+      })
+      return [
+        { label: `${ch} Actual`, data: actualData, backgroundColor: color, borderRadius: 3, datalabels: barDataLabels(col.unit, color) },
+        { label: `${ch} Forecast`, data: forecastData, backgroundColor: color + '55', borderRadius: 3, datalabels: barDataLabels(col.unit, colors.textSecondary) },
+      ]
+    })
+    return {
+      label: col.label,
+      unit: col.unit,
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } } },
+        scales: { x: { ticks: { font: { size: 9 } } }, y: { beginAtZero: col.key !== 'caseRate' } },
+      },
+    }
+  }, [channelModalKey, periods, seed, colors])
 
   const tableRows = useMemo(
     () => periods.map((p, i) => ({
@@ -294,6 +347,21 @@ export default function CcoDashboard({ view }) {
               >
                 <div className="kpi-label">{m.label}</div>
                 <div className="kpi-value">{fmt(m.actual)}{m.unit}</div>
+                <div className="kpi-sub">Click for channel trend</div>
+              </div>
+            )
+          }
+          if (CHANNEL_TREND_PROFILES[m.key]) {
+            return (
+              <div
+                className="kpi-card clickable"
+                key={m.key}
+                onClick={() => setChannelModalKey(m.key)}
+                title={`Click to see ${m.label} by Channel trend`}
+              >
+                <div className="kpi-label">{m.label}</div>
+                <div className="kpi-value">{fmt(m.actual)}{m.unit}</div>
+                <div className="kpi-sub">Forecast: {fmt(m.forecast)}{m.unit}</div>
                 <div className="kpi-sub">Click for channel trend</div>
               </div>
             )
@@ -588,6 +656,24 @@ export default function CcoDashboard({ view }) {
         <div className="chart-container" style={{ height: 280 }}>
           <Bar data={channelSlaTrendChart.data} options={channelSlaTrendChart.options} />
         </div>
+      </Modal>
+
+      <Modal
+        open={!!channelModalKey}
+        onClose={() => setChannelModalKey(null)}
+        title={channelTrendChart && (
+          <>
+            {channelTrendChart.label} by Channel — Trend Detail
+            {' '}
+            <InfoBtn onDark tip={`<strong>Purpose</strong>${channelTrendChart.label} Actual vs Forecast by channel, ${view} view. Uses the same numbers shown in the ${cfg.title}.`} />
+          </>
+        )}
+      >
+        {channelTrendChart && (
+          <div className="chart-container" style={{ height: 300 }}>
+            <Bar data={channelTrendChart.data} options={channelTrendChart.options} />
+          </div>
+        )}
       </Modal>
     </div>
   )
