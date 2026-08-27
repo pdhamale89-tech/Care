@@ -9,14 +9,14 @@ import HomeTab from './components/tabs/HomeTab.jsx'
 import CcoDashboard from './components/tabs/CcoDashboard.jsx'
 import OutageReport from './components/tabs/OutageReport.jsx'
 import EpicenterHc from './components/tabs/EpicenterHc.jsx'
+import Reports from './components/tabs/Reports.jsx'
+import FiscalCalendar from './components/tabs/FiscalCalendar.jsx'
 import ComingSoonTab from './components/tabs/ComingSoonTab.jsx'
 import { getColors } from './theme/colors.js'
 
 const COMING_SOON_TITLES = {
-  reports: 'Reports',
   calendar: 'Calendar',
   planningCalendar: 'Planning Calendar',
-  fiscalCalendar: 'Fiscal Calendar',
   glossary: 'Glossary',
   notifications: 'Notifications',
   settings: 'Settings',
@@ -27,6 +27,8 @@ function TabRouter() {
   if (currentTab === 'cco') return <CcoDashboard view={ccoView} />
   if (currentTab === 'outage') return <OutageReport />
   if (currentTab === 'epicenter') return <EpicenterHc />
+  if (currentTab === 'reports') return <Reports />
+  if (currentTab === 'fiscalCalendar') return <FiscalCalendar />
   if (COMING_SOON_TITLES[currentTab]) return <ComingSoonTab title={COMING_SOON_TITLES[currentTab]} />
   return <HomeTab />
 }
