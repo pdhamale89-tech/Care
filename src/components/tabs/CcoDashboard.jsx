@@ -6,7 +6,7 @@ import {
   WEEK_DAYS, issueLabels,
 } from '../../data/mockGenerators.js'
 import { getColors } from '../../theme/colors.js'
-import { barDataLabels } from '../../charts/datalabels.js'
+import { barDataLabels, stackedBarDataLabels } from '../../charts/datalabels.js'
 import DownloadBtn from '../common/DownloadBtn.jsx'
 import Modal from '../common/Modal.jsx'
 import InfoBtn from '../common/InfoBtn.jsx'
@@ -218,8 +218,8 @@ export default function CcoDashboard({ view }) {
         forecastData.push(Math.round(forecast * w * factor) / factor)
       })
       return [
-        { label: `${ch} Actual`, data: actualData, backgroundColor: color, borderRadius: 3, datalabels: barDataLabels(col.unit, color) },
-        { label: `${ch} Forecast`, data: forecastData, backgroundColor: color + '55', borderRadius: 3, datalabels: barDataLabels(col.unit, colors.textSecondary) },
+        { label: `${ch} Actual`, data: actualData, backgroundColor: color, stack: 'actual', datalabels: stackedBarDataLabels(col.unit) },
+        { label: `${ch} Forecast`, data: forecastData, backgroundColor: color + '80', stack: 'forecast', datalabels: stackedBarDataLabels(col.unit) },
       ]
     })
     return {
@@ -230,7 +230,10 @@ export default function CcoDashboard({ view }) {
         responsive: true,
         maintainAspectRatio: false,
         plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } } },
-        scales: { x: { ticks: { font: { size: 9 } } }, y: { beginAtZero: col.key !== 'caseRate' } },
+        scales: {
+          x: { stacked: true, ticks: { font: { size: 9 } } },
+          y: { stacked: true, beginAtZero: col.key !== 'caseRate' },
+        },
       },
     }
   }, [channelModalKey, periods, seed, colors])
