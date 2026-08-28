@@ -10,6 +10,7 @@ const BREADCRUMBS = {
   cco: 'Performance Reports › CCO Overview',
   outage: 'Workforce Reports › Outage Report',
   epicenter: 'Workforce Reports › Epicenter HC',
+  whatIf: 'Planning › What-If Simulator',
   reports: 'Tools › Reports',
   calendar: 'Tools › Calendar',
   planningCalendar: 'Tools › Calendar › Planning Calendar',
@@ -66,7 +67,7 @@ export function AppProvider({ children }) {
   }, [])
 
   const clearFilters = useCallback(() => {
-    if (currentTab === 'cco') { setCcoFilters(CCO_FILTERS_DEFAULT); setCcoView('daily') }
+    if (currentTab === 'cco' || currentTab === 'whatIf') { setCcoFilters(CCO_FILTERS_DEFAULT); setCcoView('daily') }
     else if (currentTab === 'outage') setOutageFilters(OUTAGE_FILTERS_DEFAULT)
     else if (currentTab === 'epicenter') setEpicenterFilters(EPICENTER_FILTERS_DEFAULT)
   }, [currentTab])
