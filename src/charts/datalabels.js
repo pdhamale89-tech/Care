@@ -63,6 +63,21 @@ export function lineDataLabels(unit = '', color) {
   }
 }
 
+// Dense line series (many close-together points, e.g. a trend line sharing a chart
+// with bars): label only the last point instead of every point, so labels never
+// pile up on each other. The full series is still readable via hover/tooltip.
+export function lineEndDataLabels(unit = '', color) {
+  return {
+    display: (ctx) => ctx.dataIndex === ctx.dataset.data.length - 1,
+    align: 'top',
+    offset: 6,
+    clamp: true,
+    font: LABEL_FONT,
+    color: color ?? ((ctx) => ctx.dataset.borderColor),
+    formatter: (v) => fmtOrEmpty(v, unit),
+  }
+}
+
 // Stacked bar segments: centered, white text, hidden for zero/empty segments
 // so thin slivers don't get an unreadable overlapping label.
 export function stackedBarDataLabels(unit = '') {

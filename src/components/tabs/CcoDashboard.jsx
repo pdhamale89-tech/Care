@@ -6,7 +6,7 @@ import {
   WEEK_DAYS, issueLabels,
 } from '../../data/mockGenerators.js'
 import { getColors } from '../../theme/colors.js'
-import { barDataLabels, lineDataLabels, stackedBarDataLabels } from '../../charts/datalabels.js'
+import { barDataLabels, lineEndDataLabels, stackedBarDataLabels } from '../../charts/datalabels.js'
 import DownloadBtn from '../common/DownloadBtn.jsx'
 import Modal from '../common/Modal.jsx'
 import InfoBtn from '../common/InfoBtn.jsx'
@@ -139,7 +139,7 @@ function buildMetricComparisonConfig(col, labels, actual, forecast, colors) {
       datasets: [
         { label: 'Actual', data: actual, backgroundColor: colors.accentBlue, borderRadius: 4, order: 1, datalabels: barDataLabels(col.unit, colors.accentBlue) },
         { label: 'Forecast', data: forecast, backgroundColor: colors.border, borderRadius: 4, order: 1, datalabels: barDataLabels(col.unit, colors.textSecondary) },
-        { type: 'line', label: 'Accuracy %', data: accuracy, borderColor: colors.accentPurple, backgroundColor: colors.accentPurple, yAxisID: 'y1', tension: 0.3, pointRadius: 3, order: 2, datalabels: lineDataLabels('%', colors.accentPurple) },
+        { type: 'line', label: 'Accuracy %', data: accuracy, borderColor: colors.accentPurple, backgroundColor: colors.accentPurple, yAxisID: 'y1', tension: 0.3, pointRadius: 3, order: 2, datalabels: lineEndDataLabels('%', colors.accentPurple) },
       ],
     },
     options: {
