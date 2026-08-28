@@ -57,6 +57,10 @@ const EXTRA_METRIC_CHARTS = [
   { key: 'ccpd', label: 'CCpD', base: 42, unit: '', hf: false, decimals: 0 },
 ]
 
+// APC / ICW / CCpD are all "Actual only" metrics — shown as one card with a toggle
+// instead of three separate cards.
+const ACTUAL_TOGGLE_KEYS = ['apc', 'icw', 'ccpd']
+
 const CHANNELS = ['Voice', 'Email', 'Chat', 'W2C']
 const CHANNEL_BASES_1 = [6500, 4200, 3200, 1500]
 const TCD_CHANNELS = ['Voice', 'Email', 'Chat']
@@ -166,6 +170,7 @@ export default function CcoDashboard({ view }) {
   const { subRegion, quarter, week, classification } = ccoFilters
   const [slaModalOpen, setSlaModalOpen] = useState(false)
   const [channelModalKey, setChannelModalKey] = useState(null)
+  const [actualToggleKey, setActualToggleKey] = useState('apc')
   const [heatmapDrill, setHeatmapDrill] = useState(null)
 
   const seed = useMemo(
@@ -261,10 +266,20 @@ export default function CcoDashboard({ view }) {
             config: buildMetricComparisonConfig(c, shortLabels, actual, forecast, colors),
           }
         })
-        .filter((c) => c.key !== 'sla')
+        .filter((c) => c.key !== 'sla' && !ACTUAL_TOGGLE_KEYS.includes(c.key))
     },
     [periods, seed, colors],
   )
+
+  const actualToggleChart = useMemo(() => {
+    const shortLabels = periods.map(shortPeriodLabel)
+    const combined = [...METRIC_COLS, ...EXTRA_METRIC_CHARTS]
+    const ci = combined.findIndex((c) => c.key === actualToggleKey)
+    const col = combined[ci]
+    const actual = periods.map((_, i) => genKpiValue(col.base, seed + i * 7 + ci * 3, col.decimals).actual)
+    const forecast = periods.map((_, i) => genKpiValue(col.base, seed + i * 7 + ci * 3, col.decimals).forecast)
+    return { label: col.label, config: buildMetricComparisonConfig(col, shortLabels, actual, forecast, colors) }
+  }, [actualToggleKey, periods, seed, colors])
 
   const table1Rows = useMemo(
     () => CHANNELS.map((c, i) => {
@@ -412,6 +427,23 @@ export default function CcoDashboard({ view }) {
             </div>
           </div>
         ))}
+        <div className="card">
+          <div className="card-header">
+            <div className="card-title">
+              {actualToggleChart.label} — Actual <InfoBtn tip={`<strong>Purpose</strong>${METRIC_CHART_TIPS[actualToggleKey] || ''}`} />
+            </div>
+          </div>
+          <div className="plan-sel" style={{ marginBottom: 8 }}>
+            {ACTUAL_TOGGLE_KEYS.map((k) => (
+              <button key={k} type="button" className={'plan-btn' + (actualToggleKey === k ? ' active' : '')} onClick={() => setActualToggleKey(k)}>
+                {EXTRA_METRIC_CHARTS.find((c) => c.key === k).label}
+              </button>
+            ))}
+          </div>
+          <div className="chart-container">
+            <Bar data={actualToggleChart.config.data} options={actualToggleChart.config.options} />
+          </div>
+        </div>
       </div>
 
       <div className="section-div">
