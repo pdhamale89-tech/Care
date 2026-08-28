@@ -84,8 +84,9 @@ export function seededRandom(seed) {
   return x - Math.floor(x)
 }
 
-// Global tuning knob: scales every generated metric value down by 15%.
-export const VALUE_SCALE = 0.85
+// Global tuning knob: scales every generated metric value down (originally -15%,
+// cut a further 10% on top: 0.85 * 0.90 = 0.765, i.e. ~23.5% below the raw base values).
+export const VALUE_SCALE = 0.765
 
 export function genKpiValue(base, seed, decimals = 0) {
   const scaledBase = base * VALUE_SCALE
