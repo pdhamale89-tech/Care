@@ -1,6 +1,6 @@
 // Overall SLA map data — region/sub-region country groupings, plus a seeded
-// accuracy computation so the map/drill-down respond to the Daily/Weekly/
-// Quarterly selector like the rest of CCO Overview. Structure mirrors the
+// accuracy computation so the map/drill-down respond to the Weekly/Quarterly
+// selector like the rest of CCO Overview. Structure mirrors the
 // SPOG_CSG reference implementation's src/data/regions.js.
 export const REGION_COUNTRIES = {
   AMER: ['US', 'CA', 'MX', 'BR', 'AR', 'CL', 'CO', 'PE', 'VE', 'EC', 'BO', 'PY', 'UY', 'GT', 'HN', 'SV', 'NI', 'CR', 'PA', 'DO', 'CU', 'HT', 'JM', 'TT', 'GY', 'SR', 'BZ', 'GL'],
@@ -56,7 +56,7 @@ export const COUNTRY_SUBREGION = Object.keys(SUBREGION_MEMBERS).reduce((acc, sub
 }, {})
 
 // Region accuracy varies with the given seed (tie it to CCO Overview's
-// Daily/Weekly/Quarterly view + filters); sub-region and country accuracy are
+// Weekly/Quarterly view + filters); sub-region and country accuracy are
 // derived from it so the map, its labels and the drill-down modal all agree.
 export function computeAccuracy(seed) {
   const regionAcc = Object.fromEntries(

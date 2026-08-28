@@ -29,6 +29,7 @@ export default function ForecastAdherenceMap() {
   const [hover, setHover] = useState(null)
   const [drillOpen, setDrillOpen] = useState(false)
   const mapRef = useRef(null)
+  const wrapRef = useRef(null)
   const colors = getColors(theme)
 
   const seed = useMemo(
@@ -101,7 +102,24 @@ export default function ForecastAdherenceMap() {
       },
     })
 
+    // jsvectormap sizes its SVG from the container's measured width at construction
+    // time; if the card/grid layout hasn't settled yet (e.g. right after a tab/theme
+    // switch), that measurement can be too narrow and the map renders shifted/cropped.
+    // Re-measure once layout has settled, and again on any later resize.
+    const raf = requestAnimationFrame(() => mapRef.current?.updateSize())
+    const onWindowResize = () => mapRef.current?.updateSize()
+    window.addEventListener('resize', onWindowResize)
+
+    let ro
+    if (wrapRef.current && typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => mapRef.current?.updateSize())
+      ro.observe(wrapRef.current)
+    }
+
     return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('resize', onWindowResize)
+      ro?.disconnect()
       mapRef.current?.destroy()
       mapRef.current = null
     }
@@ -120,7 +138,7 @@ export default function ForecastAdherenceMap() {
         </div>
       </div>
 
-      <div className="geo-map-inner" onMouseLeave={() => setHover(null)}>
+      <div className="geo-map-inner" ref={wrapRef} onMouseLeave={() => setHover(null)}>
         <div id="forecastAdherenceMap"></div>
         {hover && (
           <div className="geo-hover-card">

@@ -38,7 +38,7 @@ export default function FilterBar() {
         </div>
         {isCco && (
           <div className="period-bar">
-            {[['daily', 'Daily'], ['weekly', 'Weekly'], ['quarterly', 'Quarterly']].map(([v, label]) => (
+            {[['weekly', 'Weekly'], ['quarterly', 'Quarterly']].map(([v, label]) => (
               <button key={v} type="button" className={'p-btn' + (ccoView === v ? ' active' : '')} onClick={() => setCcoView(v)}>{label}</button>
             ))}
           </div>

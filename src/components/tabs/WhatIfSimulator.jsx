@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Bar } from 'react-chartjs-2'
 import { useApp } from '../../context/AppContext.jsx'
-import { fmt, genKpiValue, hashSeed, getWeeksForQuarter, WEEK_DAYS } from '../../data/mockGenerators.js'
+import { fmt, genKpiValue, hashSeed, getWeeksForQuarter } from '../../data/mockGenerators.js'
 import { getColors } from '../../theme/colors.js'
 import { barDataLabels } from '../../charts/datalabels.js'
 import { evaluateStaffing, requiredAgents } from '../../utils/erlangC.js'
@@ -20,10 +20,6 @@ function getPeriodsForView(view, quarters, weeks) {
   const activeQuarters = qList.length ? qList : ['FQ1', 'FQ2', 'FQ3', 'FQ4']
   const allWeeks = activeQuarters.flatMap((q) => getWeeksForQuarter(q))
   const wList = (weeks || []).filter((w) => w !== 'All')
-  if (view === 'daily') {
-    const weekPool = wList.length ? wList : [allWeeks[0]]
-    return weekPool.flatMap((wk) => WEEK_DAYS.map((d) => `${wk} - ${d}`))
-  }
   if (view === 'weekly') return wList.length ? wList : allWeeks
   return activeQuarters
 }

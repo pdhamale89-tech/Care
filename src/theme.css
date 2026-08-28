@@ -238,16 +238,9 @@ body {
 .kpi-card:nth-child(4n+2) { background: linear-gradient(135deg, #0ea5e9, #2563eb); }
 .kpi-card:nth-child(4n+3) { background: linear-gradient(135deg, #10b981, #059669); }
 .kpi-card:nth-child(4n+4) { background: linear-gradient(135deg, #f59e0b, #ef4444); }
-@media (max-width: 1024px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 640px) { .kpi-grid { grid-template-columns: 1fr; } }
-
-/* ===== Backlog summary (Assigned / Unassigned) ===== */
-.backlog-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.backlog-box { background: var(--bg-filter); border-radius: 12px; padding: 20px; text-align: center; }
-.backlog-box .val { font-size: 26px; font-weight: 800; color: var(--text-primary); }
-.backlog-box .lbl { font-size: 11px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; margin-top: 6px; }
-.backlog-box.assigned .val { color: var(--accent-blue); }
-.backlog-box.unassigned .val { color: var(--accent-red); }
+.kpi-grid.cols-6 { grid-template-columns: repeat(6, 1fr); }
+@media (max-width: 1024px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } .kpi-grid.cols-6 { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 640px) { .kpi-grid { grid-template-columns: 1fr; } .kpi-grid.cols-6 { grid-template-columns: 1fr; } }
 
 /* ===== Outage adherence % tones ===== */
 .outage-pct-bad { color: var(--accent-red); font-weight: 700; }
@@ -328,12 +321,12 @@ tr.group-row td { background: var(--table-header); font-weight: 800; color: var(
 @media (max-width: 640px) { .home-hero-grid { grid-template-columns: 1fr; } }
 
 @media (max-width: 1024px) {
-  .mini-row, .backlog-summary-grid { grid-template-columns: repeat(2, 1fr); }
+  .mini-row { grid-template-columns: repeat(2, 1fr); }
   .s-grid, .s-grid.thirds { grid-template-columns: 1fr; }
   .fc-grid { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 640px) {
-  .mini-row, .backlog-summary-grid { grid-template-columns: 1fr; }
+  .mini-row { grid-template-columns: 1fr; }
   .sidebar { display: none; }
   .fc-grid { grid-template-columns: 1fr; }
 }

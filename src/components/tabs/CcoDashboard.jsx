@@ -3,15 +3,14 @@ import { Bar, Pie } from 'react-chartjs-2'
 import { useApp } from '../../context/AppContext.jsx'
 import {
   fmt, pct, varClass, arrow, genKpiValue, hashSeed, getWeeksForQuarter,
-  WEEK_DAYS, issueLabels,
+  issueLabels,
 } from '../../data/mockGenerators.js'
 import { getColors } from '../../theme/colors.js'
 import { barDataLabels, lineEndDataLabels, stackedBarDataLabels, doughnutDataLabels } from '../../charts/datalabels.js'
-import DownloadBtn from '../common/DownloadBtn.jsx'
 import Modal from '../common/Modal.jsx'
 import InfoBtn from '../common/InfoBtn.jsx'
 import ForecastAdherenceMap from './ForecastAdherenceMap.jsx'
-import { issueTypeBarConfig } from '../../charts/chartConfigs.js'
+import { issueTypeBarConfig, stackedBarConfig } from '../../charts/chartConfigs.js'
 
 const METRIC_CHART_TIPS = {
   contacts: 'Contacts Offered, Actual vs Forecast, by period.',
@@ -34,7 +33,6 @@ const ISSUE_CHART_TIPS = {
 }
 
 const VIEW_CONFIG = {
-  daily: { title: 'Daily Performance Table', sub: 'Day-level performance (Sat–Fri week)' },
   weekly: { title: 'Weekly Performance Table', sub: 'Fiscal week-level performance' },
   quarterly: { title: 'Quarterly Performance Table', sub: 'Quarter-level aggregated performance' },
 }
@@ -98,10 +96,6 @@ function getPeriodsForView(view, quarters, weeks) {
   const allWeeks = activeQuarters.flatMap((q) => getWeeksForQuarter(q))
   const wList = (weeks || []).filter((w) => w !== 'All')
 
-  if (view === 'daily') {
-    const weekPool = wList.length ? wList : [allWeeks[0]]
-    return weekPool.flatMap((wk) => WEEK_DAYS.map((d) => `${wk} - ${d}`))
-  }
   if (view === 'weekly') return wList.length ? wList : allWeeks
   return activeQuarters
 }
@@ -172,6 +166,7 @@ export default function CcoDashboard({ view }) {
   const [slaModalOpen, setSlaModalOpen] = useState(false)
   const [channelModalKey, setChannelModalKey] = useState(null)
   const [metricDrillKey, setMetricDrillKey] = useState(null)
+  const [backlogModalOpen, setBacklogModalOpen] = useState(false)
   const [heatmapDrill, setHeatmapDrill] = useState(null)
 
   const seed = useMemo(
@@ -187,10 +182,29 @@ export default function CcoDashboard({ view }) {
       const variance = actual - forecast
       return { ...c, actual, forecast, variance, vp: pct(actual, forecast), cls: varClass(variance) }
     })
-    const crw = Math.round(genKpiValue(130, seed + 800).actual)
-    const headcount = Math.round(genKpiValue(65, seed + 900).actual)
-    return { metrics, crw, headcount }
+    return { metrics }
   }, [periods, seed])
+
+  const crwHeadcountChart = useMemo(() => {
+    const shortLabels = periods.map(shortPeriodLabel)
+    const crw = periods.map((_, i) => Math.round(genKpiValue(130, seed + i * 7 + 800).actual))
+    const headcount = periods.map((_, i) => Math.round(genKpiValue(65, seed + i * 7 + 900).actual))
+    return {
+      data: {
+        labels: shortLabels,
+        datasets: [
+          { label: 'CRW', data: crw, backgroundColor: colors.accentBlue, borderRadius: 4, datalabels: barDataLabels('', colors.accentBlue) },
+          { label: 'Headcount', data: headcount, backgroundColor: colors.accentGreen, borderRadius: 4, datalabels: barDataLabels('', colors.accentGreen) },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { beginAtZero: true } },
+      },
+    }
+  }, [periods, seed, colors])
 
   const channelSlaTrendChart = useMemo(() => {
     const labels = periods.map(shortPeriodLabel)
@@ -277,26 +291,6 @@ export default function CcoDashboard({ view }) {
   const visibleMetricCharts = useMemo(() => metricCharts.filter((c) => METRIC_COMPARISON_VISIBLE.includes(c.key)), [metricCharts])
   const metricDrillCharts = metricDrillKey ? METRIC_DRILL_DOWN[metricDrillKey].map((k) => metricChartsByKey[k]) : null
 
-  const table1Rows = useMemo(
-    () => CHANNELS.map((c, i) => {
-      const { actual, forecast } = genKpiValue(CHANNEL_BASES_1[i], seed + i + 70)
-      const variance = actual - forecast
-      return { channel: c, actual, forecast, variance, vp: pct(actual, forecast), cls: varClass(variance) }
-    }),
-    [seed],
-  )
-
-  const table3Rows = useMemo(
-    () => TCD_CHANNELS.map((c, i) => {
-      const raw = genKpiValue(TCD_CHANNEL_BASES[i], seed + i + 90)
-      const actual = Math.round(raw.actual)
-      const forecast = Math.round(raw.forecast)
-      const variance = actual - forecast
-      return { channel: c, actual, forecast, variance, vp: pct(actual, forecast), cls: varClass(variance) }
-    }),
-    [seed],
-  )
-
   const issueCharts = useMemo(
     () => ISSUE_CHARTS.map(({ id, title, base, unit }) => {
       const actual = issueLabels.map((_, i) => Math.round(base * (0.8 + ((Math.sin((seed + i) * 2.7) + 1) / 2) * 0.5)))
@@ -334,17 +328,10 @@ export default function CcoDashboard({ view }) {
     return { metricLabel: col.title, unit: col.unit, rows }
   }, [heatmapDrill, periods, seed])
 
-  const backlog = useMemo(() => {
-    const assigned = genKpiValue(2800, seed + 401).actual
-    const unassigned = genKpiValue(650, seed + 402).actual
-    const total = Math.round(assigned + unassigned)
-    return {
-      assigned: Math.round(assigned),
-      unassigned: Math.round(unassigned),
-      assignedPct: ((assigned / total) * 100).toFixed(1),
-      unassignedPct: ((unassigned / total) * 100).toFixed(1),
-    }
-  }, [seed])
+  const backlog = useMemo(() => ({
+    assigned: Math.round(genKpiValue(2800, seed + 401).actual),
+    unassigned: Math.round(genKpiValue(650, seed + 402).actual),
+  }), [seed])
 
   const backlogPieConfig = useMemo(() => ({
     data: {
@@ -364,12 +351,22 @@ export default function CcoDashboard({ view }) {
     },
   }), [backlog, colors])
 
+  const backlogTrendChart = useMemo(() => {
+    const shortLabels = periods.map(shortPeriodLabel)
+    const assigned = periods.map((_, i) => Math.round(genKpiValue(2800, seed + i * 7 + 401).actual))
+    const unassigned = periods.map((_, i) => Math.round(genKpiValue(650, seed + i * 7 + 402).actual))
+    return stackedBarConfig(shortLabels, [
+      { label: 'Assigned', data: assigned, backgroundColor: colors.accentBlue },
+      { label: 'Unassigned', data: unassigned, backgroundColor: colors.accentRed },
+    ])
+  }, [periods, seed, colors])
+
   return (
     <div className="tab-panel active">
       <div className="section-div">
         <h2>Key Metrics Summary</h2>
       </div>
-      <div className="kpi-grid">
+      <div className="kpi-grid cols-6">
         {keyMetrics.metrics.map((m) => {
           if (m.key === 'sla') {
             return (
@@ -413,15 +410,16 @@ export default function CcoDashboard({ view }) {
             </div>
           )
         })}
-        <div className="kpi-card">
-          <div className="kpi-label">CRW</div>
-          <div className="kpi-value">{fmt(keyMetrics.crw)}</div>
-          <div className="kpi-sub">Actual only</div>
+      </div>
+
+      <div className="card">
+        <div className="card-header">
+          <div className="card-title">
+            CRW &amp; Headcount <InfoBtn tip={`<strong>Purpose</strong>CRW and Headcount trend, ${view} view.`} />
+          </div>
         </div>
-        <div className="kpi-card">
-          <div className="kpi-label">Headcount</div>
-          <div className="kpi-value">{fmt(keyMetrics.headcount)}</div>
-          <div className="kpi-sub">Actual only</div>
+        <div className="chart-container">
+          <Bar data={crwHeadcountChart.data} options={crwHeadcountChart.options} />
         </div>
       </div>
 
@@ -472,62 +470,6 @@ export default function CcoDashboard({ view }) {
       </Modal>
 
       <div className="section-div">
-        <h2>Contacts Offered by Channel</h2>
-      </div>
-      <div className="card">
-        <div className="card-header">
-          <div className="card-title">
-            Channel Volume <InfoBtn tip="<strong>Purpose</strong>Contacts offered per channel (Voice, Email, Chat, W2C), Actual vs Forecast." />
-          </div>
-          <DownloadBtn filename="cco-channel-table" rows={[['Channel', 'Actual', 'Forecast', 'Variance', 'Variance %'], ...table1Rows.map((r) => [r.channel, r.actual, r.forecast, r.variance, r.vp.toFixed(1) + '%'])]} />
-        </div>
-        <div className="tw">
-          <table>
-            <thead><tr><th>Channel</th><th>Actual</th><th>Forecast</th><th>Variance</th><th>Var %</th></tr></thead>
-            <tbody>
-              {table1Rows.map((r) => (
-                <tr key={r.channel}>
-                  <td>{r.channel}</td>
-                  <td>{fmt(r.actual)}</td>
-                  <td>{fmt(r.forecast)}</td>
-                  <td><span className={'badge ' + r.cls}>{arrow(r.variance)} {fmt(Math.abs(r.variance))}</span></td>
-                  <td><span className={'badge ' + r.cls}>{fmt(Math.abs(r.vp))}%</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div className="section-div">
-        <h2>TCD Breakdown by Contact Type</h2>
-      </div>
-      <div className="card">
-        <div className="card-header">
-          <div className="card-title">
-            Contact Type Duration <InfoBtn tip="<strong>Purpose</strong>Total Contact Duration per channel (Voice, Email, Chat), Actual vs Forecast." />
-          </div>
-          <DownloadBtn filename="cco-tcd-table" rows={[['Channel', 'Actual', 'Forecast', 'Variance', 'Var %'], ...table3Rows.map((r) => [r.channel, r.actual, r.forecast, r.variance, r.vp.toFixed(1) + '%'])]} />
-        </div>
-        <div className="tw">
-          <table>
-            <thead><tr><th>Channel</th><th>Actual</th><th>Forecast</th><th>Variance</th><th>Var %</th></tr></thead>
-            <tbody>
-              {table3Rows.map((r) => (
-                <tr key={r.channel}>
-                  <td>{r.channel}</td>
-                  <td>{fmt(r.actual)}</td>
-                  <td>{fmt(r.forecast)}</td>
-                  <td><span className={'badge ' + r.cls}>{arrow(r.variance)} {fmt(Math.abs(r.variance))}</span></td>
-                  <td><span className={'badge ' + r.cls}>{fmt(Math.abs(r.vp))}%</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div className="section-div">
         <h2>Issue Type Analysis</h2>
       </div>
       <div className="s-grid thirds">
@@ -571,7 +513,7 @@ export default function CcoDashboard({ view }) {
               {' '}
               <InfoBtn
                 tip={heatmapDrill
-                  ? `<strong>Purpose</strong>${heatmapDrillData.metricLabel} for every issue type, broken down by period (${view} view). Use the Daily / Weekly / Quarterly buttons above to change granularity.`
+                  ? `<strong>Purpose</strong>${heatmapDrillData.metricLabel} for every issue type, broken down by period (${view} view). Use the Weekly / Quarterly buttons above to change granularity.`
                   : '<strong>Purpose</strong>Actual values for Cases, Activities, APC, TCD, Case Rate and Ci1 across all 9 issue types. Use the Drill Down button on a row to see that metric broken down by issue type and period.'}
               />
             </div>
@@ -643,30 +585,27 @@ export default function CcoDashboard({ view }) {
       <div className="section-div">
         <h2>Backlog Analysis</h2>
       </div>
-      <div className="s-grid">
-        <div className="card">
-          <div className="backlog-summary-grid">
-            <div className="backlog-box assigned">
-              <div className="val">{fmt(backlog.assigned)}</div>
-              <div className="lbl">Assigned ({backlog.assignedPct}%)</div>
-            </div>
-            <div className="backlog-box unassigned">
-              <div className="val">{fmt(backlog.unassigned)}</div>
-              <div className="lbl">Unassigned ({backlog.unassignedPct}%)</div>
-            </div>
+      <div className="card clickable-card" onClick={() => setBacklogModalOpen(true)} title="Click for weekly/quarterly breakdown">
+        <div className="card-header">
+          <div className="card-title">
+            Assigned vs Unassigned <InfoBtn tip="<strong>Purpose</strong>Share of backlog that is assigned to an agent vs still unassigned. Click for a weekly/quarterly breakdown." />
           </div>
         </div>
-        <div className="card">
-          <div className="card-header">
-            <div className="card-title">
-              Assigned vs Unassigned <InfoBtn tip="<strong>Purpose</strong>Share of backlog that is assigned to an agent vs still unassigned." />
-            </div>
-          </div>
-          <div className="chart-container">
-            <Pie data={backlogPieConfig.data} options={backlogPieConfig.options} />
-          </div>
+        <div className="chart-container">
+          <Pie data={backlogPieConfig.data} options={backlogPieConfig.options} />
         </div>
+        <div className="mc-drill-hint">Click to drill down ▸</div>
       </div>
+
+      <Modal
+        open={backlogModalOpen}
+        onClose={() => setBacklogModalOpen(false)}
+        title={`Assigned vs Unassigned — ${view === 'weekly' ? 'Weekly' : 'Quarterly'} Breakdown`}
+      >
+        <div className="chart-container" style={{ height: 280 }}>
+          <Bar data={backlogTrendChart.data} options={backlogTrendChart.options} />
+        </div>
+      </Modal>
 
       <Modal
         open={slaModalOpen}

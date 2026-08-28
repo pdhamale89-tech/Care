@@ -31,7 +31,7 @@ export function AppProvider({ children }) {
   const [activeRegions, setActiveRegionsState] = useState(['APJC'])
 
   const [ccoFilters, setCcoFilters] = useState(CCO_FILTERS_DEFAULT)
-  const [ccoView, setCcoView] = useState('daily')
+  const [ccoView, setCcoView] = useState('weekly')
   const [outageFilters, setOutageFilters] = useState(OUTAGE_FILTERS_DEFAULT)
   const [epicenterFilters, setEpicenterFilters] = useState(EPICENTER_FILTERS_DEFAULT)
 
@@ -67,7 +67,7 @@ export function AppProvider({ children }) {
   }, [])
 
   const clearFilters = useCallback(() => {
-    if (currentTab === 'cco' || currentTab === 'whatIf') { setCcoFilters(CCO_FILTERS_DEFAULT); setCcoView('daily') }
+    if (currentTab === 'cco' || currentTab === 'whatIf') { setCcoFilters(CCO_FILTERS_DEFAULT); setCcoView('weekly') }
     else if (currentTab === 'outage') setOutageFilters(OUTAGE_FILTERS_DEFAULT)
     else if (currentTab === 'epicenter') setEpicenterFilters(EPICENTER_FILTERS_DEFAULT)
   }, [currentTab])
