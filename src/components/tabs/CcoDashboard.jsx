@@ -492,7 +492,7 @@ export default function CcoDashboard({ view }) {
               )}
               {heatmapDrill
                 ? `${heatmapDrillData.metricLabel} by Issue Type — ${cfg.title.replace(' Performance Table', '')}`
-                : 'Issue Type Metrics Heatmap'}
+                : 'Issue Type Metrics'}
               {' '}
               <InfoBtn
                 tip={heatmapDrill
