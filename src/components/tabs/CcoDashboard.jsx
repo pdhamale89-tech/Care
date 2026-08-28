@@ -137,9 +137,9 @@ function buildMetricComparisonConfig(col, labels, actual, forecast, colors) {
     data: {
       labels,
       datasets: [
-        { label: 'Actual', data: actual, backgroundColor: colors.accentBlue, borderRadius: 4, datalabels: barDataLabels(col.unit, colors.accentBlue) },
-        { label: 'Forecast', data: forecast, backgroundColor: colors.border, borderRadius: 4, datalabels: barDataLabels(col.unit, colors.textSecondary) },
-        { type: 'line', label: 'Accuracy %', data: accuracy, borderColor: colors.accentPurple, backgroundColor: colors.accentPurple, yAxisID: 'y1', tension: 0.3, pointRadius: 3, datalabels: lineDataLabels('%', colors.accentPurple) },
+        { label: 'Actual', data: actual, backgroundColor: colors.accentBlue, borderRadius: 4, order: 1, datalabels: barDataLabels(col.unit, colors.accentBlue) },
+        { label: 'Forecast', data: forecast, backgroundColor: colors.border, borderRadius: 4, order: 1, datalabels: barDataLabels(col.unit, colors.textSecondary) },
+        { type: 'line', label: 'Accuracy %', data: accuracy, borderColor: colors.accentPurple, backgroundColor: colors.accentPurple, yAxisID: 'y1', tension: 0.3, pointRadius: 3, order: 2, datalabels: lineDataLabels('%', colors.accentPurple) },
       ],
     },
     options: {
@@ -147,7 +147,9 @@ function buildMetricComparisonConfig(col, labels, actual, forecast, colors) {
       maintainAspectRatio: false,
       plugins: { legend: { position: 'bottom' } },
       scales: {
-        y: { beginAtZero: col.key !== 'caseRate' },
+        // Extra headroom keeps bar tops (and their labels) clear of the Accuracy line,
+        // which floats near the top of its own 0-100 axis since accuracy is usually >=85%.
+        y: { beginAtZero: col.key !== 'caseRate', grace: '25%' },
         y1: { position: 'right', min: 0, max: 100, grid: { drawOnChartArea: false }, ticks: { callback: (v) => v + '%' } },
       },
     },
