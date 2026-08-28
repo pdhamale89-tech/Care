@@ -417,3 +417,13 @@ tr.group-row td { background: var(--table-header); font-weight: 800; color: var(
 #globalInfoTip { display: none; position: fixed; z-index: 99999; width: 280px; padding: 10px 12px; background: var(--tooltip-bg); color: #e5e7eb; border-radius: 8px; font-size: 10px; line-height: 1.6; box-shadow: var(--shadow-lg); pointer-events: none; }
 #globalInfoTip.show { display: block; }
 #globalInfoTip strong { color: #fbbf24; display: block; margin-bottom: 2px; font-size: 9px; text-transform: uppercase; }
+
+/* ===== Metric Comparison preview — stat tiles ===== */
+.mc-tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.mc-tile { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 4px; }
+.mc-tile-label { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .3px; }
+.mc-tile-value { font-size: 18px; font-weight: 800; color: var(--text-primary); }
+.mc-tile-delta { font-size: 10px; font-weight: 700; }
+.mc-tile-delta.pos { color: var(--accent-green); }
+.mc-tile-delta.neg { color: var(--accent-red); }
+.spark-svg { margin-top: 2px; }

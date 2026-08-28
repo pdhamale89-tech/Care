@@ -8,6 +8,12 @@ const NAV_SECTIONS = [
     ],
   },
   {
+    label: 'Preview (temp)',
+    items: [
+      { id: 'metricComparisonPreview', label: 'Metric Comparison', icon: '🧪' },
+    ],
+  },
+  {
     label: 'Workforce Reports',
     items: [
       { id: 'outage', label: 'Outage Report', icon: '⚠️' },
