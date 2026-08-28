@@ -200,7 +200,6 @@ body {
 .card:hover { box-shadow: var(--shadow-md); }
 .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; flex-wrap: wrap; }
 .card-title { font-size: 12px; font-weight: 700; color: var(--text-card); display: flex; align-items: center; gap: 5px; }
-.mc-accuracy-label { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .3px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); }
 .card-dd { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 .chart-container { position: relative; height: 240px; width: 100%; }
 

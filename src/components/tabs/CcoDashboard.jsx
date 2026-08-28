@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Bar, Line } from 'react-chartjs-2'
+import { Bar } from 'react-chartjs-2'
 import { useApp } from '../../context/AppContext.jsx'
 import {
   fmt, pct, varClass, arrow, genKpiValue, hashSeed, getWeeksForQuarter,
@@ -129,22 +129,6 @@ function buildMetricComparisonConfig(col, labels, actual, forecast, colors) {
       },
     }
   }
-  return {
-    data: {
-      labels,
-      datasets: [
-        { label: 'Actual', data: actual, backgroundColor: colors.accentBlue, borderRadius: 4, datalabels: barDataLabels(col.unit, colors.accentBlue) },
-        { label: 'Forecast', data: forecast, backgroundColor: colors.border, borderRadius: 4, datalabels: barDataLabels(col.unit, colors.textSecondary) },
-      ],
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: col.key !== 'caseRate' } } },
-  }
-}
-
-// Accuracy % gets its own small single-axis line chart under the bars instead of a
-// second axis on the same chart — a dual-axis combo kept rendering the line/points/
-// labels unreadable (fighting the bar chart's scale, z-order and label space).
-function buildAccuracyConfig(labels, actual, forecast, colors) {
   const accuracy = actual.map((a, i) => {
     const f = forecast[i]
     return f === 0 ? 100 : Math.max(0, Math.min(100, Math.round((100 - Math.abs((a - f) / f) * 100) * 10) / 10))
@@ -153,16 +137,23 @@ function buildAccuracyConfig(labels, actual, forecast, colors) {
     data: {
       labels,
       datasets: [
-        { label: 'Accuracy %', data: accuracy, borderColor: colors.accentPurple, backgroundColor: colors.accentPurple, tension: 0.3, pointRadius: 3, borderWidth: 2, datalabels: lineEndDataLabels('%', colors.accentPurple) },
+        { label: 'Actual', data: actual, backgroundColor: colors.accentBlue, borderRadius: 4, order: 1, datalabels: barDataLabels(col.unit, colors.accentBlue) },
+        { label: 'Forecast', data: forecast, backgroundColor: colors.border, borderRadius: 4, order: 1, datalabels: barDataLabels(col.unit, colors.textSecondary) },
+        { type: 'line', label: 'Accuracy %', data: accuracy, borderColor: colors.accentPurple, backgroundColor: colors.accentPurple, yAxisID: 'y1', tension: 0.3, pointRadius: 3, borderWidth: 2, order: 2, datalabels: lineEndDataLabels('%', colors.accentPurple) },
       ],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: { legend: { position: 'bottom' } },
       scales: {
-        x: { ticks: { font: { size: 9 } } },
-        y: { min: 0, max: 100, ticks: { callback: (v) => v + '%', font: { size: 9 } } },
+        // Extra headroom keeps bar tops (and their labels) clear of the Accuracy line.
+        y: { beginAtZero: col.key !== 'caseRate', grace: '25%' },
+        // `type: 'linear'` is required here — Chart.js only infers a scale's type
+        // automatically for the default 'x'/'y' ids; a non-default id like 'y1'
+        // silently falls back to a category scale without it, which is why the
+        // line/points/labels weren't rendering correctly before.
+        y1: { type: 'linear', position: 'right', min: 0, max: 100, grid: { drawOnChartArea: false }, ticks: { callback: (v) => v + '%' } },
       },
     },
   }
@@ -267,9 +258,7 @@ export default function CcoDashboard({ view }) {
           return {
             key: c.key,
             title: c.hf ? `${c.label} — Actual vs Forecast` : `${c.label} — Actual`,
-            hf: c.hf,
             config: buildMetricComparisonConfig(c, shortLabels, actual, forecast, colors),
-            accuracyConfig: c.hf ? buildAccuracyConfig(shortLabels, actual, forecast, colors) : null,
           }
         })
         .filter((c) => c.key !== 'sla')
@@ -421,14 +410,6 @@ export default function CcoDashboard({ view }) {
             <div className="chart-container">
               <Bar data={c.config.data} options={c.config.options} />
             </div>
-            {c.accuracyConfig && (
-              <>
-                <div className="mc-accuracy-label">Accuracy %</div>
-                <div className="chart-container" style={{ height: 90 }}>
-                  <Line data={c.accuracyConfig.data} options={c.accuracyConfig.options} />
-                </div>
-              </>
-            )}
           </div>
         ))}
       </div>
