@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import jsVectorMap from 'jsvectormap'
 import 'jsvectormap/dist/maps/world.js'
 import 'jsvectormap/dist/jsvectormap.min.css'
-import { REGION_ACC, COUNTRY_REGION, COUNTRY_SUBREGION, SUBREGION_ACC, accTier } from '../../data/geoRegions.js'
+import { COUNTRY_REGION, COUNTRY_SUBREGION, computeAccuracy, accTier } from '../../data/geoRegions.js'
+import { hashSeed } from '../../data/mockGenerators.js'
 import { getColors } from '../../theme/colors.js'
 import { useApp } from '../../context/AppContext.jsx'
 import InfoBtn from '../common/InfoBtn.jsx'
@@ -23,12 +24,18 @@ function tierColor(val, c) {
 }
 
 export default function ForecastAdherenceMap() {
-  const { theme } = useApp()
+  const { theme, ccoFilters, ccoView } = useApp()
   const [mode, setMode] = useState('region')
   const [hover, setHover] = useState(null)
-  const [drill, setDrill] = useState(null)
+  const [drillOpen, setDrillOpen] = useState(false)
   const mapRef = useRef(null)
   const colors = getColors(theme)
+
+  const seed = useMemo(
+    () => hashSeed(ccoFilters.subRegion.join(',') + ccoFilters.quarter.join(',') + ccoFilters.week.join(',') + ccoView + 'overallSlaMap'),
+    [ccoFilters, ccoView],
+  )
+  const { regionAcc, subregionAcc } = useMemo(() => computeAccuracy(seed), [seed])
 
   useEffect(() => {
     if (mapRef.current) {
@@ -37,7 +44,7 @@ export default function ForecastAdherenceMap() {
     }
     setHover(null)
     const isSubregion = mode === 'subregion'
-    const groupAcc = isSubregion ? SUBREGION_ACC : REGION_ACC
+    const groupAcc = isSubregion ? subregionAcc : regionAcc
     const groupOf = isSubregion ? COUNTRY_SUBREGION : COUNTRY_REGION
     const labelCoords = isSubregion ? SUBREGION_LABEL_COORDS : REGION_LABEL_COORDS
     const tierScale = { excellent: colors.accentGreen, good: colors.accentBlue, fair: colors.accentOrange, critical: colors.accentRed }
@@ -89,9 +96,8 @@ export default function ForecastAdherenceMap() {
         if (!group) return
         setHover({ label: group, value: groupAcc[group] })
       },
-      onRegionClick(event, code) {
-        const macroRegion = COUNTRY_REGION[code]
-        if (macroRegion) setDrill(macroRegion)
+      onRegionClick() {
+        setDrillOpen(true)
       },
     })
 
@@ -100,13 +106,13 @@ export default function ForecastAdherenceMap() {
       mapRef.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme, mode])
+  }, [theme, mode, regionAcc, subregionAcc])
 
   return (
     <div className="card">
       <div className="card-header">
         <div className="card-title">
-          🌍 Overall SLA <InfoBtn tip="<strong>Purpose</strong>Overall SLA by geography. Toggle Region/Sub Region to change map granularity; % labels are shown directly on the map. Click a region for a Region/Sub Region/Country breakdown." />
+          🌍 Overall SLA <InfoBtn tip={`<strong>Purpose</strong>Overall SLA by geography, ${ccoView} view. Toggle Region/Sub Region to change map granularity; % labels are shown directly on the map.<strong>Tip</strong>💡 Click the map for a Channel/Segment/Region/Sub Region variance matrix.`} />
         </div>
         <div className="plan-sel">
           <button type="button" className={'plan-btn' + (mode === 'region' ? ' active' : '')} onClick={() => setMode('region')}>Region</button>
@@ -131,7 +137,7 @@ export default function ForecastAdherenceMap() {
         <span className="geo-legend-item"><span className="geo-legend-dot" style={{ background: colors.accentRed }}></span>&lt;70% Critical</span>
       </div>
 
-      <OverallSlaDrillModal open={!!drill} onClose={() => setDrill(null)} focusRegion={drill} />
+      <OverallSlaDrillModal open={drillOpen} onClose={() => setDrillOpen(false)} seed={seed} />
     </div>
   )
 }

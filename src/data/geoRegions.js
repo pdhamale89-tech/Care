@@ -1,13 +1,14 @@
-// Forecast Adherence map data — region/sub-region country groupings and their
-// accuracy figures. Structure and base values mirror the SPOG_CSG reference
-// implementation's src/data/regions.js.
+// Overall SLA map data — region/sub-region country groupings, plus a seeded
+// accuracy computation so the map/drill-down respond to the Daily/Weekly/
+// Quarterly selector like the rest of CCO Overview. Structure mirrors the
+// SPOG_CSG reference implementation's src/data/regions.js.
 export const REGION_COUNTRIES = {
   AMER: ['US', 'CA', 'MX', 'BR', 'AR', 'CL', 'CO', 'PE', 'VE', 'EC', 'BO', 'PY', 'UY', 'GT', 'HN', 'SV', 'NI', 'CR', 'PA', 'DO', 'CU', 'HT', 'JM', 'TT', 'GY', 'SR', 'BZ', 'GL'],
   EMEA: ['GB', 'IE', 'FR', 'DE', 'ES', 'PT', 'IT', 'NL', 'BE', 'LU', 'CH', 'AT', 'SE', 'NO', 'DK', 'FI', 'IS', 'PL', 'CZ', 'SK', 'HU', 'RO', 'BG', 'GR', 'HR', 'SI', 'RS', 'BA', 'MK', 'AL', 'ME', 'XK', 'EE', 'LV', 'LT', 'UA', 'BY', 'MD', 'RU', 'TR', 'CY', 'MT', 'ZA', 'EG', 'NG', 'KE', 'MA', 'DZ', 'TN', 'LY', 'SA', 'AE', 'IL', 'QA', 'KW', 'BH', 'OM', 'JO', 'LB', 'IQ', 'IR', 'GH', 'ET', 'TZ', 'UG', 'AO', 'MZ', 'ZM', 'ZW', 'SN', 'CI', 'CM'],
   APJ: ['CN', 'JP', 'KR', 'IN', 'AU', 'NZ', 'SG', 'MY', 'TH', 'VN', 'ID', 'PH', 'TW', 'HK', 'PK', 'BD', 'LK', 'NP', 'MM', 'KH', 'LA', 'MN', 'BN', 'MO', 'FJ', 'PG', 'KZ', 'UZ', 'AF'],
 }
 
-export const REGION_ACC = { AMER: 78, EMEA: 66, APJ: 48 }
+const BASE_REGION_ACC = { AMER: 78, EMEA: 66, APJ: 48 }
 
 export const COUNTRY_REGION = Object.keys(REGION_COUNTRIES).reduce((acc, region) => {
   REGION_COUNTRIES[region].forEach((code) => { acc[code] = region })
@@ -20,13 +21,9 @@ function hashCode(str) {
   return Math.abs(h)
 }
 
-// Deterministic per-country accuracy derived from its region's baseline (no live country-level feed).
-export const COUNTRY_ACC = Object.keys(COUNTRY_REGION).reduce((acc, code) => {
-  const base = REGION_ACC[COUNTRY_REGION[code]]
-  const variance = (hashCode(code) % 21) - 10 // -10..+10
-  acc[code] = Math.max(30, Math.min(96, base + variance))
-  return acc
-}, {})
+function jitter(seed) {
+  return (Math.sin(seed * 13.37) + 1) / 2
+}
 
 // Sub-region buckets, one level below the top-level Region grouping above.
 // EMEA's SER bucket absorbs everything else in the region (Southern Europe,
@@ -58,12 +55,29 @@ export const COUNTRY_SUBREGION = Object.keys(SUBREGION_MEMBERS).reduce((acc, sub
   return acc
 }, {})
 
-// Sub-region accuracy is the average of its member countries' accuracy.
-export const SUBREGION_ACC = Object.keys(SUBREGION_MEMBERS).reduce((acc, sub) => {
-  const members = SUBREGION_MEMBERS[sub].filter((code) => COUNTRY_ACC[code] != null)
-  acc[sub] = Math.round(members.reduce((s, code) => s + COUNTRY_ACC[code], 0) / members.length)
-  return acc
-}, {})
+// Region accuracy varies with the given seed (tie it to CCO Overview's
+// Daily/Weekly/Quarterly view + filters); sub-region and country accuracy are
+// derived from it so the map, its labels and the drill-down modal all agree.
+export function computeAccuracy(seed) {
+  const regionAcc = Object.fromEntries(
+    Object.entries(BASE_REGION_ACC).map(([region, base], i) => {
+      const j = jitter(seed + i * 17 + 500)
+      return [region, Math.round(Math.max(25, Math.min(96, base + (j - 0.5) * 18)))]
+    }),
+  )
+  const countryAcc = Object.keys(COUNTRY_REGION).reduce((acc, code) => {
+    const base = regionAcc[COUNTRY_REGION[code]]
+    const variance = (hashCode(code) % 21) - 10 // -10..+10
+    acc[code] = Math.max(20, Math.min(99, base + variance))
+    return acc
+  }, {})
+  const subregionAcc = Object.keys(SUBREGION_MEMBERS).reduce((acc, sub) => {
+    const members = SUBREGION_MEMBERS[sub].filter((code) => countryAcc[code] != null)
+    acc[sub] = Math.round(members.reduce((s, code) => s + countryAcc[code], 0) / members.length)
+    return acc
+  }, {})
+  return { regionAcc, subregionAcc, countryAcc }
+}
 
 export function accTier(val) {
   if (val >= 90) return 'excellent'

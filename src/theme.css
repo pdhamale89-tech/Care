@@ -376,6 +376,17 @@ tr.group-row td { background: var(--table-header); font-weight: 800; color: var(
 .mtx-toggle { background: none; border: none; padding: 0; font: inherit; font-size: 11px; font-weight: 700; color: var(--text-primary); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
 .mtx-toggle:hover { color: var(--accent-blue); }
 .mtx-toggle-ic { font-size: 9px; color: var(--text-muted); width: 10px; }
+.mtx-tbl { border-collapse: collapse; font-size: 10px; white-space: nowrap; }
+.mtx-tbl th, .mtx-tbl td { padding: 6px 10px; text-align: center; border: 1px solid var(--border); }
+.mtx-tbl thead th { color: var(--text-primary); font-size: 10px; font-weight: 700; background: var(--bg-filter); }
+.mtx-tbl thead th:first-child, .mtx-tbl thead th:nth-child(2) { background: var(--bg-card); }
+.mtx-region-hdr { background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); color: #fff; }
+.mtx-sub-hdr { background: var(--accent-blue); color: #fff; font-size: 9px; }
+.mtx-tbl tbody th { text-align: left; font-weight: 600; color: var(--text-primary); background: var(--bg-card); }
+.mtx-tbl td.mtx-pos { background: var(--accent-green); color: #fff; font-weight: 700; }
+.mtx-tbl td.mtx-neg { background: var(--accent-red); color: #fff; font-weight: 700; }
+.mtx-overall-row th { background: var(--bg-filter); font-weight: 800; border-top: 2px solid var(--text-primary); }
+.mtx-overall-row td { border-top: 2px solid var(--text-primary); }
 
 .fc-wrap { overflow-x: auto; padding: 4px 0; }
 .fc-title { font-size: 16px; font-weight: 800; text-align: center; color: var(--text-primary); margin-bottom: 2px; }
