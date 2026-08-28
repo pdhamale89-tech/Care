@@ -413,7 +413,7 @@ export default function CcoDashboard({ view }) {
       </div>
 
       <div className="section-div">
-        <h2>Forecast Adherence</h2>
+        <h2>Overall SLA</h2>
       </div>
       <ForecastAdherenceMap />
 

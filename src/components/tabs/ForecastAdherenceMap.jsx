@@ -6,6 +6,7 @@ import { REGION_ACC, COUNTRY_REGION, COUNTRY_SUBREGION, SUBREGION_ACC, accTier }
 import { getColors } from '../../theme/colors.js'
 import { useApp } from '../../context/AppContext.jsx'
 import InfoBtn from '../common/InfoBtn.jsx'
+import OverallSlaDrillModal from './OverallSlaDrillModal.jsx'
 
 // Hand-picked on-land coordinates so region/sub-region labels land in a
 // recognizable spot instead of at an arbitrary country's bounding-box center.
@@ -25,6 +26,7 @@ export default function ForecastAdherenceMap() {
   const { theme } = useApp()
   const [mode, setMode] = useState('region')
   const [hover, setHover] = useState(null)
+  const [drill, setDrill] = useState(null)
   const mapRef = useRef(null)
   const colors = getColors(theme)
 
@@ -87,6 +89,10 @@ export default function ForecastAdherenceMap() {
         if (!group) return
         setHover({ label: group, value: groupAcc[group] })
       },
+      onRegionClick(event, code) {
+        const macroRegion = COUNTRY_REGION[code]
+        if (macroRegion) setDrill(macroRegion)
+      },
     })
 
     return () => {
@@ -100,7 +106,7 @@ export default function ForecastAdherenceMap() {
     <div className="card">
       <div className="card-header">
         <div className="card-title">
-          🌍 Forecast Adherence <InfoBtn tip="<strong>Purpose</strong>Forecast accuracy by geography. Toggle Region/Sub Region to change map granularity; % labels are shown directly on the map." />
+          🌍 Overall SLA <InfoBtn tip="<strong>Purpose</strong>Overall SLA by geography. Toggle Region/Sub Region to change map granularity; % labels are shown directly on the map. Click a region for a Region/Sub Region/Country breakdown." />
         </div>
         <div className="plan-sel">
           <button type="button" className={'plan-btn' + (mode === 'region' ? ' active' : '')} onClick={() => setMode('region')}>Region</button>
@@ -124,6 +130,8 @@ export default function ForecastAdherenceMap() {
         <span className="geo-legend-item"><span className="geo-legend-dot" style={{ background: colors.accentOrange }}></span>70–80% Fair</span>
         <span className="geo-legend-item"><span className="geo-legend-dot" style={{ background: colors.accentRed }}></span>&lt;70% Critical</span>
       </div>
+
+      <OverallSlaDrillModal open={!!drill} onClose={() => setDrill(null)} focusRegion={drill} />
     </div>
   )
 }
