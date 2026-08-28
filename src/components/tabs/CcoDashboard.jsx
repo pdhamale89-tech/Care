@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
-import { Bar } from 'react-chartjs-2'
+import { Bar, Pie } from 'react-chartjs-2'
 import { useApp } from '../../context/AppContext.jsx'
 import {
   fmt, pct, varClass, arrow, genKpiValue, hashSeed, getWeeksForQuarter,
   WEEK_DAYS, issueLabels,
 } from '../../data/mockGenerators.js'
 import { getColors } from '../../theme/colors.js'
-import { barDataLabels, lineEndDataLabels, stackedBarDataLabels } from '../../charts/datalabels.js'
+import { barDataLabels, lineEndDataLabels, stackedBarDataLabels, doughnutDataLabels } from '../../charts/datalabels.js'
 import DownloadBtn from '../common/DownloadBtn.jsx'
 import Modal from '../common/Modal.jsx'
 import InfoBtn from '../common/InfoBtn.jsx'
@@ -22,8 +22,6 @@ const METRIC_CHART_TIPS = {
   cases: 'Cases handled, Actual vs Forecast, by period.',
   activities: 'Activities logged, Actual vs Forecast, by period.',
   apc: 'Activities Per Case (decimal), Actual only, by period.',
-  icw: 'ICW volume, Actual only, by period.',
-  ccpd: 'Cases Closed per Day, Actual only, by period.',
 }
 
 const ISSUE_CHART_TIPS = {
@@ -54,13 +52,15 @@ const EXTRA_METRIC_CHARTS = [
   { key: 'cases', label: 'Cases', base: 3200, unit: '', hf: true, decimals: 0 },
   { key: 'activities', label: 'Activities', base: 16000, unit: '', hf: true, decimals: 0 },
   { key: 'apc', label: 'APC', base: 4.8, unit: '', hf: false, decimals: 1 },
-  { key: 'icw', label: 'ICW', base: 850, unit: '', hf: false, decimals: 0 },
-  { key: 'ccpd', label: 'CCpD', base: 42, unit: '', hf: false, decimals: 0 },
 ]
 
-// APC / ICW / CCpD are all "Actual only" metrics — shown as one card with a toggle
-// instead of three separate cards.
-const ACTUAL_TOGGLE_KEYS = ['apc', 'icw', 'ccpd']
+// Metric Comparison shows only these 3 cards; each drills into a pair of related metrics.
+const METRIC_COMPARISON_VISIBLE = ['caseRate', 'cpsr', 'apc']
+const METRIC_DRILL_DOWN = {
+  caseRate: ['cases', 'orders'],
+  cpsr: ['tcd', 'cases'],
+  apc: ['activities', 'cases'],
+}
 
 const CHANNELS = ['Voice', 'Email', 'Chat', 'W2C']
 const CHANNEL_BASES_1 = [6500, 4200, 3200, 1500]
@@ -171,7 +171,7 @@ export default function CcoDashboard({ view }) {
   const { subRegion, quarter, week, classification } = ccoFilters
   const [slaModalOpen, setSlaModalOpen] = useState(false)
   const [channelModalKey, setChannelModalKey] = useState(null)
-  const [actualToggleKey, setActualToggleKey] = useState('apc')
+  const [metricDrillKey, setMetricDrillKey] = useState(null)
   const [heatmapDrill, setHeatmapDrill] = useState(null)
 
   const seed = useMemo(
@@ -263,24 +263,19 @@ export default function CcoDashboard({ view }) {
           const forecast = periods.map((_, i) => genKpiValue(c.base, seed + i * 7 + ci * 3, c.decimals).forecast)
           return {
             key: c.key,
+            label: c.label,
             title: c.hf ? `${c.label} — Actual vs Forecast` : `${c.label} — Actual`,
             config: buildMetricComparisonConfig(c, shortLabels, actual, forecast, colors),
           }
         })
-        .filter((c) => c.key !== 'sla' && !ACTUAL_TOGGLE_KEYS.includes(c.key))
+        .filter((c) => c.key !== 'sla')
     },
     [periods, seed, colors],
   )
 
-  const actualToggleChart = useMemo(() => {
-    const shortLabels = periods.map(shortPeriodLabel)
-    const combined = [...METRIC_COLS, ...EXTRA_METRIC_CHARTS]
-    const ci = combined.findIndex((c) => c.key === actualToggleKey)
-    const col = combined[ci]
-    const actual = periods.map((_, i) => genKpiValue(col.base, seed + i * 7 + ci * 3, col.decimals).actual)
-    const forecast = periods.map((_, i) => genKpiValue(col.base, seed + i * 7 + ci * 3, col.decimals).forecast)
-    return { label: col.label, config: buildMetricComparisonConfig(col, shortLabels, actual, forecast, colors) }
-  }, [actualToggleKey, periods, seed, colors])
+  const metricChartsByKey = useMemo(() => Object.fromEntries(metricCharts.map((c) => [c.key, c])), [metricCharts])
+  const visibleMetricCharts = useMemo(() => metricCharts.filter((c) => METRIC_COMPARISON_VISIBLE.includes(c.key)), [metricCharts])
+  const metricDrillCharts = metricDrillKey ? METRIC_DRILL_DOWN[metricDrillKey].map((k) => metricChartsByKey[k]) : null
 
   const table1Rows = useMemo(
     () => CHANNELS.map((c, i) => {
@@ -351,6 +346,24 @@ export default function CcoDashboard({ view }) {
     }
   }, [seed])
 
+  const backlogPieConfig = useMemo(() => ({
+    data: {
+      labels: ['Assigned', 'Unassigned'],
+      datasets: [{
+        data: [backlog.assigned, backlog.unassigned],
+        backgroundColor: [colors.accentBlue, colors.accentRed],
+        borderColor: colors.bgCard,
+        borderWidth: 2,
+        datalabels: doughnutDataLabels(),
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom' } },
+    },
+  }), [backlog, colors])
+
   return (
     <div className="tab-panel active">
       <div className="section-div">
@@ -420,37 +433,43 @@ export default function CcoDashboard({ view }) {
       <div className="section-div">
         <h2>Metric Comparison — Actual vs Forecast</h2>
       </div>
-      <div className="s-grid">
-        {metricCharts.map((c) => (
-          <div className="card" key={c.key}>
-            <div className="card-header">
-              <div className="card-title">
-                {c.title} <InfoBtn tip={`<strong>Purpose</strong>${METRIC_CHART_TIPS[c.key] || ''}`} />
+      <div className="s-grid thirds">
+        {visibleMetricCharts.map((c) => {
+          const drillLabels = METRIC_DRILL_DOWN[c.key].map((k) => metricChartsByKey[k].label).join(' & ')
+          return (
+            <div className="card clickable-card" key={c.key} onClick={() => setMetricDrillKey(c.key)} title={`Click to drill into ${drillLabels}`}>
+              <div className="card-header">
+                <div className="card-title">
+                  {c.title} <InfoBtn tip={`<strong>Purpose</strong>${METRIC_CHART_TIPS[c.key] || ''} Click for the ${drillLabels} drill-down.`} />
+                </div>
               </div>
+              <div className="chart-container">
+                <Bar data={c.config.data} options={c.config.options} />
+              </div>
+              <div className="mc-drill-hint">Click to drill down ▸</div>
             </div>
-            <div className="chart-container">
-              <Bar data={c.config.data} options={c.config.options} />
-            </div>
-          </div>
-        ))}
-        <div className="card">
-          <div className="card-header">
-            <div className="card-title">
-              {actualToggleChart.label} — Actual <InfoBtn tip={`<strong>Purpose</strong>${METRIC_CHART_TIPS[actualToggleKey] || ''}`} />
-            </div>
-          </div>
-          <div className="plan-sel" style={{ marginBottom: 8 }}>
-            {ACTUAL_TOGGLE_KEYS.map((k) => (
-              <button key={k} type="button" className={'plan-btn' + (actualToggleKey === k ? ' active' : '')} onClick={() => setActualToggleKey(k)}>
-                {EXTRA_METRIC_CHARTS.find((c) => c.key === k).label}
-              </button>
+          )
+        })}
+      </div>
+
+      <Modal
+        open={!!metricDrillKey}
+        onClose={() => setMetricDrillKey(null)}
+        title={metricDrillKey && `${metricChartsByKey[metricDrillKey].label} — Drill Down`}
+      >
+        {metricDrillCharts && (
+          <div className="s-grid">
+            {metricDrillCharts.map((c) => (
+              <div className="card" key={c.key}>
+                <div className="card-header"><div className="card-title">{c.title}</div></div>
+                <div className="chart-container">
+                  <Bar data={c.config.data} options={c.config.options} />
+                </div>
+              </div>
             ))}
           </div>
-          <div className="chart-container">
-            <Bar data={actualToggleChart.config.data} options={actualToggleChart.config.options} />
-          </div>
-        </div>
-      </div>
+        )}
+      </Modal>
 
       <div className="section-div">
         <h2>Contacts Offered by Channel</h2>
@@ -624,15 +643,27 @@ export default function CcoDashboard({ view }) {
       <div className="section-div">
         <h2>Backlog Analysis</h2>
       </div>
-      <div className="card">
-        <div className="backlog-summary-grid">
-          <div className="backlog-box assigned">
-            <div className="val">{fmt(backlog.assigned)}</div>
-            <div className="lbl">Assigned ({backlog.assignedPct}%)</div>
+      <div className="s-grid">
+        <div className="card">
+          <div className="backlog-summary-grid">
+            <div className="backlog-box assigned">
+              <div className="val">{fmt(backlog.assigned)}</div>
+              <div className="lbl">Assigned ({backlog.assignedPct}%)</div>
+            </div>
+            <div className="backlog-box unassigned">
+              <div className="val">{fmt(backlog.unassigned)}</div>
+              <div className="lbl">Unassigned ({backlog.unassignedPct}%)</div>
+            </div>
           </div>
-          <div className="backlog-box unassigned">
-            <div className="val">{fmt(backlog.unassigned)}</div>
-            <div className="lbl">Unassigned ({backlog.unassignedPct}%)</div>
+        </div>
+        <div className="card">
+          <div className="card-header">
+            <div className="card-title">
+              Assigned vs Unassigned <InfoBtn tip="<strong>Purpose</strong>Share of backlog that is assigned to an agent vs still unassigned." />
+            </div>
+          </div>
+          <div className="chart-container">
+            <Pie data={backlogPieConfig.data} options={backlogPieConfig.options} />
           </div>
         </div>
       </div>

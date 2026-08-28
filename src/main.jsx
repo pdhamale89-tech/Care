@@ -11,6 +11,7 @@ import {
   BarController,
   LineController,
   DoughnutController,
+  PieController,
   Tooltip,
   Legend,
 } from 'chart.js'
@@ -28,6 +29,7 @@ ChartJS.register(
   BarController,
   LineController,
   DoughnutController,
+  PieController,
   Tooltip,
   Legend,
   ChartDataLabels,

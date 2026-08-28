@@ -205,6 +205,9 @@ body {
 .s-grid.thirds { grid-template-columns: 1fr 1fr 1fr; }
 .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; box-shadow: var(--shadow-sm); transition: all .2s; min-width: 0; }
 .card:hover { box-shadow: var(--shadow-md); }
+.clickable-card { cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+.clickable-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--accent-blue); }
+.mc-drill-hint { text-align: center; font-size: 9px; font-weight: 700; color: var(--accent-blue); text-transform: uppercase; letter-spacing: .3px; margin-top: 6px; }
 .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; flex-wrap: wrap; }
 .card-title { font-size: 12px; font-weight: 700; color: var(--text-card); display: flex; align-items: center; gap: 5px; }
 .card-dd { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
