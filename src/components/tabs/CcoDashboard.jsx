@@ -6,7 +6,7 @@ import {
   WEEK_DAYS, issueLabels,
 } from '../../data/mockGenerators.js'
 import { getColors } from '../../theme/colors.js'
-import { barDataLabels, stackedBarDataLabels } from '../../charts/datalabels.js'
+import { barDataLabels, lineDataLabels, stackedBarDataLabels } from '../../charts/datalabels.js'
 import DownloadBtn from '../common/DownloadBtn.jsx'
 import Modal from '../common/Modal.jsx'
 import InfoBtn from '../common/InfoBtn.jsx'
@@ -129,15 +129,28 @@ function buildMetricComparisonConfig(col, labels, actual, forecast, colors) {
       },
     }
   }
+  const accuracy = actual.map((a, i) => {
+    const f = forecast[i]
+    return f === 0 ? 100 : Math.max(0, Math.min(100, Math.round((100 - Math.abs((a - f) / f) * 100) * 10) / 10))
+  })
   return {
     data: {
       labels,
       datasets: [
         { label: 'Actual', data: actual, backgroundColor: colors.accentBlue, borderRadius: 4, datalabels: barDataLabels(col.unit, colors.accentBlue) },
         { label: 'Forecast', data: forecast, backgroundColor: colors.border, borderRadius: 4, datalabels: barDataLabels(col.unit, colors.textSecondary) },
+        { type: 'line', label: 'Accuracy %', data: accuracy, borderColor: colors.accentPurple, backgroundColor: colors.accentPurple, yAxisID: 'y1', tension: 0.3, pointRadius: 3, datalabels: lineDataLabels('%', colors.accentPurple) },
       ],
     },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: col.key !== 'caseRate' } } },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom' } },
+      scales: {
+        y: { beginAtZero: col.key !== 'caseRate' },
+        y1: { position: 'right', min: 0, max: 100, grid: { drawOnChartArea: false }, ticks: { callback: (v) => v + '%' } },
+      },
+    },
   }
 }
 
