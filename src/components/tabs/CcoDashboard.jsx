@@ -10,6 +10,7 @@ import { barDataLabels, lineEndDataLabels, stackedBarDataLabels } from '../../ch
 import DownloadBtn from '../common/DownloadBtn.jsx'
 import Modal from '../common/Modal.jsx'
 import InfoBtn from '../common/InfoBtn.jsx'
+import ForecastAdherenceMap from './ForecastAdherenceMap.jsx'
 import { issueTypeBarConfig } from '../../charts/chartConfigs.js'
 
 const METRIC_CHART_TIPS = {
@@ -410,6 +411,11 @@ export default function CcoDashboard({ view }) {
           <div className="kpi-sub">Actual only</div>
         </div>
       </div>
+
+      <div className="section-div">
+        <h2>Forecast Adherence</h2>
+      </div>
+      <ForecastAdherenceMap />
 
       <div className="section-div">
         <h2>Metric Comparison — Actual vs Forecast</h2>
