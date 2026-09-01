@@ -167,6 +167,7 @@ export default function CcoDashboard({ view }) {
   const [channelModalKey, setChannelModalKey] = useState(null)
   const [metricDrillKey, setMetricDrillKey] = useState(null)
   const [backlogModalOpen, setBacklogModalOpen] = useState(false)
+  const [headcountModalOpen, setHeadcountModalOpen] = useState(false)
   const [heatmapDrill, setHeatmapDrill] = useState(null)
 
   const seed = useMemo(
@@ -185,25 +186,52 @@ export default function CcoDashboard({ view }) {
     return { metrics }
   }, [periods, seed])
 
-  const crwHeadcountChart = useMemo(() => {
+  const crwChart = useMemo(() => {
     const shortLabels = periods.map(shortPeriodLabel)
     const crw = periods.map((_, i) => Math.round(genKpiValue(130, seed + i * 7 + 800).actual))
-    const headcount = periods.map((_, i) => Math.round(genKpiValue(65, seed + i * 7 + 900).actual))
     return {
       data: {
         labels: shortLabels,
         datasets: [
           { label: 'CRW', data: crw, backgroundColor: colors.accentBlue, borderRadius: 4, datalabels: barDataLabels('', colors.accentBlue) },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } },
+      },
+    }
+  }, [periods, seed, colors])
+
+  const headcountChart = useMemo(() => {
+    const shortLabels = periods.map(shortPeriodLabel)
+    const headcount = periods.map((_, i) => Math.round(genKpiValue(65, seed + i * 7 + 900).actual))
+    return {
+      data: {
+        labels: shortLabels,
+        datasets: [
           { label: 'Headcount', data: headcount, backgroundColor: colors.accentGreen, borderRadius: 4, datalabels: barDataLabels('', colors.accentGreen) },
         ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom' } },
+        plugins: { legend: { display: false } },
         scales: { y: { beginAtZero: true } },
       },
     }
+  }, [periods, seed, colors])
+
+  const headcountBreakdownChart = useMemo(() => {
+    const shortLabels = periods.map(shortPeriodLabel)
+    const db = periods.map((_, i) => Math.round(genKpiValue(40, seed + i * 7 + 910).actual))
+    const osp = periods.map((_, i) => Math.round(genKpiValue(25, seed + i * 7 + 920).actual))
+    return stackedBarConfig(shortLabels, [
+      { label: 'DB', data: db, backgroundColor: colors.accentBlue },
+      { label: 'OSP', data: osp, backgroundColor: colors.accentOrange },
+    ])
   }, [periods, seed, colors])
 
   const channelSlaTrendChart = useMemo(() => {
@@ -412,16 +440,40 @@ export default function CcoDashboard({ view }) {
         })}
       </div>
 
-      <div className="card">
-        <div className="card-header">
-          <div className="card-title">
-            CRW &amp; Headcount <InfoBtn tip={`<strong>Purpose</strong>CRW and Headcount trend, ${view} view.`} />
+      <div className="s-grid">
+        <div className="card">
+          <div className="card-header">
+            <div className="card-title">
+              CRW <InfoBtn tip={`<strong>Purpose</strong>CRW trend, ${view} view.`} />
+            </div>
+          </div>
+          <div className="chart-container">
+            <Bar data={crwChart.data} options={crwChart.options} />
           </div>
         </div>
-        <div className="chart-container">
-          <Bar data={crwHeadcountChart.data} options={crwHeadcountChart.options} />
+
+        <div className="card clickable-card" onClick={() => setHeadcountModalOpen(true)} title="Click for DB / OSP breakdown">
+          <div className="card-header">
+            <div className="card-title">
+              Headcount <InfoBtn tip={`<strong>Purpose</strong>Headcount trend, ${view} view. Click for a DB / OSP breakdown.`} />
+            </div>
+          </div>
+          <div className="chart-container">
+            <Bar data={headcountChart.data} options={headcountChart.options} />
+          </div>
+          <div className="mc-drill-hint">Click to drill down ▸</div>
         </div>
       </div>
+
+      <Modal
+        open={headcountModalOpen}
+        onClose={() => setHeadcountModalOpen(false)}
+        title={`Headcount — DB vs OSP ${view === 'weekly' ? 'Weekly' : 'Quarterly'} Breakdown`}
+      >
+        <div className="chart-container" style={{ height: 280 }}>
+          <Bar data={headcountBreakdownChart.data} options={headcountBreakdownChart.options} />
+        </div>
+      </Modal>
 
       <div className="section-div">
         <h2>Overall SLA</h2>
