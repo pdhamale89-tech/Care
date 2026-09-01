@@ -166,6 +166,7 @@ export default function CcoDashboard({ view }) {
   const { subRegion, quarter, week, classification } = ccoFilters
   const [slaModalOpen, setSlaModalOpen] = useState(false)
   const [channelModalKey, setChannelModalKey] = useState(null)
+  const [channelFilterSel, setChannelFilterSel] = useState('All')
   const [metricDrillKey, setMetricDrillKey] = useState(null)
   const [backlogModalOpen, setBacklogModalOpen] = useState(false)
   const [headcountModalOpen, setHeadcountModalOpen] = useState(false)
@@ -267,41 +268,40 @@ export default function CcoDashboard({ view }) {
     const labels = periods.map(shortPeriodLabel)
     const seriesColors = [colors.accentBlue, colors.accentGreen, colors.accentOrange, colors.accentRed]
     const factor = Math.pow(10, col.decimals)
-    const totalActual = periods.map(() => 0)
-    const totalForecast = periods.map(() => 0)
-    const datasets = profile.channels.flatMap((ch, chi) => {
+    const channelsToShow = channelFilterSel === 'All' ? profile.channels : profile.channels.filter((ch) => ch === channelFilterSel)
+    const barDatasets = []
+    const varianceDatasets = []
+    channelsToShow.forEach((ch) => {
+      const chi = profile.channels.indexOf(ch)
       const color = seriesColors[chi]
       const actualData = []
       const forecastData = []
       periods.forEach((_, i) => {
         const { actual, forecast } = genKpiValue(col.base, seed + i * 7 + ci * 3, col.decimals)
         const w = profile.weights[chi]
-        const a = Math.round(actual * w * factor) / factor
-        const f = Math.round(forecast * w * factor) / factor
-        actualData.push(a)
-        forecastData.push(f)
-        totalActual[i] += a
-        totalForecast[i] += f
+        actualData.push(Math.round(actual * w * factor) / factor)
+        forecastData.push(Math.round(forecast * w * factor) / factor)
       })
-      return [
+      barDatasets.push(
         { label: `${ch} Actual`, data: actualData, backgroundColor: color, stack: 'actual', datalabels: stackedBarDataLabels(col.unit) },
         { label: `${ch} Forecast`, data: forecastData, backgroundColor: color + '80', stack: 'forecast', datalabels: stackedBarDataLabels(col.unit) },
-      ]
-    })
-    const variance = totalActual.map((a, i) => {
-      const f = totalForecast[i]
-      return f === 0 ? 0 : Math.round(((a - f) / f) * 1000) / 10
-    })
-    datasets.push({
-      type: 'line', label: 'Variance %', data: variance, yAxisID: 'y1',
-      borderColor: colors.accentPurple, backgroundColor: colors.accentPurple,
-      tension: 0.3, pointRadius: 3, borderWidth: 2, order: 0,
-      datalabels: lineEndDataLabels('%', colors.accentPurple),
+      )
+      const variance = actualData.map((a, i) => {
+        const f = forecastData[i]
+        return f === 0 ? 0 : Math.round(((a - f) / f) * 1000) / 10
+      })
+      varianceDatasets.push({
+        type: 'line', label: `${ch} Variance %`, data: variance, yAxisID: 'y1',
+        borderColor: color, backgroundColor: color,
+        tension: 0.3, pointRadius: 3, borderWidth: 2, order: 0,
+        datalabels: lineEndDataLabels('%', color),
+      })
     })
     return {
       label: col.label,
       unit: col.unit,
-      data: { labels, datasets },
+      channels: profile.channels,
+      data: { labels, datasets: [...barDatasets, ...varianceDatasets] },
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -315,7 +315,7 @@ export default function CcoDashboard({ view }) {
         },
       },
     }
-  }, [channelModalKey, periods, seed, colors])
+  }, [channelModalKey, channelFilterSel, periods, seed, colors])
 
   const metricCharts = useMemo(
     () => {
@@ -471,7 +471,7 @@ export default function CcoDashboard({ view }) {
               <div
                 className="kpi-card clickable"
                 key={m.key}
-                onClick={() => setChannelModalKey(m.key)}
+                onClick={() => { setChannelFilterSel('All'); setChannelModalKey(m.key) }}
                 title={`Click to see ${m.label} by Channel trend`}
               >
                 <div className="kpi-label">{m.label}</div>
@@ -763,14 +763,21 @@ export default function CcoDashboard({ view }) {
           <>
             {channelTrendChart.label} by Channel — Trend Detail
             {' '}
-            <InfoBtn onDark tip={`<strong>Purpose</strong>${channelTrendChart.label} Actual vs Forecast by channel, ${view} view — split from the same period-level numbers used across this dashboard. The Variance % line shows overall Actual vs Forecast variance per period.`} />
+            <InfoBtn onDark tip={`<strong>Purpose</strong>${channelTrendChart.label} Actual vs Forecast by channel, ${view} view — split from the same period-level numbers used across this dashboard. Select a channel to isolate it, or All to see every channel's Variance % line.`} />
           </>
         )}
       >
         {channelTrendChart && (
-          <div className="chart-container" style={{ height: 300 }}>
-            <Bar data={channelTrendChart.data} options={channelTrendChart.options} />
-          </div>
+          <>
+            <div className="plan-sel">
+              {['All', ...channelTrendChart.channels].map((ch) => (
+                <button key={ch} type="button" className={'plan-btn' + (channelFilterSel === ch ? ' active' : '')} onClick={() => setChannelFilterSel(ch)}>{ch}</button>
+              ))}
+            </div>
+            <div className="chart-container" style={{ height: 300 }}>
+              <Bar data={channelTrendChart.data} options={channelTrendChart.options} />
+            </div>
+          </>
         )}
       </Modal>
     </div>
