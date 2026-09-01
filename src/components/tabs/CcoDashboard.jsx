@@ -634,9 +634,11 @@ export default function CcoDashboard({ view }) {
         onClose={() => setIssueDrillKey(null)}
         title={issueDrillKey && `${issueDrillKey.issueLabel} — ${issueDrillTrendChart.metricLabel} ${view === 'weekly' ? 'Weekly' : 'Quarterly'} Trend`}
       >
-        <div className="chart-container" style={{ height: 280 }}>
-          <Bar data={issueDrillTrendChart.data} options={issueDrillTrendChart.options} />
-        </div>
+        {issueDrillTrendChart && (
+          <div className="chart-container" style={{ height: 280 }}>
+            <Bar data={issueDrillTrendChart.data} options={issueDrillTrendChart.options} />
+          </div>
+        )}
       </Modal>
 
       <div className="s-grid full">
