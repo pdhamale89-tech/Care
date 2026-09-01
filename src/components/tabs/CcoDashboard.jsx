@@ -76,10 +76,7 @@ function normalizeWeights(bases) {
 // Non-additive (rate/ratio) profiles keep each channel near the overall value (weights average ~1).
 const CHANNEL_TREND_PROFILES = {
   contacts: { channels: CHANNELS, weights: normalizeWeights(CHANNEL_BASES_1) },
-  orders: { channels: CHANNELS, weights: normalizeWeights(CHANNEL_BASES_1) },
   tcd: { channels: TCD_CHANNELS, weights: normalizeWeights(TCD_CHANNEL_BASES) },
-  caseRate: { channels: CHANNELS, weights: [1.08, 0.95, 1.02, 0.90] },
-  cpsr: { channels: CHANNELS, weights: [1.05, 0.92, 1.08, 0.95] },
 }
 const ISSUE_CHARTS = [
   { id: 'issue1', title: 'Cases', base: 900, unit: '' },
