@@ -38,12 +38,12 @@ export default function MultiSelectDropdown({ options, selected, onChange, allLa
         <div className="multiselect-menu">
           <label className="multiselect-item">
             <input type="checkbox" checked={isAll} onChange={toggleAll} />
-            {allLabel}
+            <span>{allLabel}</span>
           </label>
           {options.map((opt) => (
             <label className="multiselect-item" key={opt}>
               <input type="checkbox" checked={!isAll && selected.includes(opt)} onChange={() => toggleOption(opt)} />
-              {opt}
+              <span>{opt}</span>
             </label>
           ))}
         </div>

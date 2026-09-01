@@ -167,6 +167,7 @@ export default function CcoDashboard({ view }) {
   const cfg = VIEW_CONFIG[view]
   const { subRegion, quarter, week, classification } = ccoFilters
   const [slaModalOpen, setSlaModalOpen] = useState(false)
+  const [slaChannelFilterSel, setSlaChannelFilterSel] = useState('All')
   const [channelModalKey, setChannelModalKey] = useState(null)
   const [channelFilterSel, setChannelFilterSel] = useState('All')
   const [metricDrillKey, setMetricDrillKey] = useState(null)
@@ -233,25 +234,50 @@ export default function CcoDashboard({ view }) {
     const shortLabels = periods.map(shortPeriodLabel)
     const db = periods.map((_, i) => Math.round(genKpiValue(40, seed + i * 7 + 910).actual))
     const osp = periods.map((_, i) => Math.round(genKpiValue(25, seed + i * 7 + 920).actual))
-    return stackedBarConfig(shortLabels, [
-      { label: 'DB', data: db, backgroundColor: colors.accentBlue },
-      { label: 'OSP', data: osp, backgroundColor: colors.accentOrange },
-    ])
+    const gap = db.map((v, i) => v - osp[i])
+    return {
+      data: {
+        labels: shortLabels,
+        datasets: [
+          { label: 'DB', data: db, backgroundColor: colors.accentBlue, stack: 'hc', order: 1, datalabels: stackedBarDataLabels('') },
+          { label: 'OSP', data: osp, backgroundColor: colors.accentOrange, stack: 'hc', order: 1, datalabels: stackedBarDataLabels('') },
+          // A lower `order` value is drawn later by Chart.js, so this must stay below
+          // the bars' order (1) for the line to render on top of them, not behind.
+          { type: 'line', label: 'Gap (DB − OSP)', data: gap, yAxisID: 'y1', borderColor: colors.accentPurple, backgroundColor: colors.accentPurple, tension: 0.3, pointRadius: 3, borderWidth: 2, order: 0, datalabels: lineEndDataLabels('', colors.accentPurple) },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: {
+          x: { stacked: true },
+          y: { stacked: true, beginAtZero: true, grace: '25%' },
+          // `type: 'linear'` is required — a non-default scale id like 'y1' otherwise
+          // falls back to a category scale and the line silently fails to render.
+          y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false } },
+        },
+      },
+    }
   }, [periods, seed, colors])
 
   const channelSlaTrendChart = useMemo(() => {
     const labels = periods.map(shortPeriodLabel)
     const seriesColors = [colors.accentBlue, colors.accentGreen, colors.accentOrange, colors.accentRed]
+    const channelsToShow = slaChannelFilterSel === 'All' ? CHANNELS : CHANNELS.filter((c) => c === slaChannelFilterSel)
     return {
       data: {
         labels,
-        datasets: CHANNELS.map((c, ci) => ({
-          label: c,
-          data: periods.map((_, i) => genKpiValue(CHANNEL_SLA_BASES[ci], seed + i * 13 + ci * 11 + 300, 1).actual),
-          backgroundColor: seriesColors[ci],
-          borderRadius: 4,
-          datalabels: barDataLabels('%', seriesColors[ci]),
-        })),
+        datasets: channelsToShow.map((c) => {
+          const ci = CHANNELS.indexOf(c)
+          return {
+            label: c,
+            data: periods.map((_, i) => genKpiValue(CHANNEL_SLA_BASES[ci], seed + i * 13 + ci * 11 + 300, 1).actual),
+            backgroundColor: seriesColors[ci],
+            borderRadius: 4,
+            datalabels: barDataLabels('%', seriesColors[ci]),
+          }
+        }),
       },
       options: {
         responsive: true,
@@ -260,7 +286,7 @@ export default function CcoDashboard({ view }) {
         scales: { y: { min: 0, max: 100, ticks: { callback: (v) => v + '%' } } },
       },
     }
-  }, [periods, seed, colors])
+  }, [periods, seed, colors, slaChannelFilterSel])
 
   const channelTrendChart = useMemo(() => {
     if (!channelModalKey) return null
@@ -461,7 +487,7 @@ export default function CcoDashboard({ view }) {
               <div
                 className="kpi-card clickable"
                 key={m.key}
-                onClick={() => setSlaModalOpen(true)}
+                onClick={() => { setSlaChannelFilterSel('All'); setSlaModalOpen(true) }}
                 title="Click to see SLA by Channel trend"
               >
                 <div className="kpi-label">{m.label}</div>
@@ -755,8 +781,13 @@ export default function CcoDashboard({ view }) {
       <Modal
         open={slaModalOpen}
         onClose={() => setSlaModalOpen(false)}
-        title={<>SLA by Channel — Trend Detail <InfoBtn onDark tip="<strong>Purpose</strong>SLA % by channel (Voice, Email, Chat, W2C) across the selected period range." /></>}
+        title={<>SLA by Channel — Trend Detail <InfoBtn onDark tip="<strong>Purpose</strong>SLA % by channel (Voice, Email, Chat, W2C) across the selected period range. Select a channel to isolate it." /></>}
       >
+        <div className="plan-sel">
+          {['All', ...CHANNELS].map((ch) => (
+            <button key={ch} type="button" className={'plan-btn' + (slaChannelFilterSel === ch ? ' active' : '')} onClick={() => setSlaChannelFilterSel(ch)}>{ch}</button>
+          ))}
+        </div>
         <div className="chart-container" style={{ height: 280 }}>
           <Bar data={channelSlaTrendChart.data} options={channelSlaTrendChart.options} />
         </div>
