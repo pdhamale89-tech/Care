@@ -139,7 +139,9 @@ function buildMetricComparisonConfig(col, labels, actual, forecast, colors) {
       datasets: [
         { label: 'Actual', data: actual, backgroundColor: colors.accentBlue, borderRadius: 4, order: 1, datalabels: barDataLabels(col.unit, colors.accentBlue) },
         { label: 'Forecast', data: forecast, backgroundColor: colors.border, borderRadius: 4, order: 1, datalabels: barDataLabels(col.unit, colors.textSecondary) },
-        { type: 'line', label: 'Accuracy %', data: accuracy, borderColor: colors.accentPurple, backgroundColor: colors.accentPurple, yAxisID: 'y1', tension: 0.3, pointRadius: 3, borderWidth: 2, order: 2, datalabels: lineEndDataLabels('%', colors.accentPurple) },
+        // A lower `order` value is drawn later by Chart.js, so this must stay below
+        // the bars' order (1) for the line to render on top of them, not behind.
+        { type: 'line', label: 'Accuracy %', data: accuracy, borderColor: colors.accentPurple, backgroundColor: colors.accentPurple, yAxisID: 'y1', tension: 0.3, pointRadius: 3, borderWidth: 2, order: 0, datalabels: lineEndDataLabels('%', colors.accentPurple) },
       ],
     },
     options: {
@@ -283,13 +285,15 @@ export default function CcoDashboard({ view }) {
         forecastData.push(Math.round(forecast * w * factor) / factor)
       })
       barDatasets.push(
-        { label: `${ch} Actual`, data: actualData, backgroundColor: color, stack: 'actual', datalabels: stackedBarDataLabels(col.unit) },
-        { label: `${ch} Forecast`, data: forecastData, backgroundColor: color + '80', stack: 'forecast', datalabels: stackedBarDataLabels(col.unit) },
+        { label: `${ch} Actual`, data: actualData, backgroundColor: color, stack: 'actual', order: 1, datalabels: stackedBarDataLabels(col.unit) },
+        { label: `${ch} Forecast`, data: forecastData, backgroundColor: color + '80', stack: 'forecast', order: 1, datalabels: stackedBarDataLabels(col.unit) },
       )
       const variance = actualData.map((a, i) => {
         const f = forecastData[i]
         return f === 0 ? 0 : Math.round(((a - f) / f) * 1000) / 10
       })
+      // A lower `order` value is drawn later by Chart.js, so this must stay below
+      // the bars' order (1) for the line to render on top of them, not behind.
       varianceDatasets.push({
         type: 'line', label: `${ch} Variance %`, data: variance, yAxisID: 'y1',
         borderColor: color, backgroundColor: color,
