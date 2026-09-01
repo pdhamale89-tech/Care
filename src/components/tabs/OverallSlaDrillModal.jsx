@@ -65,9 +65,16 @@ function cellClass(v) {
   return v >= 0 ? 'mtx-pos' : 'mtx-neg'
 }
 
+function filteredTotal(row, activeRegions, subsByRegion) {
+  const leaf = activeRegions.flatMap((r) => subsByRegion[r].map((s) => row.byRegion[r][s]))
+  return leaf.length ? Math.round(leaf.reduce((a, b) => a + b, 0) / leaf.length) : 0
+}
+
 export default function OverallSlaDrillModal({ open, onClose, seed }) {
   const [expanded, setExpanded] = useState({})
+  const [regionFilter, setRegionFilter] = useState('All')
   const { regions, subsByRegion, groups, overall } = useMemo(() => buildMatrix(seed), [seed])
+  const visibleRegions = regionFilter === 'All' ? regions : [regionFilter]
 
   function toggleGroup(key) {
     setExpanded((prev) => ({ ...prev, [key]: !prev[key] }))
@@ -75,12 +82,12 @@ export default function OverallSlaDrillModal({ open, onClose, seed }) {
 
   function buildCsvRows() {
     const header = ['Channel', 'Segment']
-    regions.forEach((r) => { subsByRegion[r].forEach((s) => header.push(`${r} ${s}`)); header.push(`${r} Total`) })
+    visibleRegions.forEach((r) => { subsByRegion[r].forEach((s) => header.push(`${r} ${s}`)); header.push(`${r} Total`) })
     header.push('Grand Total')
     const rowToCsv = (channelLabel, row) => {
       const cells = [channelLabel, row.label]
-      regions.forEach((r) => { subsByRegion[r].forEach((s) => cells.push(row.byRegion[r][s] + '%')); cells.push(row.byRegion[r].Total + '%') })
-      cells.push(row.grandTotal + '%')
+      visibleRegions.forEach((r) => { subsByRegion[r].forEach((s) => cells.push(row.byRegion[r][s] + '%')); cells.push(row.byRegion[r].Total + '%') })
+      cells.push(filteredTotal(row, visibleRegions, subsByRegion) + '%')
       return cells
     }
     const rows = [header]
@@ -91,7 +98,12 @@ export default function OverallSlaDrillModal({ open, onClose, seed }) {
 
   return (
     <Modal open={open} onClose={onClose} title="Overall SLA by Geography — Detail">
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 8, flexWrap: 'wrap' }}>
+        <div className="plan-sel">
+          {['All', ...REGIONS_ORDER].map((r) => (
+            <button key={r} type="button" className={'plan-btn' + (regionFilter === r ? ' active' : '')} onClick={() => setRegionFilter(r)}>{r}</button>
+          ))}
+        </div>
         <DownloadBtn filename="overall-sla-matrix" title="Download Overall SLA variance matrix" rows={buildCsvRows()} />
       </div>
       <div className="tw scroll">
@@ -100,11 +112,11 @@ export default function OverallSlaDrillModal({ open, onClose, seed }) {
             <tr>
               <th rowSpan={2}>Channel</th>
               <th rowSpan={2}>Segment</th>
-              {regions.map((r) => <th key={r} colSpan={subsByRegion[r].length + 1} className="mtx-region-hdr">{r}</th>)}
+              {visibleRegions.map((r) => <th key={r} colSpan={subsByRegion[r].length + 1} className="mtx-region-hdr">{r}</th>)}
               <th rowSpan={2}>TOTAL</th>
             </tr>
             <tr>
-              {regions.map((r) => (
+              {visibleRegions.map((r) => (
                 <Fragment key={r}>
                   {subsByRegion[r].map((s) => <th key={r + s} className="mtx-sub-hdr">{s}</th>)}
                   <th className="mtx-sub-hdr">Total</th>
@@ -126,25 +138,25 @@ export default function OverallSlaDrillModal({ open, onClose, seed }) {
                     </th>
                   )}
                   <th>{row.label}</th>
-                  {regions.map((r) => (
+                  {visibleRegions.map((r) => (
                     <Fragment key={r}>
                       {subsByRegion[r].map((s) => <td key={s} className={cellClass(row.byRegion[r][s])}>{row.byRegion[r][s]}%</td>)}
                       <td className={cellClass(row.byRegion[r].Total)}>{row.byRegion[r].Total}%</td>
                     </Fragment>
                   ))}
-                  <td className={cellClass(row.grandTotal)}>{row.grandTotal}%</td>
+                  <td className={cellClass(filteredTotal(row, visibleRegions, subsByRegion))}>{filteredTotal(row, visibleRegions, subsByRegion)}%</td>
                 </tr>
               ))
             })}
             <tr className="mtx-overall-row">
               <th colSpan={2}>Overall</th>
-              {regions.map((r) => (
+              {visibleRegions.map((r) => (
                 <Fragment key={r}>
                   {subsByRegion[r].map((s) => <td key={s} className={cellClass(overall.byRegion[r][s])}>{overall.byRegion[r][s]}%</td>)}
                   <td className={cellClass(overall.byRegion[r].Total)}>{overall.byRegion[r].Total}%</td>
                 </Fragment>
               ))}
-              <td className={cellClass(overall.grandTotal)}>{overall.grandTotal}%</td>
+              <td className={cellClass(filteredTotal(overall, visibleRegions, subsByRegion))}>{filteredTotal(overall, visibleRegions, subsByRegion)}%</td>
             </tr>
           </tbody>
         </table>

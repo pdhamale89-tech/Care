@@ -170,6 +170,7 @@ export default function CcoDashboard({ view }) {
   const [backlogModalOpen, setBacklogModalOpen] = useState(false)
   const [headcountModalOpen, setHeadcountModalOpen] = useState(false)
   const [heatmapDrill, setHeatmapDrill] = useState(null)
+  const [issueDrillKey, setIssueDrillKey] = useState(null)
 
   const seed = useMemo(
     () => hashSeed(subRegion.join(',') + quarter.join(',') + week.join(',') + classification.join(',') + activeRegions.join(',') + view),
@@ -342,7 +343,17 @@ export default function CcoDashboard({ view }) {
   const issueCharts = useMemo(
     () => ISSUE_CHARTS.map(({ id, title, base, unit }) => {
       const actual = issueLabels.map((_, i) => Math.round(base * (0.8 + ((Math.sin((seed + i) * 2.7) + 1) / 2) * 0.5)))
-      return { id, title, unit, actual, config: issueTypeBarConfig(issueLabels, actual, unit, colors) }
+      const config = issueTypeBarConfig(issueLabels, actual, unit, colors)
+      config.options = {
+        ...config.options,
+        onClick: (evt, elements) => {
+          if (elements.length) setIssueDrillKey({ metricId: id, issueLabel: issueLabels[elements[0].index] })
+        },
+        onHover: (evt, elements) => {
+          evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'
+        },
+      }
+      return { id, title, unit, actual, config }
     }),
     [seed, colors],
   )
@@ -375,6 +386,31 @@ export default function CcoDashboard({ view }) {
     })
     return { metricLabel: col.title, unit: col.unit, rows }
   }, [heatmapDrill, periods, seed])
+
+  const issueDrillTrendChart = useMemo(() => {
+    if (!issueDrillKey) return null
+    const ci = ISSUE_CHARTS.findIndex((c) => c.id === issueDrillKey.metricId)
+    const col = ISSUE_CHARTS[ci]
+    const ii = issueLabels.indexOf(issueDrillKey.issueLabel)
+    const shortLabels = periods.map(shortPeriodLabel)
+    const values = periods.map((_, i) => genKpiValue(col.base, seed + i * 7 + ci * 3 + ii * 41 + 500).actual)
+    return {
+      metricLabel: col.title,
+      unit: col.unit,
+      data: {
+        labels: shortLabels,
+        datasets: [
+          { label: col.title, data: values, backgroundColor: colors.accentBlue, borderRadius: 4, datalabels: barDataLabels(col.unit, colors.accentBlue) },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } },
+      },
+    }
+  }, [issueDrillKey, periods, seed, colors])
 
   const backlog = useMemo(() => ({
     assigned: Math.round(genKpiValue(2800, seed + 401).actual),
@@ -573,6 +609,7 @@ export default function CcoDashboard({ view }) {
             <div className="chart-container">
               <Bar data={c.config.data} options={c.config.options} />
             </div>
+            <div className="mc-drill-hint">Click a bar for its weekly/quarterly trend ▸</div>
           </div>
         ))}
       </div>
@@ -587,9 +624,21 @@ export default function CcoDashboard({ view }) {
             <div className="chart-container">
               <Bar data={c.config.data} options={c.config.options} />
             </div>
+            <div className="mc-drill-hint">Click a bar for its weekly/quarterly trend ▸</div>
           </div>
         ))}
       </div>
+
+      <Modal
+        open={!!issueDrillKey}
+        onClose={() => setIssueDrillKey(null)}
+        title={issueDrillKey && `${issueDrillKey.issueLabel} — ${issueDrillTrendChart.metricLabel} ${view === 'weekly' ? 'Weekly' : 'Quarterly'} Trend`}
+      >
+        <div className="chart-container" style={{ height: 280 }}>
+          <Bar data={issueDrillTrendChart.data} options={issueDrillTrendChart.options} />
+        </div>
+      </Modal>
+
       <div className="s-grid full">
         <div className="card">
           <div className="card-header">
