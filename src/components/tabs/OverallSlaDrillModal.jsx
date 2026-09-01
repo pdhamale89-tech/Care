@@ -4,7 +4,7 @@ import DownloadBtn from '../common/DownloadBtn.jsx'
 import { SUBREGIONS_BY_REGION } from '../../data/geoRegions.js'
 
 const CHANNELS = ['Voice', 'Email', 'Chat']
-const SEGMENTS = ['Consumer', 'Commercial']
+const SEGMENTS = ['Consumer', 'Global Sales']
 const REGIONS_ORDER = ['AMER', 'APJ', 'EMEA']
 
 function hashCode(str) {
@@ -120,7 +120,7 @@ export default function OverallSlaDrillModal({ open, onClose, seed }) {
                 <tr key={g.key + row.label}>
                   {i === 0 && (
                     <th rowSpan={visibleRows.length}>
-                      <button type="button" className="mtx-toggle" onClick={() => toggleGroup(g.key)} title={isOpen ? 'Collapse' : 'Expand to see Consumer/Commercial split'}>
+                      <button type="button" className="mtx-toggle" onClick={() => toggleGroup(g.key)} title={isOpen ? 'Collapse' : 'Expand to see Consumer/Global Sales split'}>
                         <span className="mtx-toggle-ic">{isOpen ? '▾' : '▸'}</span>{g.label}
                       </button>
                     </th>

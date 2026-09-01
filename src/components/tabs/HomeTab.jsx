@@ -4,7 +4,6 @@ const SECTIONS = [
   { key: 'cco', tab: 'cco', icon: '📊', title: 'CCO Overview', tag: 'Weekly and quarterly SLA, volume, and backlog performance.' },
   { key: 'outage', tab: 'outage', icon: '⚠️', title: 'Outage Report', tag: 'Agent schedule adherence and unplanned-outage breakdowns by manager.' },
   { key: 'epicenter', tab: 'epicenter', icon: '👥', title: 'Epicenter HC', tag: 'Headcount roster across departments, queues, and managers.' },
-  { key: 'whatIf', tab: 'whatIf', icon: '🧮', title: 'What-If Simulator', tag: 'Model volume, AHT, and shrinkage changes against required staffing and service level.' },
 ]
 
 export default function HomeTab() {

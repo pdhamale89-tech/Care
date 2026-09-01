@@ -21,6 +21,8 @@ const METRIC_CHART_TIPS = {
   cases: 'Cases handled, Actual vs Forecast, by period.',
   activities: 'Activities logged, Actual vs Forecast, by period.',
   apc: 'Activities Per Case (decimal), Actual only, by period.',
+  icw: 'ICW, Actual only, by period.',
+  ccpd: 'CCpD, Actual only, by period.',
 }
 
 const ISSUE_CHART_TIPS = {
@@ -50,6 +52,8 @@ const EXTRA_METRIC_CHARTS = [
   { key: 'cases', label: 'Cases', base: 3200, unit: '', hf: true, decimals: 0 },
   { key: 'activities', label: 'Activities', base: 16000, unit: '', hf: true, decimals: 0 },
   { key: 'apc', label: 'APC', base: 4.8, unit: '', hf: false, decimals: 1 },
+  { key: 'icw', label: 'ICW', base: 3.5, unit: '', hf: false, decimals: 1 },
+  { key: 'ccpd', label: 'CCpD', base: 1.8, unit: '', hf: false, decimals: 1 },
 ]
 
 // Metric Comparison shows only these 3 cards; each drills into a pair of related metrics.
@@ -262,6 +266,8 @@ export default function CcoDashboard({ view }) {
     const labels = periods.map(shortPeriodLabel)
     const seriesColors = [colors.accentBlue, colors.accentGreen, colors.accentOrange, colors.accentRed]
     const factor = Math.pow(10, col.decimals)
+    const totalActual = periods.map(() => 0)
+    const totalForecast = periods.map(() => 0)
     const datasets = profile.channels.flatMap((ch, chi) => {
       const color = seriesColors[chi]
       const actualData = []
@@ -269,13 +275,27 @@ export default function CcoDashboard({ view }) {
       periods.forEach((_, i) => {
         const { actual, forecast } = genKpiValue(col.base, seed + i * 7 + ci * 3, col.decimals)
         const w = profile.weights[chi]
-        actualData.push(Math.round(actual * w * factor) / factor)
-        forecastData.push(Math.round(forecast * w * factor) / factor)
+        const a = Math.round(actual * w * factor) / factor
+        const f = Math.round(forecast * w * factor) / factor
+        actualData.push(a)
+        forecastData.push(f)
+        totalActual[i] += a
+        totalForecast[i] += f
       })
       return [
         { label: `${ch} Actual`, data: actualData, backgroundColor: color, stack: 'actual', datalabels: stackedBarDataLabels(col.unit) },
         { label: `${ch} Forecast`, data: forecastData, backgroundColor: color + '80', stack: 'forecast', datalabels: stackedBarDataLabels(col.unit) },
       ]
+    })
+    const variance = totalActual.map((a, i) => {
+      const f = totalForecast[i]
+      return f === 0 ? 0 : Math.round(((a - f) / f) * 1000) / 10
+    })
+    datasets.push({
+      type: 'line', label: 'Variance %', data: variance, yAxisID: 'y1',
+      borderColor: colors.accentPurple, backgroundColor: colors.accentPurple,
+      tension: 0.3, pointRadius: 3, borderWidth: 2, order: 0,
+      datalabels: lineEndDataLabels('%', colors.accentPurple),
     })
     return {
       label: col.label,
@@ -287,7 +307,10 @@ export default function CcoDashboard({ view }) {
         plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } } },
         scales: {
           x: { stacked: true, ticks: { font: { size: 9 } } },
-          y: { stacked: true, beginAtZero: col.key !== 'caseRate' },
+          y: { stacked: true, beginAtZero: col.key !== 'caseRate', grace: '25%' },
+          // `type: 'linear'` is required — a non-default scale id like 'y1' otherwise
+          // falls back to a category scale and the line silently fails to render.
+          y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, ticks: { callback: (v) => v + '%' } },
         },
       },
     }
@@ -437,41 +460,6 @@ export default function CcoDashboard({ view }) {
         })}
       </div>
 
-      <div className="s-grid">
-        <div className="card">
-          <div className="card-header">
-            <div className="card-title">
-              CRW <InfoBtn tip={`<strong>Purpose</strong>CRW trend, ${view} view.`} />
-            </div>
-          </div>
-          <div className="chart-container">
-            <Bar data={crwChart.data} options={crwChart.options} />
-          </div>
-        </div>
-
-        <div className="card clickable-card" onClick={() => setHeadcountModalOpen(true)} title="Click for DB / OSP breakdown">
-          <div className="card-header">
-            <div className="card-title">
-              Headcount <InfoBtn tip={`<strong>Purpose</strong>Headcount trend, ${view} view. Click for a DB / OSP breakdown.`} />
-            </div>
-          </div>
-          <div className="chart-container">
-            <Bar data={headcountChart.data} options={headcountChart.options} />
-          </div>
-          <div className="mc-drill-hint">Click to drill down ▸</div>
-        </div>
-      </div>
-
-      <Modal
-        open={headcountModalOpen}
-        onClose={() => setHeadcountModalOpen(false)}
-        title={`Headcount — DB vs OSP ${view === 'weekly' ? 'Weekly' : 'Quarterly'} Breakdown`}
-      >
-        <div className="chart-container" style={{ height: 280 }}>
-          <Bar data={headcountBreakdownChart.data} options={headcountBreakdownChart.options} />
-        </div>
-      </Modal>
-
       <div className="section-div">
         <h2>Overall SLA</h2>
       </div>
@@ -499,6 +487,24 @@ export default function CcoDashboard({ view }) {
         })}
       </div>
 
+      <div className="s-grid">
+        {['icw', 'ccpd'].map((key) => {
+          const c = metricChartsByKey[key]
+          return (
+            <div className="card" key={c.key}>
+              <div className="card-header">
+                <div className="card-title">
+                  {c.title} <InfoBtn tip={`<strong>Purpose</strong>${METRIC_CHART_TIPS[c.key] || ''}`} />
+                </div>
+              </div>
+              <div className="chart-container">
+                <Bar data={c.config.data} options={c.config.options} />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
       <Modal
         open={!!metricDrillKey}
         onClose={() => setMetricDrillKey(null)}
@@ -516,6 +522,41 @@ export default function CcoDashboard({ view }) {
             ))}
           </div>
         )}
+      </Modal>
+
+      <div className="s-grid">
+        <div className="card clickable-card" onClick={() => setHeadcountModalOpen(true)} title="Click for DB / OSP breakdown">
+          <div className="card-header">
+            <div className="card-title">
+              Headcount <InfoBtn tip={`<strong>Purpose</strong>Headcount trend, ${view} view. Click for a DB / OSP breakdown.`} />
+            </div>
+          </div>
+          <div className="chart-container">
+            <Bar data={headcountChart.data} options={headcountChart.options} />
+          </div>
+          <div className="mc-drill-hint">Click to drill down ▸</div>
+        </div>
+
+        <div className="card">
+          <div className="card-header">
+            <div className="card-title">
+              CRW <InfoBtn tip={`<strong>Purpose</strong>CRW trend, ${view} view.`} />
+            </div>
+          </div>
+          <div className="chart-container">
+            <Bar data={crwChart.data} options={crwChart.options} />
+          </div>
+        </div>
+      </div>
+
+      <Modal
+        open={headcountModalOpen}
+        onClose={() => setHeadcountModalOpen(false)}
+        title={`Headcount — DB vs OSP ${view === 'weekly' ? 'Weekly' : 'Quarterly'} Breakdown`}
+      >
+        <div className="chart-container" style={{ height: 280 }}>
+          <Bar data={headcountBreakdownChart.data} options={headcountBreakdownChart.options} />
+        </div>
       </Modal>
 
       <div className="section-div">
@@ -673,7 +714,7 @@ export default function CcoDashboard({ view }) {
           <>
             {channelTrendChart.label} by Channel — Trend Detail
             {' '}
-            <InfoBtn onDark tip={`<strong>Purpose</strong>${channelTrendChart.label} Actual vs Forecast by channel, ${view} view — split from the same period-level numbers used across this dashboard.`} />
+            <InfoBtn onDark tip={`<strong>Purpose</strong>${channelTrendChart.label} Actual vs Forecast by channel, ${view} view — split from the same period-level numbers used across this dashboard. The Variance % line shows overall Actual vs Forecast variance per period.`} />
           </>
         )}
       >
