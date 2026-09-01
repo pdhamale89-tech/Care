@@ -27,7 +27,7 @@ const ISSUE_CHART_TIPS = {
   issue1: 'Case volume (Actual), broken down by issue type.',
   issue2: 'Activity volume (Actual), broken down by issue type.',
   issue3: 'Activities Per Case (Actual), broken down by issue type.',
-  issue4: 'TTC (Actual), broken down by issue type.',
+  issue4: 'TtC (Actual), broken down by issue type.',
   issue5: 'Case Rate (%, Actual), broken down by issue type.',
   issue6: 'Ci1 (%, Actual), broken down by issue type.',
 }
@@ -43,7 +43,7 @@ const METRIC_COLS = [
   { key: 'caseRate', label: 'Case Rate', base: 12.5, unit: '%', hf: true, decimals: 1 },
   { key: 'cpsr', label: 'CPSR', base: 4.2, unit: '', hf: true, decimals: 1 },
   { key: 'sla', label: 'Overall SLA', base: 91, unit: '%', hf: false, decimals: 1 },
-  { key: 'tcd', label: 'TTC', base: 48000, unit: '', hf: true, decimals: 0 },
+  { key: 'tcd', label: 'TCD', base: 48000, unit: '', hf: true, decimals: 0 },
 ]
 
 const EXTRA_METRIC_CHARTS = [
@@ -85,7 +85,7 @@ const ISSUE_CHARTS = [
   { id: 'issue1', title: 'Cases', base: 900, unit: '' },
   { id: 'issue2', title: 'Activities', base: 1400, unit: '' },
   { id: 'issue3', title: 'APC', base: 300, unit: '' },
-  { id: 'issue4', title: 'TTC', base: 60, unit: '' },
+  { id: 'issue4', title: 'TtC', base: 60, unit: '' },
   { id: 'issue5', title: 'Case Rate', base: 15, unit: '' },
   { id: 'issue6', title: 'Ci1', base: 20, unit: '%' },
 ]
@@ -566,7 +566,7 @@ export default function CcoDashboard({ view }) {
               <InfoBtn
                 tip={heatmapDrill
                   ? `<strong>Purpose</strong>${heatmapDrillData.metricLabel} for every issue type, broken down by period (${view} view). Use the Weekly / Quarterly buttons above to change granularity.`
-                  : '<strong>Purpose</strong>Actual values for Cases, Activities, APC, TTC, Case Rate and Ci1 across all 9 issue types. Use the Drill Down button on a row to see that metric broken down by issue type and period.'}
+                  : '<strong>Purpose</strong>Actual values for Cases, Activities, APC, TtC, Case Rate and Ci1 across all 9 issue types. Use the Drill Down button on a row to see that metric broken down by issue type and period.'}
               />
             </div>
           </div>
