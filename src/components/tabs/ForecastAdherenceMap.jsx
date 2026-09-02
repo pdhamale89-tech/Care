@@ -144,7 +144,6 @@ export default function ForecastAdherenceMap() {
           <div className="geo-hover-card">
             <div className="geo-hover-name">{hover.label}</div>
             <div className="geo-hover-val" style={{ color: tierColor(hover.value, colors) }}>{hover.value}%</div>
-            <div className="geo-hover-sub">accuracy</div>
           </div>
         )}
       </div>
