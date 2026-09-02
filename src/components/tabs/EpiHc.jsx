@@ -77,15 +77,16 @@ function buildStatusChart(entries, statusColors, textColor) {
   }
 }
 
-// Injects a per-bar click + hover-cursor handler into an existing chart config,
-// so a single click on a specific bar can drill into just that category.
-function withBarClick(config, onIndexClick) {
+// Injects a per-bar/slice click + hover-cursor handler into an existing chart
+// config, so a single click on a specific mark can drill into just that data
+// point. `onElementClick` receives the clicked element's {datasetIndex, index}.
+function withDrillClick(config, onElementClick) {
   return {
     ...config,
     options: {
       ...config.options,
       onClick: (evt, elements) => {
-        if (elements.length) onIndexClick(elements[0].index)
+        if (elements.length) onElementClick(elements[0])
       },
       onHover: (evt, elements) => {
         evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'
@@ -93,6 +94,11 @@ function withBarClick(config, onIndexClick) {
     },
   }
 }
+
+const AGENT_DETAIL_COLS = [
+  ['name', 'Name'], ['manager', 'Manager'], ['title', 'Title'], ['segment', 'Segment'],
+  ['location', 'Location'], ['tenureBucket', 'Tenure'], ['empStatus', 'Status'], ['dbOsp', 'DB/OSP'],
+]
 
 function buildDoughnutChart(entries, categoryColors) {
   return {
@@ -118,8 +124,7 @@ export default function EpiHc() {
   const { theme, activeRegions, epicenterFilters } = useApp()
   const colors = getColors(theme)
   const now = useMemo(() => new Date(), [])
-  const [managerDrill, setManagerDrill] = useState(null)
-  const [statusDrill, setStatusDrill] = useState(null)
+  const [agentDrill, setAgentDrill] = useState(null)
 
   const roster = useMemo(() => {
     const regions = activeRegions.includes('All') ? REGIONS : activeRegions
@@ -166,42 +171,72 @@ export default function EpiHc() {
     'Leave of Absence': colors.accentRed,
   }), [colors])
 
+  function drillTo(title, rows) {
+    setAgentDrill({ title: `${title} (${rows.length})`, rows })
+  }
+
   // Two dimensions per chart (a category × a cross-cut), not a flat single-series
   // count — e.g. tenure composition split by sourcing, not just tenure alone.
+  // Every chart below is also click-to-drill: clicking a bar/slice opens the
+  // matching agents in the shared Agent Details modal.
   const hiresByYearChart = useMemo(() => {
     const agent = HIRE_YEARS.map((y) => enriched.filter((a) => a.hireYear === y && a.title === 'Agent').length)
     const nonAgent = HIRE_YEARS.map((y) => enriched.filter((a) => a.hireYear === y && a.title !== 'Agent').length)
-    return stackedBarConfig(HIRE_YEARS.map(String), [
+    const base = stackedBarConfig(HIRE_YEARS.map(String), [
       { label: 'Agent', data: agent, backgroundColor: colors.accentBlue },
       { label: 'Non-Agent', data: nonAgent, backgroundColor: colors.accentPurple },
     ])
+    return withDrillClick(base, ({ datasetIndex, index }) => {
+      const year = HIRE_YEARS[index]
+      const isAgent = datasetIndex === 0
+      drillTo(`Hired ${year} — ${isAgent ? 'Agent' : 'Non-Agent'}`, enriched.filter((a) => a.hireYear === year && (isAgent ? a.title === 'Agent' : a.title !== 'Agent')))
+    })
   }, [enriched, colors])
 
   const tenureChart = useMemo(() => {
     const db = TENURE_BUCKETS.map((b) => enriched.filter((a) => a.tenureBucket === b && a.dbOsp === 'DB').length)
     const osp = TENURE_BUCKETS.map((b) => enriched.filter((a) => a.tenureBucket === b && a.dbOsp === 'OSP').length)
-    return stackedBarConfig(TENURE_BUCKETS, [
+    const base = stackedBarConfig(TENURE_BUCKETS, [
       { label: 'DB', data: db, backgroundColor: colors.accentBlue },
       { label: 'OSP', data: osp, backgroundColor: colors.accentOrange },
     ])
+    return withDrillClick(base, ({ datasetIndex, index }) => {
+      const bucket = TENURE_BUCKETS[index]
+      const source = datasetIndex === 0 ? 'DB' : 'OSP'
+      drillTo(`${bucket} tenure — ${source}`, enriched.filter((a) => a.tenureBucket === bucket && a.dbOsp === source))
+    })
   }, [enriched, colors])
 
-  const sourcingChart = useMemo(
-    () => buildDoughnutChart(countByFixed(enriched, 'dbOsp', ['DB', 'OSP']), [colors.accentBlue, colors.accentOrange]),
-    [enriched, colors],
-  )
+  const sourcingChart = useMemo(() => {
+    const base = buildDoughnutChart(countByFixed(enriched, 'dbOsp', ['DB', 'OSP']), [colors.accentBlue, colors.accentOrange])
+    return withDrillClick(base, ({ index }) => {
+      const source = index === 0 ? 'DB' : 'OSP'
+      drillTo(source, enriched.filter((a) => a.dbOsp === source))
+    })
+  }, [enriched, colors])
+
+  const ospVendorEntries = useMemo(() => countBy(enriched.filter((a) => a.dbOsp === 'OSP'), 'vendor'), [enriched])
   const vendorChart = useMemo(
-    () => buildHBarChart(countBy(enriched.filter((a) => a.dbOsp === 'OSP'), 'vendor'), colors.accentOrange, colors.textPrimary),
-    [enriched, colors],
+    () => withDrillClick(buildHBarChart(ospVendorEntries, colors.accentOrange, colors.textPrimary), ({ index }) => {
+      const vendor = ospVendorEntries[index][0]
+      drillTo(`Vendor: ${vendor}`, enriched.filter((a) => a.dbOsp === 'OSP' && a.vendor === vendor))
+    }),
+    [enriched, ospVendorEntries, colors],
   )
 
-  const managerNames = useMemo(() => countBy(enriched, 'manager').map(([k]) => k), [enriched])
+  const managerEntries = useMemo(() => countBy(enriched, 'manager'), [enriched])
   const spanChart = useMemo(
-    () => withBarClick(buildHBarChart(countBy(enriched, 'manager'), colors.accentBlue, colors.textPrimary), (i) => setManagerDrill(managerNames[i])),
-    [enriched, colors, managerNames],
+    () => withDrillClick(buildHBarChart(managerEntries, colors.accentBlue, colors.textPrimary), ({ index }) => {
+      const manager = managerEntries[index][0]
+      drillTo(`${manager} — Team`, enriched.filter((a) => a.manager === manager))
+    }),
+    [enriched, colors, managerEntries],
   )
   const statusChart = useMemo(
-    () => withBarClick(buildStatusChart(countByFixed(enriched, 'empStatus', EMP_STATUSES), statusColors, colors.textPrimary), (i) => setStatusDrill(EMP_STATUSES[i])),
+    () => withDrillClick(buildStatusChart(countByFixed(enriched, 'empStatus', EMP_STATUSES), statusColors, colors.textPrimary), ({ index }) => {
+      const status = EMP_STATUSES[index]
+      drillTo(status, enriched.filter((a) => a.empStatus === status))
+    }),
     [enriched, statusColors, colors],
   )
 
@@ -209,20 +244,16 @@ export default function EpiHc() {
   const locationChart = useMemo(() => {
     const db = topLocations.map((l) => enriched.filter((a) => a.location === l && a.dbOsp === 'DB').length)
     const osp = topLocations.map((l) => enriched.filter((a) => a.location === l && a.dbOsp === 'OSP').length)
-    return stackedBarConfig(topLocations, [
+    const base = stackedBarConfig(topLocations, [
       { label: 'DB', data: db, backgroundColor: colors.accentBlue },
       { label: 'OSP', data: osp, backgroundColor: colors.accentOrange },
     ])
+    return withDrillClick(base, ({ datasetIndex, index }) => {
+      const location = topLocations[index]
+      const source = datasetIndex === 0 ? 'DB' : 'OSP'
+      drillTo(`${location} — ${source}`, enriched.filter((a) => a.location === location && a.dbOsp === source))
+    })
   }, [enriched, topLocations, colors])
-
-  const managerDrillRows = useMemo(
-    () => (managerDrill ? enriched.filter((a) => a.manager === managerDrill) : []),
-    [enriched, managerDrill],
-  )
-  const statusDrillRows = useMemo(
-    () => (statusDrill ? enriched.filter((a) => a.empStatus === statusDrill) : []),
-    [enriched, statusDrill],
-  )
 
   return (
     <div className="tab-panel active">
@@ -288,6 +319,7 @@ export default function EpiHc() {
           <div className="chart-container">
             <Bar data={hiresByYearChart.data} options={hiresByYearChart.options} />
           </div>
+          <div className="mc-drill-hint">Click a segment for agent details ▸</div>
         </div>
         <div className="card">
           <div className="card-header">
@@ -298,6 +330,7 @@ export default function EpiHc() {
           <div className="chart-container">
             <Bar data={tenureChart.data} options={tenureChart.options} />
           </div>
+          <div className="mc-drill-hint">Click a segment for agent details ▸</div>
         </div>
       </div>
 
@@ -314,6 +347,7 @@ export default function EpiHc() {
           <div className="chart-container">
             <Doughnut data={sourcingChart.data} options={sourcingChart.options} />
           </div>
+          <div className="mc-drill-hint">Click a slice for agent details ▸</div>
         </div>
         <div className="card">
           <div className="card-header">
@@ -324,6 +358,7 @@ export default function EpiHc() {
           <div className="chart-container">
             <Bar data={vendorChart.data} options={vendorChart.options} />
           </div>
+          <div className="mc-drill-hint">Click a bar for agent details ▸</div>
         </div>
       </div>
 
@@ -356,50 +391,19 @@ export default function EpiHc() {
       </div>
 
       <Modal
-        open={!!managerDrill}
-        onClose={() => setManagerDrill(null)}
-        title={managerDrill && `${managerDrill} — Team (${managerDrillRows.length})`}
+        open={!!agentDrill}
+        onClose={() => setAgentDrill(null)}
+        title={agentDrill && `Agent Details — ${agentDrill.title}`}
       >
         <div className="tw scroll">
           <table>
             <thead>
-              <tr><th>Name</th><th>Title</th><th>Segment</th><th>Location</th><th>Tenure</th><th>Status</th></tr>
+              <tr>{AGENT_DETAIL_COLS.map(([, label]) => <th key={label}>{label}</th>)}</tr>
             </thead>
             <tbody>
-              {managerDrillRows.map((a) => (
+              {agentDrill && agentDrill.rows.map((a) => (
                 <tr key={a.badgeId}>
-                  <td>{a.name}</td>
-                  <td>{a.title}</td>
-                  <td>{a.segment}</td>
-                  <td>{a.location}</td>
-                  <td>{a.tenureBucket}</td>
-                  <td>{a.empStatus}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Modal>
-
-      <Modal
-        open={!!statusDrill}
-        onClose={() => setStatusDrill(null)}
-        title={statusDrill && `${statusDrill} — Employees (${statusDrillRows.length})`}
-      >
-        <div className="tw scroll">
-          <table>
-            <thead>
-              <tr><th>Name</th><th>Manager</th><th>Segment</th><th>Location</th><th>Tenure</th><th>DB/OSP</th></tr>
-            </thead>
-            <tbody>
-              {statusDrillRows.map((a) => (
-                <tr key={a.badgeId}>
-                  <td>{a.name}</td>
-                  <td>{a.manager}</td>
-                  <td>{a.segment}</td>
-                  <td>{a.location}</td>
-                  <td>{a.tenureBucket}</td>
-                  <td>{a.dbOsp}</td>
+                  {AGENT_DETAIL_COLS.map(([key]) => <td key={key}>{a[key]}</td>)}
                 </tr>
               ))}
             </tbody>
@@ -420,6 +424,7 @@ export default function EpiHc() {
           <div className="chart-container">
             <Bar data={locationChart.data} options={locationChart.options} />
           </div>
+          <div className="mc-drill-hint">Click a segment for agent details ▸</div>
         </div>
       </div>
     </div>
