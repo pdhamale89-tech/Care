@@ -16,6 +16,12 @@ const NAV_SECTIONS = [
     ],
   },
   {
+    label: 'Planning',
+    items: [
+      { id: 'whatIf', label: 'What-If Simulator', icon: '🧮' },
+    ],
+  },
+  {
     label: 'Tools',
     items: [
       { id: 'reports', label: 'Reports', icon: '📄' },

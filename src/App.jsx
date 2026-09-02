@@ -14,6 +14,7 @@ import EpiHc from './components/tabs/EpiHc.jsx'
 import Reports from './components/tabs/Reports.jsx'
 import FiscalCalendar from './components/tabs/FiscalCalendar.jsx'
 import ComingSoonTab from './components/tabs/ComingSoonTab.jsx'
+import WhatIfSimulator from './components/tabs/WhatIfSimulator.jsx'
 import { getColors } from './theme/colors.js'
 
 const COMING_SOON_TITLES = {
@@ -32,6 +33,7 @@ function TabRouter() {
   if (currentTab === 'epiHc') return <EpiHc />
   if (currentTab === 'reports') return <Reports />
   if (currentTab === 'fiscalCalendar') return <FiscalCalendar />
+  if (currentTab === 'whatIf') return <WhatIfSimulator />
   if (COMING_SOON_TITLES[currentTab]) return <ComingSoonTab title={COMING_SOON_TITLES[currentTab]} />
   return <HomeTab />
 }

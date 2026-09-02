@@ -5,6 +5,7 @@ const SECTIONS = [
   { key: 'outage', tab: 'outage', icon: '⚠️', title: 'Outage Report', tag: 'Agent schedule adherence and unplanned-outage breakdowns by manager.' },
   { key: 'epicenter', tab: 'epicenter', icon: '👥', title: 'Epicenter HC', tag: 'Headcount roster across departments, queues, and managers.' },
   { key: 'epiHc', tab: 'epiHc', icon: '📈', title: 'Epi HC', tag: 'Workforce analytics — growth, tenure, sourcing mix, span of control, and risk.' },
+  { key: 'whatIf', tab: 'whatIf', icon: '🧮', title: 'What-If Simulator', tag: 'Staffing, hiring plan, sourcing mix, and backlog scenarios in one place.' },
 ]
 
 export default function HomeTab() {
