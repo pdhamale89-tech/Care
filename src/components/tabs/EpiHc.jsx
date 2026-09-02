@@ -95,9 +95,17 @@ function withDrillClick(config, onElementClick) {
   }
 }
 
+// Same field set as Epicenter HC's Agent Roster table, plus the tenure/status
+// columns this dashboard's drill-downs are keyed on.
 const AGENT_DETAIL_COLS = [
-  ['name', 'Name'], ['manager', 'Manager'], ['title', 'Title'], ['segment', 'Segment'],
-  ['location', 'Location'], ['tenureBucket', 'Tenure'], ['empStatus', 'Status'], ['dbOsp', 'DB/OSP'],
+  ['name', 'Name'], ['badgeId', 'Badge ID'], ['email', 'Email'], ['hireDate', 'Hire Date'],
+  ['tenureBucket', 'Tenure'], ['weekEnding', 'Week Ending'], ['vendor', 'Vendor'], ['dbOsp', 'DB/OSP'],
+  ['queue', 'Queue'], ['dept', 'Dept'], ['deptCode', 'Code'], ['manager', 'Manager'],
+  ['businessUnit', 'Business Unit'], ['region', 'Region'], ['segment', 'Segment'], ['location', 'Location'],
+  ['subQueueDesc', 'Sub Queue Description'], ['title', 'Title'], ['empStatus', 'Status'],
+  ['ewfmDeptCode', 'EWFM Dept Code'], ['ewfmDeptName', 'EWFM Dept Name'],
+  ['ewfmTeamCode', 'EWFM Team Code'], ['ewfmTeamName', 'EWFM Team Name'],
+  ['acdExtension', 'ACD/Extension'], ['switchCode', 'Switch'],
 ]
 
 function buildDoughnutChart(entries, categoryColors) {
