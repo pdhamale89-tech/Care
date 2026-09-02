@@ -10,6 +10,7 @@ const BREADCRUMBS = {
   cco: 'Performance Reports › CCO Overview',
   outage: 'Workforce Reports › Outage Report',
   epicenter: 'Workforce Reports › Epicenter HC',
+  epiHc: 'Workforce Reports › Epi HC',
   reports: 'Tools › Reports',
   calendar: 'Tools › Calendar',
   planningCalendar: 'Tools › Calendar › Planning Calendar',
@@ -68,7 +69,7 @@ export function AppProvider({ children }) {
   const clearFilters = useCallback(() => {
     if (currentTab === 'cco') { setCcoFilters(CCO_FILTERS_DEFAULT); setCcoView('weekly') }
     else if (currentTab === 'outage') setOutageFilters(OUTAGE_FILTERS_DEFAULT)
-    else if (currentTab === 'epicenter') setEpicenterFilters(EPICENTER_FILTERS_DEFAULT)
+    else if (currentTab === 'epicenter' || currentTab === 'epiHc') setEpicenterFilters(EPICENTER_FILTERS_DEFAULT)
   }, [currentTab])
 
   const showToast = useCallback((msg, cls) => {

@@ -4,6 +4,7 @@ const SECTIONS = [
   { key: 'cco', tab: 'cco', icon: '📊', title: 'CCO Overview', tag: 'Weekly and quarterly SLA, volume, and backlog performance.' },
   { key: 'outage', tab: 'outage', icon: '⚠️', title: 'Outage Report', tag: 'Agent schedule adherence and unplanned-outage breakdowns by manager.' },
   { key: 'epicenter', tab: 'epicenter', icon: '👥', title: 'Epicenter HC', tag: 'Headcount roster across departments, queues, and managers.' },
+  { key: 'epiHc', tab: 'epiHc', icon: '📈', title: 'Epi HC', tag: 'Workforce analytics — growth, tenure, sourcing mix, span of control, and risk.' },
 ]
 
 export default function HomeTab() {

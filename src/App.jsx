@@ -10,6 +10,7 @@ import HomeTab from './components/tabs/HomeTab.jsx'
 import CcoDashboard from './components/tabs/CcoDashboard.jsx'
 import OutageReport from './components/tabs/OutageReport.jsx'
 import EpicenterHc from './components/tabs/EpicenterHc.jsx'
+import EpiHc from './components/tabs/EpiHc.jsx'
 import Reports from './components/tabs/Reports.jsx'
 import FiscalCalendar from './components/tabs/FiscalCalendar.jsx'
 import ComingSoonTab from './components/tabs/ComingSoonTab.jsx'
@@ -28,6 +29,7 @@ function TabRouter() {
   if (currentTab === 'cco') return <CcoDashboard view={ccoView} />
   if (currentTab === 'outage') return <OutageReport />
   if (currentTab === 'epicenter') return <EpicenterHc />
+  if (currentTab === 'epiHc') return <EpiHc />
   if (currentTab === 'reports') return <Reports />
   if (currentTab === 'fiscalCalendar') return <FiscalCalendar />
   if (COMING_SOON_TITLES[currentTab]) return <ComingSoonTab title={COMING_SOON_TITLES[currentTab]} />

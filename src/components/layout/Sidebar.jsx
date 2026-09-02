@@ -12,6 +12,7 @@ const NAV_SECTIONS = [
     items: [
       { id: 'outage', label: 'Outage Report', icon: '⚠️' },
       { id: 'epicenter', label: 'Epicenter HC', icon: '👥' },
+      { id: 'epiHc', label: 'Epi HC', icon: '📈' },
     ],
   },
   {
