@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Bar, Doughnut } from 'react-chartjs-2'
 import { useApp } from '../../context/AppContext.jsx'
-import { generateEpicenterRoster, fmt, EMP_STATUSES, matchesMulti, REGIONS } from '../../data/mockGenerators.js'
+import { generateEpicenterRoster, EMP_STATUSES, matchesMulti, REGIONS } from '../../data/mockGenerators.js'
 import { getColors } from '../../theme/colors.js'
 import { barDataLabels, hBarDataLabels, doughnutDataLabels } from '../../charts/datalabels.js'
 import { stackedBarConfig } from '../../charts/chartConfigs.js'
@@ -10,8 +10,6 @@ import Modal from '../common/Modal.jsx'
 
 const HIRE_YEARS = Array.from({ length: 7 }, (_, i) => 2018 + i)
 const TENURE_BUCKETS = ['<1 yr', '1–2 yrs', '2–3 yrs', '3–5 yrs', '5+ yrs']
-// "At risk" here means away from the floor and needing coverage, not performance risk.
-const AT_RISK_STATUSES = ['Leave of Absence', 'Temporary Duty Assignment']
 
 function tenureYears(hireDateStr, now) {
   return (now - new Date(hireDateStr)) / (365.25 * 24 * 3600 * 1000)
@@ -155,22 +153,6 @@ export default function EpiHc() {
     tenureBucket: tenureBucket(tenureYears(a.hireDate, now)),
   })), [filtered, now])
 
-  const summary = useMemo(() => {
-    const total = enriched.length
-    const totalManagers = new Set(enriched.map((a) => a.manager)).size
-    const ospCount = enriched.filter((a) => a.dbOsp === 'OSP').length
-    const newHireCount = enriched.filter((a) => a.empStatus === 'New Hire').length
-    const atRiskCount = enriched.filter((a) => AT_RISK_STATUSES.includes(a.empStatus)).length
-    return {
-      total,
-      totalManagers,
-      avgSpan: totalManagers ? total / totalManagers : 0,
-      ospPct: total ? (ospCount / total) * 100 : 0,
-      newHirePct: total ? (newHireCount / total) * 100 : 0,
-      atRiskPct: total ? (atRiskCount / total) * 100 : 0,
-    }
-  }, [enriched])
-
   const statusColors = useMemo(() => ({
     Normal: colors.accentGreen,
     'New Hire': colors.accentBlue,
@@ -268,50 +250,6 @@ export default function EpiHc() {
       <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 10 }}>
         ⚠️ All data shown is randomly generated placeholder data for demonstration purposes only. No real employee or
         personal information is used. Email domain (@example-demo.test) is a reserved test domain.
-      </div>
-
-      <div className="ai-story">
-        <div className="ai-icon-box">👥</div>
-        <div>
-          <div className="ai-story-title">Workforce Snapshot</div>
-          <div className="ai-story-text">
-            <strong>{fmt(summary.total)} TSEs</strong> across <strong>{fmt(summary.totalManagers)} managers</strong> —
-            an average span of control of <strong>{fmt(summary.avgSpan)}</strong> direct reports. <strong>{fmt(summary.ospPct)}%</strong> of
-            the team is outsourced (OSP). <strong>{fmt(summary.newHirePct)}%</strong> are new hires still ramping, and{' '}
-            <strong>{fmt(summary.atRiskPct)}%</strong> are currently on leave or temporary duty and off the floor.
-          </div>
-        </div>
-      </div>
-
-      <div className="section-div">
-        <h2>Team Summary</h2>
-      </div>
-      <div className="kpi-grid">
-        <div className="kpi-card">
-          <div className="kpi-label">Total Headcount</div>
-          <div className="kpi-value">{fmt(summary.total)}</div>
-          <div className="kpi-sub">{fmt(summary.totalManagers)} managers</div>
-        </div>
-        <div className="kpi-card">
-          <div className="kpi-label">Avg Span of Control</div>
-          <div className="kpi-value">{fmt(summary.avgSpan)}</div>
-          <div className="kpi-sub">Direct reports per manager</div>
-        </div>
-        <div className="kpi-card">
-          <div className="kpi-label">OSP Share</div>
-          <div className="kpi-value">{fmt(summary.ospPct)}%</div>
-          <div className="kpi-sub">Outsourced vs internal (DB)</div>
-        </div>
-        <div className="kpi-card">
-          <div className="kpi-label">New Hire Rate</div>
-          <div className="kpi-value">{fmt(summary.newHirePct)}%</div>
-          <div className="kpi-sub">Still ramping</div>
-        </div>
-        <div className="kpi-card">
-          <div className="kpi-label">At-Risk / Off-Floor</div>
-          <div className="kpi-value">{fmt(summary.atRiskPct)}%</div>
-          <div className="kpi-sub">Leave of Absence + Temp Duty</div>
-        </div>
       </div>
 
       <div className="section-div">
