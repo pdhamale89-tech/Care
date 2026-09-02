@@ -362,7 +362,12 @@ tr.group-row td { background: var(--table-header); font-weight: 800; color: var(
 /* ===== Forecast Adherence world map ===== */
 #forecastAdherenceMap { width: 100%; height: 300px; overflow: hidden; }
 .jvm-tooltip { display: none !important; }
-.geo-map-inner { position: relative; cursor: pointer; }
+/* A fixed height (unlike .chart-container's, this one has none by default)
+   avoids a circular sizing dependency: jsvectormap measures this container to
+   size its SVG, but without a fixed height the container's own height was
+   following the SVG's content — an unstable loop that showed up as the map
+   visibly resizing/"zooming" shortly after render. */
+.geo-map-inner { position: relative; cursor: pointer; height: 400px; }
 .geo-hover-card { position: absolute; top: 10px; right: 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; min-width: 100px; text-align: center; box-shadow: 0 4px 14px rgba(0, 0, 0, .25); pointer-events: none; z-index: 5; }
 .geo-hover-name { font-size: 10px; font-weight: 700; color: var(--accent-blue); text-transform: uppercase; letter-spacing: .03em; }
 .geo-hover-val { font-size: 20px; font-weight: 800; margin-top: 2px; }
