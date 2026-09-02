@@ -305,7 +305,11 @@ export default function CcoDashboard({ view }) {
       const actualData = []
       const forecastData = []
       periods.forEach((_, i) => {
-        const { actual, forecast } = genKpiValue(col.base, seed + i * 7 + ci * 3, col.decimals)
+        // `chi` must be folded into the seed here, not just applied via the `w`
+        // multiplier below — multiplying both actual and forecast by the same
+        // weight cancels out of the variance ratio, which made every channel's
+        // Variance % line identical regardless of channel.
+        const { actual, forecast } = genKpiValue(col.base, seed + i * 7 + ci * 3 + chi * 17, col.decimals)
         const w = profile.weights[chi]
         actualData.push(Math.round(actual * w * factor) / factor)
         forecastData.push(Math.round(forecast * w * factor) / factor)
