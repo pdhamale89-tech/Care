@@ -44,6 +44,12 @@ export default function ForecastAdherenceMap() {
       mapRef.current = null
     }
     setHover(null)
+    // jsvectormap's own destroy() doesn't reliably remove marker-label <text>
+    // nodes it injected via labels.markers.render — without this, switching
+    // Region/Sub Region leaves the previous instance's labels behind, stacked
+    // underneath the new ones.
+    const container = document.getElementById('forecastAdherenceMap')
+    if (container) container.innerHTML = ''
     const isSubregion = mode === 'subregion'
     const groupAcc = isSubregion ? subregionAcc : regionAcc
     const groupOf = isSubregion ? COUNTRY_SUBREGION : COUNTRY_REGION

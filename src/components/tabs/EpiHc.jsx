@@ -7,6 +7,7 @@ import { barDataLabels, hBarDataLabels, doughnutDataLabels } from '../../charts/
 import { stackedBarConfig } from '../../charts/chartConfigs.js'
 import InfoBtn from '../common/InfoBtn.jsx'
 import Modal from '../common/Modal.jsx'
+import EpiHcLocationMap from './EpiHcLocationMap.jsx'
 
 const HIRE_YEARS = Array.from({ length: 7 }, (_, i) => 2018 + i)
 const TENURE_BUCKETS = ['<1 yr', '1–2 yrs', '2–3 yrs', '3–5 yrs', '5+ yrs']
@@ -230,26 +231,18 @@ export default function EpiHc() {
     [enriched, statusColors, colors],
   )
 
-  const topLocations = useMemo(() => countBy(enriched, 'location').slice(0, 8).map(([k]) => k), [enriched])
-  const locationChart = useMemo(() => {
-    const db = topLocations.map((l) => enriched.filter((a) => a.location === l && a.dbOsp === 'DB').length)
-    const osp = topLocations.map((l) => enriched.filter((a) => a.location === l && a.dbOsp === 'OSP').length)
-    const base = stackedBarConfig(topLocations, [
-      { label: 'DB', data: db, backgroundColor: colors.accentBlue },
-      { label: 'OSP', data: osp, backgroundColor: colors.accentOrange },
-    ])
-    return withDrillClick(base, ({ datasetIndex, index }) => {
-      const location = topLocations[index]
-      const source = datasetIndex === 0 ? 'DB' : 'OSP'
-      drillTo(`${location} — ${source}`, enriched.filter((a) => a.location === location && a.dbOsp === source))
-    })
-  }, [enriched, topLocations, colors])
-
   return (
     <div className="tab-panel active">
       <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 10 }}>
         ⚠️ All data shown is randomly generated placeholder data for demonstration purposes only. No real employee or
         personal information is used. Email domain (@example-demo.test) is a reserved test domain.
+      </div>
+
+      <div className="section-div">
+        <h2>Geographic Distribution</h2>
+      </div>
+      <div className="s-grid full">
+        <EpiHcLocationMap agents={enriched} onDrill={drillTo} theme={theme} />
       </div>
 
       <div className="section-div">
@@ -356,23 +349,6 @@ export default function EpiHc() {
           </table>
         </div>
       </Modal>
-
-      <div className="section-div">
-        <h2>Geographic Distribution</h2>
-      </div>
-      <div className="s-grid full">
-        <div className="card">
-          <div className="card-header">
-            <div className="card-title">
-              Headcount by Location <InfoBtn tip="<strong>Purpose</strong>Headcount by work location (top 8), split DB vs OSP — which sites are internally staffed vs outsourced." />
-            </div>
-          </div>
-          <div className="chart-container">
-            <Bar data={locationChart.data} options={locationChart.options} />
-          </div>
-          <div className="mc-drill-hint">Click a segment for agent details ▸</div>
-        </div>
-      </div>
     </div>
   )
 }
