@@ -68,9 +68,7 @@ export default function EpiHcLocationMap({ agents, onDrill, theme }) {
     return c
   }, [geoAgents, groups, mode, sourcing])
 
-  const total = useMemo(() => Object.values(counts).reduce((a, b) => a + b, 0), [counts])
   const maxCount = useMemo(() => Math.max(1, ...Object.values(counts)), [counts])
-  const pctOf = (g) => (total ? Math.round((counts[g] / total) * 100) : 0)
 
   function drillGroup(group) {
     const groupOf = mode === 'subregion' ? COUNTRY_SUBREGION : COUNTRY_REGION
@@ -124,7 +122,7 @@ export default function EpiHcLocationMap({ agents, onDrill, theme }) {
       labels: {
         markers: {
           render(markerConfig) {
-            return `${markerConfig.name} ${pctOf(markerConfig.name)}%`
+            return `${markerConfig.name} ${counts[markerConfig.name] ?? 0}`
           },
         },
       },
@@ -136,7 +134,7 @@ export default function EpiHcLocationMap({ agents, onDrill, theme }) {
       onRegionTooltipShow(event, tooltip, code) {
         const group = groupOf[code]
         if (!group) return
-        setHover({ label: group, count: counts[group], pct: pctOf(group) })
+        setHover({ label: group, count: counts[group] })
       },
       onRegionClick(event, code) {
         const group = groupOf[code]
@@ -173,7 +171,7 @@ export default function EpiHcLocationMap({ agents, onDrill, theme }) {
     <div className="card">
       <div className="card-header">
         <div className="card-title">
-          🌍 Headcount by Location <InfoBtn tip="<strong>Purpose</strong>Headcount by geography, toggled DB vs OSP. Toggle Region/Sub Region to change map granularity; labels show each group's share of the selected sourcing type's total headcount. Click the map for that region's agent details." />
+          🌍 Headcount by Location <InfoBtn tip="<strong>Purpose</strong>Headcount by geography, toggled DB vs OSP. Toggle Region/Sub Region to change map granularity; labels show each group's headcount for the selected sourcing type. Click the map for that region's agent details." />
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <div className="plan-sel">
@@ -192,8 +190,8 @@ export default function EpiHcLocationMap({ agents, onDrill, theme }) {
         {hover && (
           <div className="geo-hover-card">
             <div className="geo-hover-name">{hover.label}</div>
-            <div className="geo-hover-val" style={{ color: sourceColor }}>{hover.pct}%</div>
-            <div className="geo-hover-sub">{hover.count} {sourcing} agents</div>
+            <div className="geo-hover-val" style={{ color: sourceColor }}>{hover.count}</div>
+            <div className="geo-hover-sub">{sourcing} agents</div>
           </div>
         )}
       </div>
