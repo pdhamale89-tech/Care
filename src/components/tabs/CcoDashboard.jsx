@@ -218,7 +218,7 @@ export default function CcoDashboard({ view }) {
       data: {
         labels: shortLabels,
         datasets: [
-          { label: 'Headcount', data: headcount, backgroundColor: colors.accentGreen, borderRadius: 4, datalabels: barDataLabels('', colors.accentGreen) },
+          { label: 'Headcount', data: headcount, backgroundColor: colors.accentBlue, borderRadius: 4, datalabels: barDataLabels('', colors.accentBlue) },
         ],
       },
       options: {
