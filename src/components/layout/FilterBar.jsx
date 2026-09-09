@@ -27,7 +27,7 @@ export default function FilterBar() {
   const countries = countriesForRegions(activeRegions)
   const isCco = currentTab === 'cco' || currentTab === 'whatIf'
   const isOutage = currentTab === 'outage'
-  const isEpicenter = currentTab === 'epicenter' || currentTab === 'epiHc'
+  const isEpicenter = currentTab === 'epiHc'
 
   return (
     <div className="filter-panel">

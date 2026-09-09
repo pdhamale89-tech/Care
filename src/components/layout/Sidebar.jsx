@@ -11,7 +11,6 @@ const NAV_SECTIONS = [
     label: 'Workforce Reports',
     items: [
       { id: 'outage', label: 'Outage Report', icon: '⚠️' },
-      { id: 'epicenter', label: 'Epicenter HC', icon: '👥' },
       { id: 'epiHc', label: 'Epi HC', icon: '📈' },
     ],
   },
@@ -30,7 +29,6 @@ const NAV_SECTIONS = [
         label: 'Calendar',
         icon: '📅',
         children: [
-          { id: 'planningCalendar', label: 'Planning Calendar' },
           { id: 'fiscalCalendar', label: 'Fiscal Calendar' },
         ],
       },

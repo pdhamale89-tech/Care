@@ -315,7 +315,6 @@ tr.group-row td { background: var(--table-header); font-weight: 800; color: var(
 .home-hero-card::after { content: ''; position: absolute; top: -30px; right: -30px; width: 100px; height: 100px; border-radius: 50%; background: rgba(255, 255, 255, .12); }
 .home-hero-card.cco { background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); }
 .home-hero-card.outage { background: linear-gradient(135deg, var(--accent-red), #b91c1c); }
-.home-hero-card.epicenter { background: linear-gradient(135deg, var(--accent-orange), #b45309); }
 .home-hero-card.epiHc { background: linear-gradient(135deg, var(--accent-green), #0f766e); }
 .home-hero-card.whatIf { background: linear-gradient(135deg, var(--accent-purple), #6d28d9); }
 .home-hero-ic { font-size: 22px; }

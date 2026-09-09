@@ -3,18 +3,16 @@ import { formatIST } from '../utils/dateUtils.js'
 
 const AppContext = createContext(null)
 
-export const NO_FILTER_TABS = ['home', 'reports', 'calendar', 'planningCalendar', 'fiscalCalendar', 'glossary', 'notifications', 'settings']
+export const NO_FILTER_TABS = ['home', 'reports', 'calendar', 'fiscalCalendar', 'glossary', 'notifications', 'settings']
 
 const BREADCRUMBS = {
   home: 'Home',
   cco: 'Performance Reports › CCO Overview',
   outage: 'Workforce Reports › Outage Report',
-  epicenter: 'Workforce Reports › Epicenter HC',
   epiHc: 'Workforce Reports › Epi HC',
   whatIf: 'Planning › What-If Simulator',
   reports: 'Tools › Reports',
   calendar: 'Tools › Calendar',
-  planningCalendar: 'Tools › Calendar › Planning Calendar',
   fiscalCalendar: 'Tools › Calendar › Fiscal Calendar',
   glossary: 'Tools › Glossary',
   notifications: 'System › Notifications',
@@ -70,7 +68,7 @@ export function AppProvider({ children }) {
   const clearFilters = useCallback(() => {
     if (currentTab === 'cco' || currentTab === 'whatIf') { setCcoFilters(CCO_FILTERS_DEFAULT); setCcoView('weekly') }
     else if (currentTab === 'outage') setOutageFilters(OUTAGE_FILTERS_DEFAULT)
-    else if (currentTab === 'epicenter' || currentTab === 'epiHc') setEpicenterFilters(EPICENTER_FILTERS_DEFAULT)
+    else if (currentTab === 'epiHc') setEpicenterFilters(EPICENTER_FILTERS_DEFAULT)
   }, [currentTab])
 
   const showToast = useCallback((msg, cls) => {
