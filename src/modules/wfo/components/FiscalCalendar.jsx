@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { FISCAL_QUARTERS } from '../lib/fiscalCalendar.js'
 import { getHolidaysForWeek } from '../lib/holidays.js'
 import HolidayCalendar from './HolidayCalendar.jsx'
-import InfoBtn from './InfoBtn.jsx'
+import InfoBtn from '../../../shared/components/InfoBtn.jsx'
 
 export default function FiscalCalendar() {
   const [view, setView] = useState('calendar')

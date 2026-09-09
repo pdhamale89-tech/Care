@@ -1,6 +1,6 @@
 import { Fragment, useMemo, useState } from 'react'
-import Modal from './Modal.jsx'
-import DownloadBtn from './DownloadBtn.jsx'
+import Modal from '../../../shared/components/Modal.jsx'
+import DownloadBtn from '../../../shared/components/DownloadBtn.jsx'
 import { SUBREGIONS_BY_REGION } from '../lib/geoRegions.js'
 
 const CHANNELS = ['Voice', 'Email', 'Chat']

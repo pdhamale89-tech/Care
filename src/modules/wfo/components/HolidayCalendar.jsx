@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
 import { HOLIDAY_CALENDAR } from '../lib/holidayCalendarData.js'
 import { matchesMulti } from '../lib/mockGenerators.js'
-import DownloadBtn from './DownloadBtn.jsx'
-import InfoBtn from './InfoBtn.jsx'
-import MultiSelectDropdown from './MultiSelectDropdown.jsx'
+import DownloadBtn from '../../../shared/components/DownloadBtn.jsx'
+import InfoBtn from '../../../shared/components/InfoBtn.jsx'
+import MultiSelectDropdown from '../../../shared/components/MultiSelectDropdown.jsx'
 
 const ALL = ['All']
 

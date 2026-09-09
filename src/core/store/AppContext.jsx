@@ -1,7 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { formatIST } from '../lib/dateUtils.js'
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
+import { formatIST } from '../utils/dateUtils.js'
 
-const AppContext = createContext(null)
+export const AppContext = createContext(null)
 
 export const NO_FILTER_TABS = ['home', 'reports', 'calendar', 'fiscalCalendar', 'glossary', 'notifications', 'settings']
 
@@ -94,10 +94,4 @@ export function AppProvider({ children }) {
   ])
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
-}
-
-export function useApp() {
-  const ctx = useContext(AppContext)
-  if (!ctx) throw new Error('useApp must be used within AppProvider')
-  return ctx
 }

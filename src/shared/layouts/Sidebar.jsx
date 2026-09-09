@@ -1,4 +1,4 @@
-import { useApp } from '../context/AppContext.jsx'
+import { useApp } from '../../core/hooks/useApp.js'
 
 const NAV_SECTIONS = [
   {

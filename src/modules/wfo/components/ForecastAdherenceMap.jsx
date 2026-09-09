@@ -4,9 +4,9 @@ import 'jsvectormap/dist/maps/world.js'
 import 'jsvectormap/dist/jsvectormap.min.css'
 import { COUNTRY_REGION, COUNTRY_SUBREGION, computeAccuracy, accTier } from '../lib/geoRegions.js'
 import { hashSeed } from '../lib/mockGenerators.js'
-import { getColors } from '../lib/colors.js'
-import { useApp } from '../context/AppContext.jsx'
-import InfoBtn from './InfoBtn.jsx'
+import { getColors } from '../../../shared/themes/colors.js'
+import { useApp } from '../../../core/hooks/useApp.js'
+import InfoBtn from '../../../shared/components/InfoBtn.jsx'
 import OverallSlaDrillModal from './OverallSlaDrillModal.jsx'
 
 // Hand-picked on-land coordinates so region/sub-region labels land in a

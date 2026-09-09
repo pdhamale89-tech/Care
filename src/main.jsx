@@ -16,7 +16,7 @@ import {
   Legend,
 } from 'chart.js'
 import ChartDataLabels from 'chartjs-plugin-datalabels'
-import './theme.css'
+import './shared/themes/theme.css'
 import App from './App.jsx'
 
 ChartJS.register(

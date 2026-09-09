@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useApp } from '../context/AppContext.jsx'
-import { countriesForRegions, managers, getWeeksForQuarter, REGIONS, vendors, weekEndingDates } from '../lib/mockGenerators.js'
-import MultiSelectDropdown from './MultiSelectDropdown.jsx'
+import { useApp } from '../../core/hooks/useApp.js'
+import { countriesForRegions, managers, getWeeksForQuarter, REGIONS, vendors, weekEndingDates } from '../../modules/wfo/lib/mockGenerators.js'
+import MultiSelectDropdown from '../components/MultiSelectDropdown.jsx'
 
 const QUARTERS = ['FQ1', 'FQ2', 'FQ3', 'FQ4']
 const CLASSIFICATIONS = ['FED', 'Global Sales', 'Consumer']

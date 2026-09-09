@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import { Bar, Doughnut } from 'react-chartjs-2'
-import { useApp } from '../context/AppContext.jsx'
+import { useApp } from '../../../core/hooks/useApp.js'
 import { generateEpicenterRoster, EMP_STATUSES, matchesMulti, REGIONS } from '../lib/mockGenerators.js'
-import { getColors } from '../lib/colors.js'
+import { getColors } from '../../../shared/themes/colors.js'
 import { barDataLabels, hBarDataLabels, doughnutDataLabels } from '../lib/datalabels.js'
 import { stackedBarConfig } from '../lib/chartConfigs.js'
-import InfoBtn from './InfoBtn.jsx'
-import Modal from './Modal.jsx'
+import InfoBtn from '../../../shared/components/InfoBtn.jsx'
+import Modal from '../../../shared/components/Modal.jsx'
 import EpiHcLocationMap from './EpiHcLocationMap.jsx'
 
 const HIRE_YEARS = Array.from({ length: 7 }, (_, i) => 2018 + i)

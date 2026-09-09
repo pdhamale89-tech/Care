@@ -1,14 +1,14 @@
 import { useMemo, useState } from 'react'
 import { Bar, Pie } from 'react-chartjs-2'
-import { useApp } from '../context/AppContext.jsx'
+import { useApp } from '../../../core/hooks/useApp.js'
 import {
   fmt, pct, varClass, arrow, genKpiValue, hashSeed, getWeeksForQuarter,
   issueLabels, REGIONS,
 } from '../lib/mockGenerators.js'
-import { getColors } from '../lib/colors.js'
+import { getColors } from '../../../shared/themes/colors.js'
 import { barDataLabels, lineEndDataLabels, stackedBarDataLabels, doughnutDataLabels } from '../lib/datalabels.js'
-import Modal from './Modal.jsx'
-import InfoBtn from './InfoBtn.jsx'
+import Modal from '../../../shared/components/Modal.jsx'
+import InfoBtn from '../../../shared/components/InfoBtn.jsx'
 import ForecastAdherenceMap from './ForecastAdherenceMap.jsx'
 import WeeklyPlanActualTable from './WeeklyPlanActualTable.jsx'
 import { issueTypeBarConfig, stackedBarConfig } from '../lib/chartConfigs.js'
