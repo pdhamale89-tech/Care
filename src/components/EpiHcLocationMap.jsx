@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import jsVectorMap from 'jsvectormap'
 import 'jsvectormap/dist/maps/world.js'
 import 'jsvectormap/dist/jsvectormap.min.css'
-import { REGION_COUNTRIES, COUNTRY_REGION, COUNTRY_SUBREGION, SUBREGIONS_BY_REGION } from '../../data/geoRegions.js'
-import { getColors } from '../../theme/colors.js'
-import InfoBtn from '../common/InfoBtn.jsx'
+import { REGION_COUNTRIES, COUNTRY_REGION, COUNTRY_SUBREGION, SUBREGIONS_BY_REGION } from '../lib/geoRegions.js'
+import { getColors } from '../lib/colors.js'
+import InfoBtn from './InfoBtn.jsx'
 
 // The roster's `country` field holds full country names (mockGenerators.js's own
 // region taxonomy), not the ISO-2 codes geoRegions.js's AMER/EMEA/APJ map uses —

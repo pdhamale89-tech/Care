@@ -1,4 +1,4 @@
-import { downloadCsv } from '../../utils/csvExport.js'
+import { downloadCsv } from '../lib/csvExport.js'
 
 export default function DownloadBtn({ filename, rows, title }) {
   return (

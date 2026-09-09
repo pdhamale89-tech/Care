@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import { genKpiValue, hashSeed, getWeeksForQuarter, fmt } from '../../data/mockGenerators.js'
-import InfoBtn from '../common/InfoBtn.jsx'
+import { genKpiValue, hashSeed, getWeeksForQuarter, fmt } from '../lib/mockGenerators.js'
+import InfoBtn from './InfoBtn.jsx'
 
 const TABLE_METRICS = [
   { key: 'orders', label: 'Orders', base: 1150, decimals: 0, unit: '', agg: 'sum' },

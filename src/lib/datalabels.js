@@ -1,4 +1,4 @@
-import { fmt } from '../data/mockGenerators.js'
+import { fmt } from './mockGenerators.js'
 
 const LABEL_FONT = { size: 9, weight: 600 }
 

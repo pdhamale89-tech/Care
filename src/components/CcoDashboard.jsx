@@ -1,17 +1,17 @@
 import { useMemo, useState } from 'react'
 import { Bar, Pie } from 'react-chartjs-2'
-import { useApp } from '../../context/AppContext.jsx'
+import { useApp } from '../context/AppContext.jsx'
 import {
   fmt, pct, varClass, arrow, genKpiValue, hashSeed, getWeeksForQuarter,
   issueLabels, REGIONS,
-} from '../../data/mockGenerators.js'
-import { getColors } from '../../theme/colors.js'
-import { barDataLabels, lineEndDataLabels, stackedBarDataLabels, doughnutDataLabels } from '../../charts/datalabels.js'
-import Modal from '../common/Modal.jsx'
-import InfoBtn from '../common/InfoBtn.jsx'
+} from '../lib/mockGenerators.js'
+import { getColors } from '../lib/colors.js'
+import { barDataLabels, lineEndDataLabels, stackedBarDataLabels, doughnutDataLabels } from '../lib/datalabels.js'
+import Modal from './Modal.jsx'
+import InfoBtn from './InfoBtn.jsx'
 import ForecastAdherenceMap from './ForecastAdherenceMap.jsx'
 import WeeklyPlanActualTable from './WeeklyPlanActualTable.jsx'
-import { issueTypeBarConfig, stackedBarConfig } from '../../charts/chartConfigs.js'
+import { issueTypeBarConfig, stackedBarConfig } from '../lib/chartConfigs.js'
 
 const METRIC_CHART_TIPS = {
   contacts: 'Contacts Offered, Actual vs Forecast, by period.',

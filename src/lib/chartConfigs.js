@@ -1,5 +1,5 @@
 import { barDataLabels, stackedBarDataLabels } from './datalabels.js'
-import { getColors } from '../theme/colors.js'
+import { getColors } from './colors.js'
 
 const LEGEND_BOTTOM = { legend: { position: 'bottom' } }
 const DEFAULT_COLORS = getColors('light')

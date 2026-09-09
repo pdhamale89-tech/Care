@@ -1,4 +1,4 @@
-import { useApp } from '../../context/AppContext.jsx'
+import { useApp } from '../context/AppContext.jsx'
 
 export default function InfoBtn({ tip, source = 'Care SPOG Data Warehouse', onDark = false }) {
   const { lastUpdated } = useApp()

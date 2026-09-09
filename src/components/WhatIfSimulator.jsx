@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import { Bar } from 'react-chartjs-2'
-import { useApp } from '../../context/AppContext.jsx'
-import { fmt, genKpiValue, hashSeed, getWeeksForQuarter } from '../../data/mockGenerators.js'
-import { getColors } from '../../theme/colors.js'
-import { barDataLabels } from '../../charts/datalabels.js'
-import InfoBtn from '../common/InfoBtn.jsx'
+import { useApp } from '../context/AppContext.jsx'
+import { fmt, genKpiValue, hashSeed, getWeeksForQuarter } from '../lib/mockGenerators.js'
+import { getColors } from '../lib/colors.js'
+import { barDataLabels } from '../lib/datalabels.js'
+import InfoBtn from './InfoBtn.jsx'
 
 const SCENARIO_METRICS = [
   { key: 'volume', label: 'Volume', base: 2200, unit: '', decimals: 0 },

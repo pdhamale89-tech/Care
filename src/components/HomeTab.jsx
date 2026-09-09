@@ -1,4 +1,4 @@
-import { useApp } from '../../context/AppContext.jsx'
+import { useApp } from '../context/AppContext.jsx'
 
 const SECTIONS = [
   { key: 'cco', tab: 'cco', icon: '📊', title: 'CCO Overview', tag: 'Weekly and quarterly SLA, volume, and backlog performance.' },

@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
 import { Bar } from 'react-chartjs-2'
-import { useApp } from '../../context/AppContext.jsx'
-import { generateAgentRoster, matchesMulti, REGIONS } from '../../data/mockGenerators.js'
-import { getColors } from '../../theme/colors.js'
-import { stackedBarConfig } from '../../charts/chartConfigs.js'
-import DownloadBtn from '../common/DownloadBtn.jsx'
-import InfoBtn from '../common/InfoBtn.jsx'
+import { useApp } from '../context/AppContext.jsx'
+import { generateAgentRoster, matchesMulti, REGIONS } from '../lib/mockGenerators.js'
+import { getColors } from '../lib/colors.js'
+import { stackedBarConfig } from '../lib/chartConfigs.js'
+import DownloadBtn from './DownloadBtn.jsx'
+import InfoBtn from './InfoBtn.jsx'
 
 const STATUS_CLASS = {
   Available: 'available',

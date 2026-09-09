@@ -1,4 +1,4 @@
-import { useApp } from '../../context/AppContext.jsx'
+import { useApp } from '../context/AppContext.jsx'
 
 const REPORTS = [
   { name: 'Voice Queue KPI', icon: '📞', category: 'Voice', description: 'Queue-level SLA, AHT and abandonment KPIs for voice.', url: null },

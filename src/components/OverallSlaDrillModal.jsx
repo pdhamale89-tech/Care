@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useState } from 'react'
-import Modal from '../common/Modal.jsx'
-import DownloadBtn from '../common/DownloadBtn.jsx'
-import { SUBREGIONS_BY_REGION } from '../../data/geoRegions.js'
+import Modal from './Modal.jsx'
+import DownloadBtn from './DownloadBtn.jsx'
+import { SUBREGIONS_BY_REGION } from '../lib/geoRegions.js'
 
 const CHANNELS = ['Voice', 'Email', 'Chat']
 const SEGMENTS = ['Consumer', 'Global Sales']

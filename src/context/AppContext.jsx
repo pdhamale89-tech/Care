@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { formatIST } from '../utils/dateUtils.js'
+import { formatIST } from '../lib/dateUtils.js'
 
 const AppContext = createContext(null)
 

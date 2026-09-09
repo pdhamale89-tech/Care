@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { FISCAL_QUARTERS } from '../../data/fiscalCalendar.js'
-import { getHolidaysForWeek } from '../../data/holidays.js'
+import { FISCAL_QUARTERS } from '../lib/fiscalCalendar.js'
+import { getHolidaysForWeek } from '../lib/holidays.js'
 import HolidayCalendar from './HolidayCalendar.jsx'
-import InfoBtn from '../common/InfoBtn.jsx'
+import InfoBtn from './InfoBtn.jsx'
 
 export default function FiscalCalendar() {
   const [view, setView] = useState('calendar')
