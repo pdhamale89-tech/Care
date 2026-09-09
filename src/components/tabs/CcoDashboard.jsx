@@ -3,13 +3,14 @@ import { Bar, Pie } from 'react-chartjs-2'
 import { useApp } from '../../context/AppContext.jsx'
 import {
   fmt, pct, varClass, arrow, genKpiValue, hashSeed, getWeeksForQuarter,
-  issueLabels,
+  issueLabels, REGIONS,
 } from '../../data/mockGenerators.js'
 import { getColors } from '../../theme/colors.js'
 import { barDataLabels, lineEndDataLabels, stackedBarDataLabels, doughnutDataLabels } from '../../charts/datalabels.js'
 import Modal from '../common/Modal.jsx'
 import InfoBtn from '../common/InfoBtn.jsx'
 import ForecastAdherenceMap from './ForecastAdherenceMap.jsx'
+import WeeklyPlanActualTable from './WeeklyPlanActualTable.jsx'
 import { issueTypeBarConfig, stackedBarConfig } from '../../charts/chartConfigs.js'
 
 const METRIC_CHART_TIPS = {
@@ -42,6 +43,7 @@ const VIEW_CONFIG = {
 const METRIC_COLS = [
   { key: 'contacts', label: 'Contacts Offered', base: 2200, unit: '', hf: true, decimals: 0 },
   { key: 'orders', label: 'Orders', base: 1150, unit: '', hf: true, decimals: 0 },
+  { key: 'cases', label: 'Cases', base: 3200, unit: '', hf: true, decimals: 0 },
   { key: 'caseRate', label: 'Case Rate', base: 12.5, unit: '%', hf: true, decimals: 1 },
   { key: 'cpsr', label: 'CPSR', base: 4.2, unit: '', hf: true, decimals: 1 },
   { key: 'sla', label: 'Overall SLA', base: 91, unit: '%', hf: false, decimals: 1 },
@@ -49,7 +51,6 @@ const METRIC_COLS = [
 ]
 
 const EXTRA_METRIC_CHARTS = [
-  { key: 'cases', label: 'Cases', base: 3200, unit: '', hf: true, decimals: 0 },
   { key: 'activities', label: 'Activities', base: 16000, unit: '', hf: true, decimals: 0 },
   { key: 'apc', label: 'APC', base: 4.8, unit: '', hf: false, decimals: 1 },
   { key: 'icw', label: 'ICW', base: 3.5, unit: '', hf: false, decimals: 1 },
@@ -484,7 +485,7 @@ export default function CcoDashboard({ view }) {
       <div className="section-div">
         <h2>Key Metrics Summary</h2>
       </div>
-      <div className="kpi-grid cols-6">
+      <div className="kpi-grid cols-7">
         {keyMetrics.metrics.map((m) => {
           if (m.key === 'sla') {
             return (
@@ -593,6 +594,13 @@ export default function CcoDashboard({ view }) {
           </div>
         )}
       </Modal>
+
+      <div className="section-div">
+        <h2>Weekly Plan vs Actual</h2>
+      </div>
+      <div className="s-grid full">
+        <WeeklyPlanActualTable regions={REGIONS} quarter={quarter.find((q) => q !== 'All') || 'FQ1'} />
+      </div>
 
       <div className="s-grid">
         <div className="card clickable-card" onClick={() => setHeadcountModalOpen(true)} title="Click for DB / OSP breakdown">
