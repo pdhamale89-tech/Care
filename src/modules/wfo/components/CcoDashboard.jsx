@@ -11,7 +11,7 @@ import Modal from '../../../shared/components/Modal.jsx'
 import InfoBtn from '../../../shared/components/InfoBtn.jsx'
 import ForecastAdherenceMap from './ForecastAdherenceMap.jsx'
 import WeeklyPlanActualTable from './WeeklyPlanActualTable.jsx'
-import { issueTypeBarConfig, stackedBarConfig, waterfallConfig } from '../lib/chartConfigs.js'
+import { issueTypeBarConfig, stackedBarConfig, waterfallConfig, trendLineConfig } from '../lib/chartConfigs.js'
 import { computeWeeklyPlanActual } from '../lib/weeklyPlanActual.js'
 
 const METRIC_CHART_TIPS = {
@@ -515,6 +515,27 @@ export default function CcoDashboard({ view }) {
     ], colors)
   }, [weeklyPlanData, colors])
 
+  // Three weekly trend charts (Total Orders / Case Rate / Cases Completed) — same
+  // region/quarter selection as the Weekly Plan vs Actual table and waterfalls above,
+  // each showing CAPACITY (plan) vs the actual-so-far/projection line.
+  const trendWeekLabels = useMemo(() => weeklyPlanData.weeks.map((w) => w.replace('FW', 'W')), [weeklyPlanData])
+
+  const ordersTrendChart = useMemo(() => {
+    const r = weeklyPlanData.byKey.orders
+    return trendLineConfig(trendWeekLabels, { capacity: r.plan, actual: r.actual }, colors, { actualLabel: 'ACTUAL/OUTLOOK' })
+  }, [weeklyPlanData, trendWeekLabels, colors])
+
+  const caseRateTrendChart = useMemo(() => {
+    const r = weeklyPlanData.byKey.caseRate
+    return trendLineConfig(trendWeekLabels, { capacity: r.plan, actual: r.actual }, colors, { unit: '%', actualLabel: 'ACTUAL/PROJECTION' })
+  }, [weeklyPlanData, trendWeekLabels, colors])
+
+  const casesCompletedTrendChart = useMemo(() => {
+    const r = weeklyPlanData.byKey.cases
+    const target = r.actual.map((v, i) => Math.round(v * (1.02 + i * 0.018)))
+    return trendLineConfig(trendWeekLabels, { capacity: r.plan, actual: r.actual, target }, colors, { actualLabel: 'ACTUAL/PROJECTION' })
+  }, [weeklyPlanData, trendWeekLabels, colors])
+
   return (
     <div className="tab-panel active">
       <div className="section-div">
@@ -661,6 +682,39 @@ export default function CcoDashboard({ view }) {
           </div>
           <div className="chart-container">
             <Bar data={headcountWaterfallChart.data} options={headcountWaterfallChart.options} />
+          </div>
+        </div>
+      </div>
+
+      <div className="s-grid thirds">
+        <div className="card">
+          <div className="card-header">
+            <div className="card-title">
+              Total Orders <InfoBtn tip="<strong>Purpose</strong>Weekly Orders capacity vs actual/outlook for the selected region/quarter. Shaded weeks are actuals-to-date; unshaded weeks are outlook. Follows the same region selected in the Weekly Plan vs Actual table above." />
+            </div>
+          </div>
+          <div className="chart-container">
+            <Bar data={ordersTrendChart.data} options={ordersTrendChart.options} plugins={ordersTrendChart.plugins} />
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-header">
+            <div className="card-title">
+              Case Rate <InfoBtn tip="<strong>Purpose</strong>Weekly Case Rate capacity vs actual/projection for the selected region/quarter. Shaded weeks are actuals-to-date; unshaded weeks are projection. Follows the same region selected in the Weekly Plan vs Actual table above." />
+            </div>
+          </div>
+          <div className="chart-container">
+            <Bar data={caseRateTrendChart.data} options={caseRateTrendChart.options} plugins={caseRateTrendChart.plugins} />
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-header">
+            <div className="card-title">
+              Cases Completed <InfoBtn tip="<strong>Purpose</strong>Weekly Cases Completed capacity vs actual/projection against a target trendline, for the selected region/quarter. Shaded weeks are actuals-to-date; unshaded weeks are projection. Follows the same region selected in the Weekly Plan vs Actual table above." />
+            </div>
+          </div>
+          <div className="chart-container">
+            <Bar data={casesCompletedTrendChart.data} options={casesCompletedTrendChart.options} plugins={casesCompletedTrendChart.plugins} />
           </div>
         </div>
       </div>

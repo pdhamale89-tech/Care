@@ -88,3 +88,62 @@ export function waterfallConfig(steps, colors) {
     },
   }
 }
+
+// Shades the chart area behind the weeks already completed (index 0..splitIndex-1)
+// vs the remaining/projected weeks, so a trend chart visually separates actuals-so-far
+// from forecast. Drawn in beforeDraw so the grid lines still render on top of the tint.
+function pastWeeksShadingPlugin(splitIndex, color = 'rgba(16,185,129,.14)') {
+  return {
+    id: 'pastWeeksShading',
+    beforeDraw(chart) {
+      const { ctx, chartArea, scales } = chart
+      if (!chartArea || !splitIndex || splitIndex <= 0) return
+      const xScale = scales.x
+      const step = xScale.getPixelForTick(1) - xScale.getPixelForTick(0)
+      const left = xScale.getPixelForTick(0) - step / 2
+      const right = xScale.getPixelForTick(Math.min(splitIndex, xScale.ticks.length) - 1) + step / 2
+      ctx.save()
+      ctx.fillStyle = color
+      ctx.fillRect(left, chartArea.top, right - left, chartArea.bottom - chartArea.top)
+      ctx.restore()
+    },
+  }
+}
+
+// Weekly trend line chart (Total Orders / Case Rate / Cases Completed pattern):
+// CAPACITY vs an actual-so-far/projection line, plus an optional dashed TARGET line.
+export function trendLineConfig(weeks, series, colors, opts = {}) {
+  const { unit = '', splitIndex = 6, actualLabel = 'ACTUAL/OUTLOOK' } = opts
+  const datasets = [
+    {
+      type: 'line', label: 'CAPACITY', data: series.capacity,
+      borderColor: colors.accentBlue, backgroundColor: colors.accentBlue,
+      tension: 0.3, pointRadius: 3, borderWidth: 2,
+    },
+    {
+      type: 'line', label: actualLabel, data: series.actual,
+      borderColor: colors.accentOrange, backgroundColor: colors.accentOrange,
+      tension: 0.3, pointRadius: 3, borderWidth: 2,
+    },
+  ]
+  if (series.target) {
+    datasets.push({
+      type: 'line', label: 'TARGET', data: series.target,
+      borderColor: colors.textPrimary, backgroundColor: colors.textPrimary,
+      borderDash: [6, 4], tension: 0.3, pointRadius: 0, borderWidth: 2,
+    })
+  }
+  return {
+    data: { labels: weeks, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { beginAtZero: true, ticks: unit ? { callback: (v) => v + unit } : undefined },
+      },
+    },
+    plugins: [pastWeeksShadingPlugin(splitIndex)],
+  }
+}
