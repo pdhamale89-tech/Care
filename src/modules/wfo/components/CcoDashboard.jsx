@@ -11,7 +11,8 @@ import Modal from '../../../shared/components/Modal.jsx'
 import InfoBtn from '../../../shared/components/InfoBtn.jsx'
 import ForecastAdherenceMap from './ForecastAdherenceMap.jsx'
 import WeeklyPlanActualTable from './WeeklyPlanActualTable.jsx'
-import { issueTypeBarConfig, stackedBarConfig } from '../lib/chartConfigs.js'
+import { issueTypeBarConfig, stackedBarConfig, waterfallConfig } from '../lib/chartConfigs.js'
+import { computeWeeklyPlanActual } from '../lib/weeklyPlanActual.js'
 
 const METRIC_CHART_TIPS = {
   contacts: 'Contacts Offered, Actual vs Forecast, by period.',
@@ -176,6 +177,7 @@ export default function CcoDashboard({ view }) {
   const [headcountModalOpen, setHeadcountModalOpen] = useState(false)
   const [heatmapDrill, setHeatmapDrill] = useState(null)
   const [issueDrillKey, setIssueDrillKey] = useState(null)
+  const [weeklyPlanRegion, setWeeklyPlanRegion] = useState(REGIONS[0])
 
   const seed = useMemo(
     () => hashSeed(subRegion.join(',') + quarter.join(',') + week.join(',') + classification.join(',') + activeRegions.join(',') + view),
@@ -480,6 +482,39 @@ export default function CcoDashboard({ view }) {
     ])
   }, [periods, seed, colors])
 
+  // Waterfall charts below the Weekly Plan vs Actual table — same region/quarter
+  // selection and the same generation formula, so the numbers agree with the table.
+  const weeklyPlanQuarter = quarter.find((q) => q !== 'All') || 'FQ1'
+  const weeklyPlanData = useMemo(
+    () => computeWeeklyPlanActual(weeklyPlanRegion, weeklyPlanQuarter),
+    [weeklyPlanRegion, weeklyPlanQuarter],
+  )
+
+  const workloadWaterfallChart = useMemo(() => {
+    const { byKey } = weeklyPlanData
+    const contactsDelta = byKey.contacts.pctQtd - 100
+    const caseRateDelta = byKey.caseRate.pctQtd - 100
+    const cpsrDelta = byKey.cpsr.pctQtd - 100
+    const actual = 100 + contactsDelta + caseRateDelta + cpsrDelta
+    return waterfallConfig([
+      { label: 'PLAN', type: 'anchor', value: 100 },
+      { label: 'CONTACTS', type: 'delta', value: contactsDelta },
+      { label: 'CASE RATE', type: 'delta', value: caseRateDelta },
+      { label: 'CpSR', type: 'delta', value: cpsrDelta },
+      { label: 'ACTUAL', type: 'anchor', value: actual },
+    ], colors)
+  }, [weeklyPlanData, colors])
+
+  const headcountWaterfallChart = useMemo(() => {
+    const hc = weeklyPlanData.byKey.hc
+    const variance = hc.pctQtd - 100
+    return waterfallConfig([
+      { label: 'PLAN', type: 'anchor', value: 100 },
+      { label: 'VARIANCE', type: 'delta', value: variance },
+      { label: 'ACTUAL', type: 'anchor', value: hc.pctQtd },
+    ], colors)
+  }, [weeklyPlanData, colors])
+
   return (
     <div className="tab-panel active">
       <div className="section-div">
@@ -599,7 +634,35 @@ export default function CcoDashboard({ view }) {
         <h2>Weekly Plan vs Actual</h2>
       </div>
       <div className="s-grid full">
-        <WeeklyPlanActualTable regions={REGIONS} quarter={quarter.find((q) => q !== 'All') || 'FQ1'} />
+        <WeeklyPlanActualTable
+          regions={REGIONS}
+          quarter={weeklyPlanQuarter}
+          region={weeklyPlanRegion}
+          onRegionChange={setWeeklyPlanRegion}
+        />
+      </div>
+
+      <div className="s-grid">
+        <div className="card">
+          <div className="card-header">
+            <div className="card-title">
+              {weeklyPlanRegion}: Workload <InfoBtn tip="<strong>Purpose</strong>Bridges PLAN (indexed to 100%) to ACTUAL for the selected region/quarter via each contributing metric's own Actual/Plan variance — Contacts, Case Rate, and CpSR. Follows the same region selected in the Weekly Plan vs Actual table above." />
+            </div>
+          </div>
+          <div className="chart-container">
+            <Bar data={workloadWaterfallChart.data} options={workloadWaterfallChart.options} />
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-header">
+            <div className="card-title">
+              {weeklyPlanRegion}: Headcount <InfoBtn tip="<strong>Purpose</strong>Bridges PLAN headcount (indexed to 100%) to ACTUAL via the overall HC variance for the selected region/quarter. Follows the same region selected in the Weekly Plan vs Actual table above." />
+            </div>
+          </div>
+          <div className="chart-container">
+            <Bar data={headcountWaterfallChart.data} options={headcountWaterfallChart.options} />
+          </div>
+        </div>
       </div>
 
       <div className="s-grid">

@@ -78,6 +78,24 @@ export function lineEndDataLabels(unit = '', color) {
   }
 }
 
+// Waterfall/bridge bars: labels the bar's own signed contribution (stashed on
+// dataset.displayValues by waterfallConfig) rather than the rendered stack height —
+// a floating delta segment's data value is its absolute height, not its sign.
+export function waterfallDataLabels(unit = '%', color = '#2B2E34') {
+  return {
+    display: true,
+    anchor: 'end',
+    align: 'top',
+    clamp: true,
+    font: { size: 10, weight: 700 },
+    color,
+    formatter: (v, ctx) => {
+      const dv = ctx.dataset.displayValues?.[ctx.dataIndex]
+      return (dv === undefined ? v : dv) + unit
+    },
+  }
+}
+
 // Stacked bar segments: centered, white text, hidden for zero/empty segments
 // so thin slivers don't get an unreadable overlapping label.
 export function stackedBarDataLabels(unit = '') {
