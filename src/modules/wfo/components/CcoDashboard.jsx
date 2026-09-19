@@ -498,7 +498,7 @@ export default function CcoDashboard({ view }) {
     const actual = 100 + contactsDelta + caseRateDelta + cpsrDelta
     return waterfallConfig([
       { label: 'PLAN', type: 'anchor', value: 100 },
-      { label: 'CONTACTS', type: 'delta', value: contactsDelta },
+      { label: 'SALES', type: 'delta', value: contactsDelta },
       { label: 'CASE RATE', type: 'delta', value: caseRateDelta },
       { label: 'CpSR', type: 'delta', value: cpsrDelta },
       { label: 'ACTUAL', type: 'anchor', value: actual },
@@ -646,7 +646,7 @@ export default function CcoDashboard({ view }) {
         <div className="card">
           <div className="card-header">
             <div className="card-title">
-              {weeklyPlanRegion}: Workload <InfoBtn tip="<strong>Purpose</strong>Bridges PLAN (indexed to 100%) to ACTUAL for the selected region/quarter via each contributing metric's own Actual/Plan variance — Contacts, Case Rate, and CpSR. Follows the same region selected in the Weekly Plan vs Actual table above." />
+              {weeklyPlanRegion}: Workload <InfoBtn tip="<strong>Purpose</strong>Bridges PLAN (indexed to 100%) to ACTUAL for the selected region/quarter via each contributing metric's own Actual/Plan variance — Sales, Case Rate, and CpSR. Follows the same region selected in the Weekly Plan vs Actual table above." />
             </div>
           </div>
           <div className="chart-container">
