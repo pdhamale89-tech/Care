@@ -19,7 +19,7 @@ export default function FilterBar() {
     currentTab, showFilters, activeRegions, setActiveRegions,
     ccoFilters, setCcoFilter, ccoView, setCcoView, outageFilters, setOutageFilter,
     epicenterFilters, setEpicenterFilter,
-    clearFilters,
+    clearFilters, showToast,
   } = useApp()
   const [expanded, setExpanded] = useState(true)
 
@@ -127,6 +127,7 @@ export default function FilterBar() {
 
           </div>
           <div className="filter-clear-row">
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => showToast('Additional filters (Vendor, Team, Manager, Scenario) would open here', 'toast-info')}>More filters</button>
             <button type="button" className="clear-all-btn" onClick={clearFilters}>✕ Clear All</button>
           </div>
         </>
