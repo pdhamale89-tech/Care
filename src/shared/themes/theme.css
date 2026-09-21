@@ -144,6 +144,13 @@ body {
 .masthead .app-name { font-weight: 400; color: var(--text-secondary); font-size: .9375rem; }
 .masthead .spacer { flex: 1; }
 .masthead .breadcrumb { font-size: .75rem; color: var(--text-secondary); }
+.masthead .m-search {
+  display: flex; align-items: center; gap: .5rem; background: var(--bg-filter);
+  border: 1px solid var(--border); border-radius: var(--dds-radius-sm);
+  padding: .4rem .7rem; width: min(280px, 32vw); color: var(--text-muted);
+}
+.masthead .m-search input { border: 0; background: transparent; outline: 0; font: inherit; color: var(--text-primary); width: 100%; }
+@media (max-width: 560px) { .masthead .m-search { display: none; } }
 .icon-btn {
   width: 36px; height: 36px; border-radius: var(--dds-radius-sm); border: 1px solid transparent; background: transparent;
   display: grid; place-items: center; color: var(--text-secondary); cursor: pointer; flex-shrink: 0;
@@ -224,10 +231,23 @@ body {
 .multiselect-item span { vertical-align: middle; }
 
 .main-wrap { flex: 1; display: flex; overflow: hidden; min-width: 0; }
-.main-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: var(--dds-spacing-lg) var(--dds-spacing-xl) 30px; min-width: 0; }
+/* DDS "rail" — content max-width, centered, so very wide monitors don't stretch cards edge to edge */
+.main-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; padding: var(--dds-spacing-lg) var(--dds-spacing-xl) 30px; min-width: 0; max-width: 1680px; margin-inline: auto; width: 100%; }
 .tab-panel { display: none; }
 .tab-panel.active { display: block; animation: fadeIn .2s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===== Page header (title + description, above the filter bar) ===== */
+.page-header { padding: var(--dds-spacing-lg) var(--dds-spacing-xl) 0; max-width: 1680px; margin-inline: auto; }
+.page-header h1 { font-size: 2rem; line-height: 2.5rem; font-weight: 300; color: var(--text-primary); }
+.page-header p { font-size: 1rem; color: var(--text-secondary); margin-top: .35rem; max-width: 62ch; }
+
+/* ===== Tabs (DDS global tabs — bottom indicator) ===== */
+.tabs { display: flex; gap: var(--dds-spacing-xl); border-bottom: 1px solid var(--border); margin-bottom: var(--dds-spacing-md); }
+.tab { padding: .7rem .1rem; background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; font: inherit; font-size: .875rem; font-weight: 500; color: var(--text-secondary); cursor: pointer; }
+.tab[aria-selected="true"] { color: var(--dds-blue-60); border-bottom-color: var(--dds-blue-60); }
+.tab:hover { color: var(--dds-blue-60); }
+.tab:focus-visible { outline: 2px solid var(--dds-blue-80); outline-offset: -2px; }
 
 /* ===== Section divider ===== */
 .section-div { border-top: 2px solid var(--accent-purple); margin: var(--dds-spacing-xl) 0 var(--dds-spacing-md); padding-top: var(--dds-spacing-md); }
@@ -245,6 +265,7 @@ body {
 .clickable-card:hover { box-shadow: var(--dds-elevation-2); border-color: var(--dds-blue-60); }
 .mc-drill-hint { text-align: center; font-size: .6875rem; color: var(--dds-blue-60); margin-top: var(--dds-spacing-sm); }
 .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--dds-spacing-sm); gap: var(--dds-spacing-sm); flex-wrap: wrap; }
+.overline { font-size: .6875rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: .2rem; display: block; }
 .card-title { font-size: 1rem; line-height: 1.5rem; font-weight: 500; color: var(--text-card); display: flex; align-items: center; gap: 5px; }
 .card-dd { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 .chart-container { position: relative; height: 240px; width: 100%; }
@@ -261,6 +282,10 @@ body {
 .modal-close { background: transparent; border: 1px solid transparent; color: var(--text-secondary); width: 32px; height: 32px; border-radius: var(--dds-radius-sm); font-size: 13px; cursor: pointer; flex-shrink: 0; }
 .modal-close:hover { background: var(--bg-sidebar-hover); color: var(--text-primary); }
 .modal-body { padding: var(--dds-spacing-lg); overflow-y: auto; }
+.modal-summary { display: flex; gap: var(--dds-spacing-xl); margin-bottom: var(--dds-spacing-lg); flex-wrap: wrap; }
+.modal-summary .stat { display: flex; flex-direction: column; gap: .15rem; }
+.modal-summary .stat .v { font-size: 1.5rem; font-weight: 300; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.modal-summary .stat .l { font-size: .75rem; color: var(--text-secondary); }
 
 /* ===== KPI cards (Key Metrics Summary) — flat DDS surface cards ===== */
 .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--dds-spacing-md); margin-bottom: var(--dds-spacing-lg); }
@@ -271,6 +296,11 @@ body {
 .kpi-value { font-size: 1.75rem; line-height: 2.25rem; font-weight: 300; letter-spacing: -.2px; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
 .kpi-sub { font-size: .75rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
 .kpi-sub + .kpi-sub { margin-top: 2px; }
+.kpi-delta { font-weight: 500; display: inline-flex; align-items: center; gap: 3px; }
+.kpi-delta.up { color: var(--dds-green-70); }
+[data-theme="dark"] .kpi-delta.up { color: var(--dds-green-30); }
+.kpi-delta.down { color: var(--dds-red-70); }
+[data-theme="dark"] .kpi-delta.down { color: var(--dds-red-30); }
 .kpi-grid.cols-7 { grid-template-columns: repeat(7, 1fr); }
 .kpi-grid.cols-7 .kpi-value { font-size: 1.375rem; line-height: 1.75rem; }
 @media (max-width: 1200px) { .kpi-grid.cols-7 { grid-template-columns: repeat(4, 1fr); } }
@@ -307,6 +337,9 @@ tr.group-row td { background: var(--table-header); font-weight: 700; color: var(
 
 /* ===== Badges / pills (DDS badge anatomy — full pill radius) ===== */
 .badge { height: var(--dds-badge-h-md); padding: 0 .55rem; border-radius: 999px; font-weight: 500; font-size: .75rem; display: inline-flex; align-items: center; gap: 3px; }
+.badge-lg { height: var(--dds-badge-h-lg); font-size: .8125rem; padding: 0 .65rem; }
+.badge-sm { height: var(--dds-badge-h-sm); font-size: .6875rem; padding: 0 .45rem; }
+.badge-mini { height: var(--dds-badge-h-mini); font-size: .625rem; padding: 0 .4rem; }
 .badge.pos { background: var(--dds-green-10); color: var(--dds-green-70); }
 .badge.neg { background: var(--dds-red-10); color: var(--dds-red-70); }
 .status-pill { height: var(--dds-badge-h-md); padding: 0 .65rem; border-radius: 999px; font-size: .75rem; font-weight: 500; display: inline-flex; align-items: center; white-space: nowrap; }
@@ -327,6 +360,33 @@ tr.group-row td { background: var(--table-header); font-weight: 700; color: var(
 .pill-toggle { display: flex; gap: 6px; }
 .pill-toggle button { height: var(--dds-button-h-sm); padding: 1px var(--dds-spacing-md); border-radius: 999px; border: 1px solid var(--dds-blue-60); background: transparent; color: var(--dds-blue-60); font-weight: 500; font-size: .75rem; cursor: pointer; font-family: inherit; }
 .pill-toggle button.active { background: var(--dds-blue-60); color: #fff; }
+
+/* ===== Buttons (DDS v3 — Large 48 / Medium 40 (default) / Small 24 / Mini (tables only)) ===== */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; border-radius: var(--dds-radius-sm); border: 1px solid transparent; height: var(--dds-button-h-md); padding: 1px var(--dds-spacing-lg); font-size: 1rem; line-height: 1.5rem; font-weight: 500; cursor: pointer; white-space: nowrap; font-family: inherit; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn-lg { height: var(--dds-button-h-lg); padding: 1px var(--dds-spacing-xl); font-size: 1rem; }
+.btn-sm { height: var(--dds-button-h-sm); padding: 1px var(--dds-spacing-md); font-size: .875rem; gap: .35rem; }
+.btn-mini { height: var(--dds-button-h-mini); padding: 1px var(--dds-spacing-sm); font-size: .75rem; }
+.btn-primary { background: var(--dds-blue-60); color: #fff; }
+.btn-primary:hover { background: var(--dds-blue-70); }
+.btn-neutral { background: var(--bg-card); color: var(--text-primary); border-color: var(--border-strong); }
+.btn-neutral:hover { background: var(--bg-sidebar-hover); }
+.btn-destructive { background: var(--dds-red-60); color: #fff; }
+.btn-destructive:hover { background: var(--dds-red-70); }
+.btn-ghost { background: transparent; color: var(--dds-blue-60); }
+.btn-ghost:hover { background: rgba(6,114,203,.1); }
+.btn-outline { background: var(--bg-card); color: var(--text-primary); border-color: var(--border-strong); }
+.btn-outline:hover { background: var(--bg-sidebar-hover); }
+
+/* ===== Empty / error / loading states ===== */
+.state-block { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: .5rem; padding: var(--dds-spacing-5xl) var(--dds-spacing-lg); color: var(--text-secondary); }
+.state-block svg { color: var(--text-muted); margin-bottom: .4rem; }
+.state-block .state-title { color: var(--text-primary); font-weight: 500; font-size: 1rem; }
+.skeleton { background: linear-gradient(90deg, var(--bg-filter) 25%, var(--border) 37%, var(--bg-filter) 63%); background-size: 400% 100%; animation: sk 1.4s ease infinite; border-radius: var(--dds-radius-sm); }
+@keyframes sk { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
+
+footer.app-footer { border-top: 1px solid var(--border); padding: var(--dds-spacing-lg) 0; color: var(--text-muted); font-size: .8125rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem; margin-top: var(--dds-spacing-lg); }
 
 /* ===== Toast ===== */
 .toast { position: fixed; top: 18px; right: 18px; padding: var(--dds-spacing-md) var(--dds-spacing-lg); border-radius: var(--dds-radius-md); color: #fff; font-size: .8125rem; font-weight: 500; z-index: 700; transform: translateX(400px); transition: transform .3s ease; box-shadow: var(--dds-elevation-2); }

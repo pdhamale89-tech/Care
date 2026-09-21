@@ -579,7 +579,7 @@ export default function CcoDashboard({ view }) {
               {m.hf && (
                 <>
                   <div className="kpi-sub">Forecast: {fmt(m.forecast)}{m.unit}</div>
-                  <div className="kpi-sub">{arrow(m.variance)} {fmt(Math.abs(m.vp))}% variance</div>
+                  <div className={'kpi-sub kpi-delta ' + (m.variance >= 0 ? 'up' : 'down')}>{arrow(m.variance)} {fmt(Math.abs(m.vp))}% variance</div>
                 </>
               )}
             </div>
@@ -910,7 +910,7 @@ export default function CcoDashboard({ view }) {
       <Modal
         open={slaModalOpen}
         onClose={() => setSlaModalOpen(false)}
-        title={<>SLA by Channel — Trend Detail <InfoBtn onDark tip="<strong>Purpose</strong>SLA % by channel (Voice, Email, Chat, W2C) across the selected period range. Select a channel to isolate it." /></>}
+        title={<>SLA by Channel — Trend Detail <InfoBtn tip="<strong>Purpose</strong>SLA % by channel (Voice, Email, Chat, W2C) across the selected period range. Select a channel to isolate it." /></>}
       >
         <div className="plan-sel">
           {['All', ...CHANNELS].map((ch) => (
@@ -929,7 +929,7 @@ export default function CcoDashboard({ view }) {
           <>
             {channelTrendChart.label} by Channel — Trend Detail
             {' '}
-            <InfoBtn onDark tip={`<strong>Purpose</strong>${channelTrendChart.label} Actual vs Forecast by channel, ${view} view — split from the same period-level numbers used across this dashboard. Select a channel to isolate it, or All to see every channel's Variance % line.`} />
+            <InfoBtn tip={`<strong>Purpose</strong>${channelTrendChart.label} Actual vs Forecast by channel, ${view} view — split from the same period-level numbers used across this dashboard. Select a channel to isolate it, or All to see every channel's Variance % line.`} />
           </>
         )}
       >

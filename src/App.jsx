@@ -5,11 +5,24 @@ import { useApp } from './core/hooks/useApp.js'
 import Sidebar from './shared/layouts/Sidebar.jsx'
 import Topbar from './shared/layouts/Topbar.jsx'
 import FilterBar from './shared/layouts/FilterBar.jsx'
+import PageHeader from './shared/components/PageHeader.jsx'
 import Toast from './shared/components/Toast.jsx'
 import InfoTip from './shared/components/InfoTip.jsx'
 import ComingSoonTab from './modules/wfo/components/ComingSoonTab.jsx'
 import { ROUTES, COMING_SOON_TITLES } from './config/routes.js'
 import { getColors } from './shared/themes/colors.js'
+
+// Title/description shown above the filter bar on each main tab (DDS page-header
+// pattern) — descriptions reuse the same copy already shown on the Home hero cards
+// for cco/outage/epiHc/whatIf, so nothing here is new/invented business copy.
+const PAGE_META = {
+  cco: { title: 'CCO Overview', description: 'Weekly and quarterly SLA, volume, and backlog performance.' },
+  outage: { title: 'Outage Report', description: 'Agent schedule adherence and unplanned-outage breakdowns by manager.' },
+  epiHc: { title: 'Epi HC', description: 'Workforce analytics — growth, tenure, sourcing mix, span of control, and risk.' },
+  whatIf: { title: 'What-If Simulator', description: 'Staffing, hiring plan, sourcing mix, and backlog scenarios in one place.' },
+  reports: { title: 'Reports', description: 'Linked reporting shortcuts for voice queue, agent and Genesys skill data.' },
+  fiscalCalendar: { title: 'Fiscal Calendar', description: 'Fiscal year weeks, quarters and holiday schedule for planning.' },
+}
 
 function TabRouter() {
   const { currentTab, ccoView } = useApp()
@@ -19,12 +32,13 @@ function TabRouter() {
 }
 
 function DashboardShell() {
-  const { theme } = useApp()
+  const { theme, currentTab } = useApp()
+  const pageMeta = PAGE_META[currentTab]
 
   useEffect(() => {
     const colors = getColors(theme)
     ChartJS.defaults.color = colors.textSecondary
-    ChartJS.defaults.font.family = "'Roboto Flex', sans-serif"
+    ChartJS.defaults.font.family = 'Roboto, sans-serif'
     ChartJS.defaults.font.size = 10
   }, [theme])
 
@@ -34,10 +48,15 @@ function DashboardShell() {
       <div className="shell">
         <Sidebar />
         <div className="content">
+          {pageMeta && <PageHeader title={pageMeta.title} description={pageMeta.description} />}
           <FilterBar />
           <div className="main-wrap">
             <div className="main-scroll">
               <TabRouter />
+              <footer className="app-footer">
+                <span>Source: Randomly generated demonstration data · Not real employee or customer information</span>
+                <span>Built with Dell Design System v3</span>
+              </footer>
             </div>
           </div>
         </div>

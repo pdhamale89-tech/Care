@@ -109,9 +109,9 @@ export default function OutageReport() {
         <div className="mini-stat"><div className="mini-stat-lbl">Unplanned Outage</div><div className="mini-stat-val tone-r">{unplanned}</div></div>
       </div>
 
-      <div className="pill-toggle" style={{ marginBottom: 14 }}>
-        <button type="button" className={view === 'agent' ? 'active' : ''} onClick={() => setView('agent')}>Agent Wise</button>
-        <button type="button" className={view === 'manager' ? 'active' : ''} onClick={() => setView('manager')}>Manager Wise</button>
+      <div className="tabs" role="tablist" aria-label="Breakdown view" style={{ marginBottom: 14 }}>
+        <button type="button" role="tab" aria-selected={view === 'agent'} className="tab" onClick={() => setView('agent')}>Agent Wise</button>
+        <button type="button" role="tab" aria-selected={view === 'manager'} className="tab" onClick={() => setView('manager')}>Manager Wise</button>
       </div>
 
       {view === 'agent' && (

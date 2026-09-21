@@ -38,9 +38,9 @@ export default function FilterBar() {
           <span className={'filter-panel-caret' + (expanded ? '' : ' collapsed')}>▾</span>
         </div>
         {isCco && (
-          <div className="period-bar">
+          <div className="tabs" role="tablist" aria-label="View" style={{ margin: 0 }}>
             {[['weekly', 'Weekly'], ['quarterly', 'Quarterly']].map(([v, label]) => (
-              <button key={v} type="button" className={'p-btn' + (ccoView === v ? ' active' : '')} onClick={() => setCcoView(v)}>{label}</button>
+              <button key={v} type="button" role="tab" aria-selected={ccoView === v} className="tab" onClick={() => setCcoView(v)}>{label}</button>
             ))}
           </div>
         )}

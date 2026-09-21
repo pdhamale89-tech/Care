@@ -30,9 +30,9 @@ export default function FiscalCalendar() {
           {view === 'calendar' ? 'Fiscal Calendar' : 'Holiday Calendar'}
           {view === 'calendar' && <InfoBtn tip="<strong>Purpose</strong>4-13-4 fiscal calendar with Quarter Weeks (QWKS), Fiscal Weeks (WKS), SCO, Holiday and Pay Date markers for FY2027." />}
         </h2>
-        <div className="plan-sel">
-          <button type="button" className={'plan-btn' + (view === 'calendar' ? ' active' : '')} onClick={() => setView('calendar')}>Fiscal Calendar</button>
-          <button type="button" className={'plan-btn' + (view === 'holidays' ? ' active' : '')} onClick={() => setView('holidays')}>Holiday Calendar</button>
+        <div className="tabs" role="tablist" aria-label="Calendar view" style={{ margin: 0 }}>
+          <button type="button" role="tab" aria-selected={view === 'calendar'} className="tab" onClick={() => setView('calendar')}>Fiscal Calendar</button>
+          <button type="button" role="tab" aria-selected={view === 'holidays'} className="tab" onClick={() => setView('holidays')}>Holiday Calendar</button>
         </div>
       </div>
 

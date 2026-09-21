@@ -136,7 +136,7 @@ export default function WhatIfSimulator() {
             <div className="kpi-label">{m.label}</div>
             <div className="kpi-value">{fmt(scenario[m.key])}{m.unit}</div>
             <div className="kpi-sub">Baseline: {fmt(baseline[m.key])}{m.unit}</div>
-            <div className="kpi-sub">{changePct[m.key] >= 0 ? '▲' : '▼'} {Math.abs(changePct[m.key])}% change</div>
+            <div className={'kpi-sub kpi-delta ' + (changePct[m.key] >= 0 ? 'up' : 'down')}>{changePct[m.key] >= 0 ? '▲' : '▼'} {Math.abs(changePct[m.key])}% change</div>
           </div>
         ))}
       </div>

@@ -138,9 +138,9 @@ export default function ForecastAdherenceMap() {
         <div className="card-title">
           Overall SLA <InfoBtn tip={`<strong>Purpose</strong>Overall SLA by geography, ${ccoView} view. Toggle Region/Sub Region to change map granularity; % labels are shown directly on the map.<strong>Tip</strong>💡 Click the map for a Channel/Segment/Region/Sub Region variance matrix.`} />
         </div>
-        <div className="plan-sel">
-          <button type="button" className={'plan-btn' + (mode === 'region' ? ' active' : '')} onClick={() => setMode('region')}>Region</button>
-          <button type="button" className={'plan-btn' + (mode === 'subregion' ? ' active' : '')} onClick={() => setMode('subregion')}>Sub Region</button>
+        <div className="tabs" role="tablist" aria-label="Map granularity" style={{ margin: 0 }}>
+          <button type="button" role="tab" aria-selected={mode === 'region'} className="tab" onClick={() => setMode('region')}>Region</button>
+          <button type="button" role="tab" aria-selected={mode === 'subregion'} className="tab" onClick={() => setMode('subregion')}>Sub Region</button>
         </div>
       </div>
 

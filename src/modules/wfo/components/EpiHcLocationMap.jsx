@@ -173,14 +173,14 @@ export default function EpiHcLocationMap({ agents, onDrill, theme }) {
         <div className="card-title">
           Headcount by Location <InfoBtn tip="<strong>Purpose</strong>Headcount by geography, toggled DB vs OSP. Toggle Region/Sub Region to change map granularity; labels show each group's headcount for the selected sourcing type. Click the map for that region's agent details." />
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <div className="plan-sel">
-            <button type="button" className={'plan-btn' + (sourcing === 'DB' ? ' active' : '')} onClick={() => setSourcing('DB')}>DB</button>
-            <button type="button" className={'plan-btn' + (sourcing === 'OSP' ? ' active' : '')} onClick={() => setSourcing('OSP')}>OSP</button>
+        <div style={{ display: 'flex', gap: 16 }}>
+          <div className="tabs" role="tablist" aria-label="Sourcing type" style={{ margin: 0 }}>
+            <button type="button" role="tab" aria-selected={sourcing === 'DB'} className="tab" onClick={() => setSourcing('DB')}>DB</button>
+            <button type="button" role="tab" aria-selected={sourcing === 'OSP'} className="tab" onClick={() => setSourcing('OSP')}>OSP</button>
           </div>
-          <div className="plan-sel">
-            <button type="button" className={'plan-btn' + (mode === 'region' ? ' active' : '')} onClick={() => setMode('region')}>Region</button>
-            <button type="button" className={'plan-btn' + (mode === 'subregion' ? ' active' : '')} onClick={() => setMode('subregion')}>Sub Region</button>
+          <div className="tabs" role="tablist" aria-label="Map granularity" style={{ margin: 0 }}>
+            <button type="button" role="tab" aria-selected={mode === 'region'} className="tab" onClick={() => setMode('region')}>Region</button>
+            <button type="button" role="tab" aria-selected={mode === 'subregion'} className="tab" onClick={() => setMode('subregion')}>Sub Region</button>
           </div>
         </div>
       </div>
