@@ -138,7 +138,7 @@ export function trendLineConfig(weeks, series, colors, opts = {}) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } } },
+      plugins: { legend: { position: 'bottom', align: 'center', labels: { boxWidth: 10, font: { size: 10 } } } },
       scales: {
         x: { grid: { display: false } },
         y: { beginAtZero: true, ticks: unit ? { callback: (v) => v + unit } : undefined },
