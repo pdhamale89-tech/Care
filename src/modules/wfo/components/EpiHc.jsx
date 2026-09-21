@@ -49,7 +49,7 @@ function buildHBarChart(entries, color, textColor) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
-      scales: { x: { beginAtZero: true }, y: { ticks: { font: { size: 10 } } } },
+      scales: { x: { beginAtZero: true, grace: '15%' }, y: { ticks: { font: { size: 10 } } } },
     },
   }
 }

@@ -18,7 +18,8 @@ export function issueTypeBarConfig(labels, actual, unit = '', colors = DEFAULT_C
       plugins: LEGEND_BOTTOM,
       scales: {
         x: { ticks: { maxRotation: 45, minRotation: 45, font: { size: 10 } } },
-        y: { beginAtZero: true },
+        // Grace headroom keeps the tallest bar's data label clear of the card edge.
+        y: { beginAtZero: true, grace: '15%' },
       },
     },
   }
@@ -34,7 +35,7 @@ export function stackedBarConfig(labels, datasets, unit = '') {
       responsive: true,
       maintainAspectRatio: false,
       plugins: LEGEND_BOTTOM,
-      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
+      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, grace: '15%' } },
     },
   }
 }

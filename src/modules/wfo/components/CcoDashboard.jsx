@@ -127,7 +127,7 @@ function buildMetricComparisonConfig(col, labels, actual, forecast, colors) {
         responsive: true,
         maintainAspectRatio: false,
         plugins: { legend: { position: 'bottom' } },
-        scales: { y: col.unit === '%' ? { min: 75, max: 100 } : { beginAtZero: true } },
+        scales: { y: col.unit === '%' ? { min: 75, max: 100 } : { beginAtZero: true, grace: '15%' } },
       },
     }
   }
@@ -209,7 +209,7 @@ export default function CcoDashboard({ view }) {
         responsive: true,
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } },
+        scales: { y: { beginAtZero: true, grace: '15%' } },
       },
     }
   }, [periods, seed, colors])
@@ -228,7 +228,7 @@ export default function CcoDashboard({ view }) {
         responsive: true,
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } },
+        scales: { y: { beginAtZero: true, grace: '15%' } },
       },
     }
   }, [periods, seed, colors])
@@ -444,7 +444,7 @@ export default function CcoDashboard({ view }) {
         responsive: true,
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } },
+        scales: { y: { beginAtZero: true, grace: '15%' } },
       },
     }
   }, [issueDrillKey, periods, seed, colors])
