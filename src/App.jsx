@@ -53,10 +53,6 @@ function DashboardShell() {
           <div className="main-wrap">
             <div className="main-scroll">
               <TabRouter />
-              <footer className="app-footer">
-                <span>Source: Randomly generated demonstration data · Not real employee or customer information</span>
-                <span>Built with Dell Design System v3</span>
-              </footer>
             </div>
           </div>
         </div>
