@@ -1,29 +1,32 @@
+// Dell Design System v3 token values (mirrors the CSS custom properties in
+// theme.css) — kept as a parallel JS object because Chart.js/SVG rendering
+// needs literal color values, not CSS custom properties.
 const palettes = {
   light: {
-    textPrimary: '#1a1f36',
-    textSecondary: '#6b7280',
+    textPrimary: '#1D2C3B',   // dds-slate-70
+    textSecondary: '#40586D', // dds-slate-50
     gridColor: 'rgba(0,0,0,.06)',
-    bgFilter: '#eef1f6',
+    bgFilter: '#EBF1F6',      // dds-slate-10
     bgCard: '#ffffff',
-    border: '#e5e7eb',
-    accentBlue: '#3b82f6',
-    accentGreen: '#10b981',
-    accentOrange: '#f59e0b',
-    accentRed: '#ef4444',
-    accentPurple: '#8b5cf6',
+    border: '#EBF1F6',        // dds-color-border-neutral-subtle
+    accentBlue: '#0672CB',    // dds-blue-60
+    accentGreen: '#4A7600',   // dds-green-70 (text-success)
+    accentOrange: '#EF6C00',  // dds-orange-60
+    accentRed: '#B32020',     // dds-red-70 (text-error)
+    accentPurple: '#703DB3',  // dds-purple-60
   },
   dark: {
-    textPrimary: '#e5e7eb',
-    textSecondary: '#9ca3af',
+    textPrimary: '#EBF1F6',   // dds-slate-10
+    textSecondary: '#A4B8CD', // dds-slate-30
     gridColor: 'rgba(255,255,255,.06)',
-    bgFilter: '#161929',
-    bgCard: '#1e2235',
-    border: '#2d3148',
-    accentBlue: '#60a5fa',
-    accentGreen: '#34d399',
-    accentOrange: '#fbbf24',
-    accentRed: '#f87171',
-    accentPurple: '#a78bfa',
+    bgFilter: '#0A0E14',      // dds-slate-90
+    bgCard: '#141D28',        // dds-slate-80
+    border: '#1D2C3B',        // dds-slate-70
+    accentBlue: '#31A2E3',    // dds-blue-40
+    accentGreen: '#A6CF4A',   // dds-green-30
+    accentOrange: '#FB8C00',  // dds-orange-50
+    accentRed: '#FF8080',     // dds-red-30
+    accentPurple: '#A66CFF',  // dds-purple-40
   },
 }
 

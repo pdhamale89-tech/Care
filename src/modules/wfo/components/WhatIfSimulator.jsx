@@ -5,6 +5,7 @@ import { fmt, genKpiValue, hashSeed, getWeeksForQuarter } from '../lib/mockGener
 import { getColors } from '../../../shared/themes/colors.js'
 import { barDataLabels } from '../lib/datalabels.js'
 import InfoBtn from '../../../shared/components/InfoBtn.jsx'
+import Icon from '../../../shared/components/Icon.jsx'
 
 const SCENARIO_METRICS = [
   { key: 'volume', label: 'Volume', base: 2200, unit: '', decimals: 0 },
@@ -91,7 +92,7 @@ export default function WhatIfSimulator() {
   return (
     <div className="tab-panel active">
       <div className="ai-story">
-        <div className="ai-icon-box">🧮</div>
+        <div className="ai-icon-box"><Icon name="calculator" size={18} /></div>
         <div>
           <div className="ai-story-title">Scenario Summary</div>
           <div className="ai-story-text">

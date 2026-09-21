@@ -1,92 +1,93 @@
 import { useApp } from '../../core/hooks/useApp.js'
+import Icon from '../components/Icon.jsx'
 
 const NAV_SECTIONS = [
   {
     label: 'Performance Reports',
     items: [
-      { id: 'cco', label: 'CCO Overview', icon: '📊' },
+      { id: 'cco', label: 'CCO Overview', icon: 'dashboards' },
     ],
   },
   {
     label: 'Workforce Reports',
     items: [
-      { id: 'outage', label: 'Outage Report', icon: '⚠️' },
-      { id: 'epiHc', label: 'Epi HC', icon: '📈' },
+      { id: 'outage', label: 'Outage Report', icon: 'warning' },
+      { id: 'epiHc', label: 'Epi HC', icon: 'trending' },
     ],
   },
   {
     label: 'Planning',
     items: [
-      { id: 'whatIf', label: 'What-If Simulator', icon: '🧮' },
+      { id: 'whatIf', label: 'What-If Simulator', icon: 'calculator' },
     ],
   },
   {
     label: 'Tools',
     items: [
-      { id: 'reports', label: 'Reports', icon: '📄' },
+      { id: 'reports', label: 'Reports', icon: 'document' },
       {
         id: 'calendar',
         label: 'Calendar',
-        icon: '📅',
+        icon: 'calendar',
         children: [
           { id: 'fiscalCalendar', label: 'Fiscal Calendar' },
         ],
       },
-      { id: 'glossary', label: 'Glossary', icon: '📖' },
+      { id: 'glossary', label: 'Glossary', icon: 'book' },
     ],
   },
 ]
 
 const SYSTEM_ITEMS = [
-  { id: 'notifications', label: 'Notifications', icon: '🔔' },
-  { id: 'settings', label: 'Settings', icon: '⚙️' },
+  { id: 'notifications', label: 'Notifications', icon: 'bell' },
+  { id: 'settings', label: 'Settings', icon: 'gear' },
 ]
 
 export default function Sidebar() {
-  const { currentTab, navTo } = useApp()
-  const itemClass = (id) => 'sb-i' + (currentTab === id ? ' active' : '')
+  const { currentTab, navTo, sidenavOpen, toggleSidenav } = useApp()
+  const itemClass = (id) => 'nav-item' + (currentTab === id ? ' active' : '')
 
   return (
-    <div className="sidebar">
-      <div className="sidebar-logo-area">
-        <div className="sidebar-logo">C</div>
-        <div className="sidebar-brand">Care SPOG<small>Single Pane Of Glass</small></div>
-      </div>
-      <div className="sidebar-nav">
-        <div className="sidebar-section-label">Main</div>
-        <div className={itemClass('home')} onClick={() => navTo('home')}><span className="ic">🏠</span>Home</div>
+    <nav className={'sidenav' + (sidenavOpen ? ' open' : '')} aria-label="Primary">
+      <div className="nav-group-label">Main</div>
+      <button type="button" className={itemClass('home')} onClick={() => navTo('home')}>
+        <span className="ic"><Icon name="home" size={18} /></span><span className="lbl">Home</span>
+      </button>
 
-        {NAV_SECTIONS.map((section) => (
-          <div key={section.label}>
-            <div className="sidebar-section-label">{section.label}</div>
-            {section.items.map((item) => (
-              <div key={item.id}>
-                <div className={itemClass(item.id)} onClick={() => navTo(item.id)}>
-                  <span className="ic">{item.icon}</span>{item.label}
+      {NAV_SECTIONS.map((section) => (
+        <div key={section.label}>
+          <div className="nav-group-label">{section.label}</div>
+          {section.items.map((item) => (
+            <div key={item.id}>
+              <button type="button" className={itemClass(item.id)} onClick={() => navTo(item.id)}>
+                <span className="ic"><Icon name={item.icon} size={18} /></span><span className="lbl">{item.label}</span>
+              </button>
+              {item.children && sidenavOpen && (
+                <div>
+                  {item.children.map((child) => (
+                    <button type="button" key={child.id} className={itemClass(child.id) + ' sub'} onClick={() => navTo(child.id)}>
+                      <span className="lbl">{child.label}</span>
+                    </button>
+                  ))}
                 </div>
-                {item.children && (
-                  <div className="sb-sub">
-                    {item.children.map((child) => (
-                      <div key={child.id} className={itemClass(child.id)} onClick={() => navTo(child.id)}>
-                        {child.label}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
+              )}
+            </div>
+          ))}
+        </div>
+      ))}
 
-      <div className="sidebar-bottom">
-        <div className="sidebar-section-label">System</div>
+      <div style={{ marginTop: 'auto' }}>
+        <div className="nav-group-label">System</div>
         {SYSTEM_ITEMS.map((item) => (
-          <div key={item.id} className={itemClass(item.id)} onClick={() => navTo(item.id)}>
-            <span className="ic">{item.icon}</span>{item.label}
-          </div>
+          <button type="button" key={item.id} className={itemClass(item.id)} onClick={() => navTo(item.id)}>
+            <span className="ic"><Icon name={item.icon} size={18} /></span><span className="lbl">{item.label}</span>
+          </button>
         ))}
+        <button type="button" className="nav-item collapse-btn" onClick={toggleSidenav} aria-label={sidenavOpen ? 'Collapse navigation' : 'Expand navigation'}>
+          <span className="ic"><Icon name="chevronLeft" size={16} style={{ transform: sidenavOpen ? 'none' : 'rotate(180deg)' }} /></span>
+          <span className="lbl">Collapse</span>
+        </button>
       </div>
-    </div>
+    </nav>
   )
 }

@@ -1,22 +1,25 @@
 import { useApp } from '../../core/hooks/useApp.js'
+import Icon from '../components/Icon.jsx'
 
 export default function Topbar() {
-  const { breadcrumb, theme, toggleTheme, lastUpdated } = useApp()
+  const { breadcrumb, theme, toggleTheme, lastUpdated, sidenavOpen, toggleSidenav } = useApp()
   return (
-    <div className="topbar">
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <h1>Care SPOG</h1>
-        <span className="bc">{breadcrumb}</span>
+    <header className="masthead">
+      <button type="button" className="icon-btn" onClick={toggleSidenav} aria-label="Toggle navigation" aria-expanded={sidenavOpen}>
+        <Icon name="menu" size={20} />
+      </button>
+      <div className="brand">
+        <span className="mark">C</span>
+        Care SPOG
+        <span className="divider"></span>
+        <span className="app-name">{breadcrumb}</span>
       </div>
-      <div className="topbar-r">
-        <span className="tog-lbl">☀️</span>
-        <label className="theme-tog">
-          <input type="checkbox" checked={theme === 'dark'} onChange={toggleTheme} />
-          <div className="tog-track"><div className="tog-thumb"></div></div>
-        </label>
-        <span className="tog-lbl">🌙</span>
-        <span className="last-updated">Last Updated: {lastUpdated}</span>
-      </div>
-    </div>
+      <div className="spacer"></div>
+      <span className="last-updated">Last Updated: {lastUpdated}</span>
+      <button type="button" className="icon-btn" onClick={toggleTheme} aria-label="Toggle color theme">
+        <Icon name={theme === 'dark' ? 'moon' : 'sun'} size={18} />
+      </button>
+      <div className="avatar" title="Care SPOG">CS</div>
+    </header>
   )
 }

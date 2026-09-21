@@ -55,7 +55,7 @@ export default function HolidayCalendar() {
     <div className="card">
       <div className="card-header">
         <div className="card-title">
-          🎉 Holiday Calendar <InfoBtn tip="<strong>Purpose</strong>Region, sub region, country and fiscal year holiday detail." />
+          Holiday Calendar <InfoBtn tip="<strong>Purpose</strong>Region, sub region, country and fiscal year holiday detail." />
         </div>
         <DownloadBtn
           filename="holiday-calendar"

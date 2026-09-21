@@ -1,10 +1,11 @@
 import { useApp } from '../../../core/hooks/useApp.js'
+import Icon from '../../../shared/components/Icon.jsx'
 
 const REPORTS = [
-  { name: 'Voice Queue KPI', icon: '📞', category: 'Voice', description: 'Queue-level SLA, AHT and abandonment KPIs for voice.', url: null },
-  { name: 'Voice Queue Intraday', icon: '⏱️', category: 'Voice', description: 'Intraday voice queue volume and staffing vs plan.', url: null },
-  { name: 'Voice Agent KPI', icon: '🎧', category: 'Voice', description: 'Agent-level voice KPIs — AHT, occupancy and quality.', url: null },
-  { name: 'Genesys Skill Data', icon: '🧩', category: 'Genesys', description: 'Skill-based routing configuration and skill group volumes.', url: null },
+  { name: 'Voice Queue KPI', icon: 'phone', category: 'Voice', description: 'Queue-level SLA, AHT and abandonment KPIs for voice.', url: null },
+  { name: 'Voice Queue Intraday', icon: 'clock', category: 'Voice', description: 'Intraday voice queue volume and staffing vs plan.', url: null },
+  { name: 'Voice Agent KPI', icon: 'headset', category: 'Voice', description: 'Agent-level voice KPIs — AHT, occupancy and quality.', url: null },
+  { name: 'Genesys Skill Data', icon: 'grid', category: 'Genesys', description: 'Skill-based routing configuration and skill group volumes.', url: null },
 ]
 
 export default function Reports() {
@@ -37,7 +38,7 @@ export default function Reports() {
             onClick={() => handleOpen(r)}
             onKeyDown={(e) => handleKeyDown(e, r)}
           >
-            <div className="report-card-icon">{r.icon}</div>
+            <div className="report-card-icon"><Icon name={r.icon} size={20} /></div>
             <div className="report-card-name">{r.name}</div>
             <div className="report-card-category">{r.category}</div>
             <div className="report-card-desc">{r.description}</div>

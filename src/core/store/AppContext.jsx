@@ -25,6 +25,7 @@ const EPICENTER_FILTERS_DEFAULT = { weekEnding: ['All'], vendor: ['All'], manage
 
 export function AppProvider({ children }) {
   const [theme, setTheme] = useState('light')
+  const [sidenavOpen, setSidenavOpen] = useState(true)
   const [currentTab, setCurrentTab] = useState('home')
   const [lastUpdated] = useState(() => formatIST(new Date()))
   const [activeRegions, setActiveRegionsState] = useState(['APJC'])
@@ -41,6 +42,7 @@ export function AppProvider({ children }) {
   }, [theme])
 
   const toggleTheme = useCallback(() => setTheme((t) => (t === 'light' ? 'dark' : 'light')), [])
+  const toggleSidenav = useCallback(() => setSidenavOpen((o) => !o), [])
 
   const navTo = useCallback((tabId) => {
     setCurrentTab(tabId)
@@ -78,6 +80,7 @@ export function AppProvider({ children }) {
 
   const value = useMemo(() => ({
     theme, toggleTheme, lastUpdated,
+    sidenavOpen, toggleSidenav,
     currentTab, navTo, breadcrumb, showFilters,
     activeRegions, setActiveRegions,
     ccoFilters, setCcoFilter, ccoView, setCcoView,
@@ -86,7 +89,7 @@ export function AppProvider({ children }) {
     clearFilters,
     toast, showToast,
   }), [
-    theme, toggleTheme, lastUpdated, currentTab, navTo, breadcrumb, showFilters,
+    theme, toggleTheme, lastUpdated, sidenavOpen, toggleSidenav, currentTab, navTo, breadcrumb, showFilters,
     activeRegions, setActiveRegions,
     ccoFilters, setCcoFilter, ccoView, outageFilters, setOutageFilter,
     epicenterFilters, setEpicenterFilter,

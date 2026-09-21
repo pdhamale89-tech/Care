@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useApp } from '../../core/hooks/useApp.js'
 import { countriesForRegions, managers, getWeeksForQuarter, REGIONS, vendors, weekEndingDates } from '../../modules/wfo/lib/mockGenerators.js'
 import MultiSelectDropdown from '../components/MultiSelectDropdown.jsx'
+import Icon from '../components/Icon.jsx'
 
 const QUARTERS = ['FQ1', 'FQ2', 'FQ3', 'FQ4']
 const CLASSIFICATIONS = ['FED', 'Global Sales', 'Consumer']
@@ -33,7 +34,7 @@ export default function FilterBar() {
     <div className="filter-panel">
       <div className="filter-panel-head">
         <div className="filter-panel-title" onClick={() => setExpanded((e) => !e)}>
-          <span className="filter-panel-icon">🔎</span>Filters
+          <span className="filter-panel-icon"><Icon name="search" size={14} /></span>Filters
           <span className={'filter-panel-caret' + (expanded ? '' : ' collapsed')}>▾</span>
         </div>
         {isCco && (

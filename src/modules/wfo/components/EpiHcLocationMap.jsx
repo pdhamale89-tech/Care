@@ -171,7 +171,7 @@ export default function EpiHcLocationMap({ agents, onDrill, theme }) {
     <div className="card">
       <div className="card-header">
         <div className="card-title">
-          🌍 Headcount by Location <InfoBtn tip="<strong>Purpose</strong>Headcount by geography, toggled DB vs OSP. Toggle Region/Sub Region to change map granularity; labels show each group's headcount for the selected sourcing type. Click the map for that region's agent details." />
+          Headcount by Location <InfoBtn tip="<strong>Purpose</strong>Headcount by geography, toggled DB vs OSP. Toggle Region/Sub Region to change map granularity; labels show each group's headcount for the selected sourcing type. Click the map for that region's agent details." />
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <div className="plan-sel">

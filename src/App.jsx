@@ -30,13 +30,15 @@ function DashboardShell() {
 
   return (
     <div className="app">
-      <Sidebar />
-      <div className="content">
-        <Topbar />
-        <FilterBar />
-        <div className="main-wrap">
-          <div className="main-scroll">
-            <TabRouter />
+      <Topbar />
+      <div className="shell">
+        <Sidebar />
+        <div className="content">
+          <FilterBar />
+          <div className="main-wrap">
+            <div className="main-scroll">
+              <TabRouter />
+            </div>
           </div>
         </div>
       </div>
