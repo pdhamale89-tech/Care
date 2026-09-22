@@ -304,6 +304,12 @@ body {
 .kpi-grid.cols-7 { grid-template-columns: repeat(7, 1fr); }
 .kpi-grid.cols-7 .kpi-label { text-transform: uppercase; letter-spacing: .03em; }
 .kpi-grid.cols-7 .kpi-value { font-size: 1.375rem; line-height: 1.75rem; font-weight: 700; }
+.kpi-grid.stats-row .kpi-label { text-transform: uppercase; letter-spacing: .03em; }
+.kpi-grid.stats-row .kpi-value { font-weight: 700; }
+.kpi-value.tone-g { color: var(--dds-green-70); }
+[data-theme="dark"] .kpi-value.tone-g { color: var(--dds-green-30); }
+.kpi-value.tone-r { color: var(--dds-red-70); }
+[data-theme="dark"] .kpi-value.tone-r { color: var(--dds-red-30); }
 @media (max-width: 1200px) { .kpi-grid.cols-7 { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 1024px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } .kpi-grid.cols-7 { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 640px) { .kpi-grid { grid-template-columns: 1fr; } .kpi-grid.cols-7 { grid-template-columns: 1fr; } }

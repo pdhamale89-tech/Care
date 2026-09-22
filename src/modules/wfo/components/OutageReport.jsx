@@ -102,11 +102,11 @@ export default function OutageReport() {
         ⚠️ All agent names shown are randomly generated placeholder data for demonstration purposes only. No real employee or personal information is used.
       </div>
 
-      <div className="mini-row">
-        <div className="mini-stat"><div className="mini-stat-lbl">Total Agents</div><div className="mini-stat-val">{total}</div></div>
-        <div className="mini-stat"><div className="mini-stat-lbl">Scheduled</div><div className="mini-stat-val">{scheduled}</div></div>
-        <div className="mini-stat"><div className="mini-stat-lbl">Available</div><div className="mini-stat-val tone-g">{available}</div></div>
-        <div className="mini-stat"><div className="mini-stat-lbl">Unplanned Outage</div><div className="mini-stat-val tone-r">{unplanned}</div></div>
+      <div className="kpi-grid stats-row">
+        <div className="kpi-card"><div className="kpi-label">Total Agents</div><div className="kpi-value">{total}</div></div>
+        <div className="kpi-card"><div className="kpi-label">Scheduled</div><div className="kpi-value">{scheduled}</div></div>
+        <div className="kpi-card"><div className="kpi-label">Available</div><div className="kpi-value tone-g">{available}</div></div>
+        <div className="kpi-card"><div className="kpi-label">Unplanned Outage</div><div className="kpi-value tone-r">{unplanned}</div></div>
       </div>
 
       <div className="tabs" role="tablist" aria-label="Breakdown view" style={{ marginBottom: 14 }}>
