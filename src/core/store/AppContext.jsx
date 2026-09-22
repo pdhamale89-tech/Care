@@ -18,8 +18,8 @@ const BREADCRUMBS = {
   settings: 'System › Settings',
 }
 
-const CCO_FILTERS_DEFAULT = { subRegion: ['All'], quarter: ['FQ1'], week: ['All'], classification: ['All'] }
-const OUTAGE_FILTERS_DEFAULT = { country: ['All'], quarter: ['FQ1'], week: ['All'], manager: ['All'], status: ['All'], search: '' }
+const CCO_FILTERS_DEFAULT = { subRegion: ['All'], quarter: ['All'], week: ['All'], classification: ['All'] }
+const OUTAGE_FILTERS_DEFAULT = { country: ['All'], quarter: ['All'], week: ['All'], manager: ['All'], status: ['All'], search: '' }
 const EPICENTER_FILTERS_DEFAULT = { weekEnding: ['All'], vendor: ['All'], manager: ['All'], dbOsp: ['All'] }
 
 export function AppProvider({ children }) {
@@ -27,7 +27,7 @@ export function AppProvider({ children }) {
   const [sidenavOpen, setSidenavOpen] = useState(true)
   const [currentTab, setCurrentTab] = useState('cco')
   const [lastUpdated] = useState(() => formatIST(new Date()))
-  const [activeRegions, setActiveRegionsState] = useState(['APJC'])
+  const [activeRegions, setActiveRegionsState] = useState(['All'])
 
   const [ccoFilters, setCcoFilters] = useState(CCO_FILTERS_DEFAULT)
   const [ccoView, setCcoView] = useState('weekly')
