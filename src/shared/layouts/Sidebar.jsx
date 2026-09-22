@@ -49,11 +49,6 @@ export default function Sidebar() {
 
   return (
     <nav className={'sidenav' + (sidenavOpen ? ' open' : '')} aria-label="Primary">
-      <div className="nav-group-label">Main</div>
-      <button type="button" className={itemClass('home')} onClick={() => navTo('home')}>
-        <span className="ic"><Icon name="home" size={18} /></span><span className="lbl">Home</span>
-      </button>
-
       {NAV_SECTIONS.map((section) => (
         <div key={section.label}>
           <div className="nav-group-label">{section.label}</div>

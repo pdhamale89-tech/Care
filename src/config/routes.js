@@ -4,12 +4,10 @@ import EpiHc from '../modules/wfo/components/EpiHc.jsx'
 import Reports from '../modules/wfo/components/Reports.jsx'
 import FiscalCalendar from '../modules/wfo/components/FiscalCalendar.jsx'
 import WhatIfSimulator from '../modules/wfo/components/WhatIfSimulator.jsx'
-import Home from '../pages/Home.jsx'
 
 // Single source of truth for tab id -> page component. Unlisted tabs either fall
-// back to Home (unknown id) or render ComingSoonTab via COMING_SOON_TITLES below.
+// back to CCO Overview (unknown id) or render ComingSoonTab via COMING_SOON_TITLES below.
 export const ROUTES = {
-  home: Home,
   cco: CcoDashboard,
   outage: OutageReport,
   epiHc: EpiHc,

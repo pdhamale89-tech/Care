@@ -3,10 +3,9 @@ import { formatIST } from '../utils/dateUtils.js'
 
 export const AppContext = createContext(null)
 
-export const NO_FILTER_TABS = ['home', 'reports', 'calendar', 'fiscalCalendar', 'glossary', 'notifications', 'settings']
+export const NO_FILTER_TABS = ['reports', 'calendar', 'fiscalCalendar', 'glossary', 'notifications', 'settings']
 
 const BREADCRUMBS = {
-  home: 'Home',
   cco: 'Performance Reports › CCO Overview',
   outage: 'Workforce Reports › Outage Report',
   epiHc: 'Workforce Reports › Epi HC',
@@ -26,7 +25,7 @@ const EPICENTER_FILTERS_DEFAULT = { weekEnding: ['All'], vendor: ['All'], manage
 export function AppProvider({ children }) {
   const [theme, setTheme] = useState('light')
   const [sidenavOpen, setSidenavOpen] = useState(true)
-  const [currentTab, setCurrentTab] = useState('home')
+  const [currentTab, setCurrentTab] = useState('cco')
   const [lastUpdated] = useState(() => formatIST(new Date()))
   const [activeRegions, setActiveRegionsState] = useState(['APJC'])
 

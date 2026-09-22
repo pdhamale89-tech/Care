@@ -27,7 +27,7 @@ const PAGE_META = {
 function TabRouter() {
   const { currentTab, ccoView } = useApp()
   if (COMING_SOON_TITLES[currentTab]) return <ComingSoonTab title={COMING_SOON_TITLES[currentTab]} />
-  const Component = ROUTES[currentTab] || ROUTES.home
+  const Component = ROUTES[currentTab] || ROUTES.cco
   return currentTab === 'cco' ? <Component view={ccoView} /> : <Component />
 }
 
