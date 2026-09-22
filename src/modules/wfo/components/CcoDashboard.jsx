@@ -671,7 +671,7 @@ export default function CcoDashboard({ view }) {
             </div>
           </div>
           <div className="chart-container">
-            <Bar data={workloadWaterfallChart.data} options={workloadWaterfallChart.options} />
+            <Bar data={workloadWaterfallChart.data} options={workloadWaterfallChart.options} plugins={workloadWaterfallChart.plugins} />
           </div>
         </div>
         <div className="card">
@@ -681,7 +681,7 @@ export default function CcoDashboard({ view }) {
             </div>
           </div>
           <div className="chart-container">
-            <Bar data={headcountWaterfallChart.data} options={headcountWaterfallChart.options} />
+            <Bar data={headcountWaterfallChart.data} options={headcountWaterfallChart.options} plugins={headcountWaterfallChart.plugins} />
           </div>
         </div>
       </div>

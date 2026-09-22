@@ -41,17 +41,52 @@ export function stackedBarConfig(labels, datasets, unit = '') {
   }
 }
 
+// Dashed step connectors between waterfall bars — Chart.js has no built-in support
+// for this (a native waterfall type would draw them automatically), so this plugin
+// draws a horizontal dashed line at each step's running-total level, from the right
+// edge of one bar to the left edge of the next, using the rendered bar geometry
+// (chart.getDatasetMeta) so it stays correct across resizes/themes.
+function waterfallConnectorPlugin(runningLevels, color) {
+  return {
+    id: 'waterfallConnectors',
+    afterDatasetsDraw(chart) {
+      const meta = chart.getDatasetMeta(1)
+      const yScale = chart.scales.y
+      if (!meta || !meta.data.length) return
+      const { ctx } = chart
+      ctx.save()
+      ctx.strokeStyle = color
+      ctx.setLineDash([4, 3])
+      ctx.lineWidth = 1
+      for (let i = 0; i < meta.data.length - 1; i++) {
+        const barA = meta.data[i]
+        const barB = meta.data[i + 1]
+        const y = yScale.getPixelForValue(runningLevels[i])
+        ctx.beginPath()
+        ctx.moveTo(barA.x + barA.width / 2, y)
+        ctx.lineTo(barB.x - barB.width / 2, y)
+        ctx.stroke()
+      }
+      ctx.restore()
+    },
+  }
+}
+
 // Waterfall/bridge chart — Chart.js has no native waterfall type, so this builds one
 // from a 2-dataset stacked bar: an invisible "base" segment plus a visible "value"
 // segment floating on top of it. `steps` is ordered: { label, type: 'anchor' | 'delta', value }.
-// An anchor (e.g. PLAN, ACTUAL) renders as a full bar from 0; a delta renders as a
-// floating bar showing the signed change from the running total up to that point.
+// An anchor (e.g. PLAN, ACTUAL) renders as a full bar from 0, in blue. A delta renders
+// as a floating bar showing the signed change from the running total up to that point,
+// colored green (increase) or red (decrease) so direction reads at a glance even when
+// the segment itself is too thin to judge by height alone — dashed connectors (above)
+// and the signed tooltip/label (below) reinforce the same reading.
 export function waterfallConfig(steps, colors) {
   const labels = steps.map((s) => s.label)
   const baseData = []
   const valueData = []
   const displayValues = []
   const barColors = []
+  const runningLevels = []
   let running = 0
   steps.forEach((s) => {
     if (s.type === 'anchor') {
@@ -66,21 +101,36 @@ export function waterfallConfig(steps, colors) {
       baseData.push(Math.min(prev, running))
       valueData.push(Math.abs(s.value))
       displayValues.push(Math.round(s.value))
-      barColors.push(colors.accentBlue + '70')
+      barColors.push(s.value >= 0 ? colors.accentGreen : colors.accentRed)
     }
+    runningLevels.push(running)
   })
   return {
     data: {
       labels,
       datasets: [
-        { data: baseData, backgroundColor: 'transparent', stack: 'wf', datalabels: { display: false } },
-        { data: valueData, backgroundColor: barColors, borderRadius: 2, stack: 'wf', displayValues, datalabels: waterfallDataLabels('%', colors.textPrimary) },
+        { label: 'Base', data: baseData, backgroundColor: 'transparent', stack: 'wf', datalabels: { display: false } },
+        { label: 'Value', data: valueData, backgroundColor: barColors, borderRadius: 2, stack: 'wf', displayValues, datalabels: waterfallDataLabels('%', colors.textPrimary) },
       ],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          // The invisible "Base" segment exists only to float the visible bar and has
+          // no meaning of its own — never show it. The visible bar's plotted value is
+          // always positive (it's a bar height), so swap in the true signed value.
+          filter: (item) => item.datasetIndex === 1,
+          callbacks: {
+            label: (item) => {
+              const dv = item.dataset.displayValues?.[item.dataIndex]
+              return (dv === undefined ? item.formattedValue : (dv > 0 ? '+' : '') + dv) + '%'
+            },
+          },
+        },
+      },
       scales: {
         x: { stacked: true },
         // Headroom (grace) keeps the topmost bar's label clear of the card edge;
@@ -88,6 +138,7 @@ export function waterfallConfig(steps, colors) {
         y: { stacked: true, display: false, grace: '25%' },
       },
     },
+    plugins: [waterfallConnectorPlugin(runningLevels, colors.textSecondary)],
   }
 }
 
