@@ -49,7 +49,7 @@ function buildHBarChart(entries, color, textColor) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
-      scales: { x: { beginAtZero: true, grace: '15%' }, y: { ticks: { font: { size: 10 } }, grid: { display: false } } },
+      scales: { x: { beginAtZero: true, grace: '15%', grid: { display: false } }, y: { ticks: { font: { size: 10 } } } },
     },
   }
 }
@@ -71,7 +71,7 @@ function buildStatusChart(entries, statusColors, textColor) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
-      scales: { x: { ticks: { font: { size: 9 }, maxRotation: 20, minRotation: 0 } }, y: { beginAtZero: true, grace: '10%', grid: { display: false } } },
+      scales: { x: { ticks: { font: { size: 9 }, maxRotation: 20, minRotation: 0 }, grid: { display: false } }, y: { beginAtZero: true, grace: '10%' } },
     },
   }
 }

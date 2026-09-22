@@ -82,7 +82,7 @@ export default function WhatIfSimulator() {
         responsive: true,
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
-        scales: { y: { ticks: { callback: (v) => v + '%' }, grace: '15%', grid: { display: false } } },
+        scales: { x: { grid: { display: false } }, y: { ticks: { callback: (v) => v + '%' }, grace: '15%' } },
       },
     }
   }, [changePct, colors])

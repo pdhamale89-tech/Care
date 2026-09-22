@@ -127,7 +127,7 @@ function buildMetricComparisonConfig(col, labels, actual, forecast, colors) {
         responsive: true,
         maintainAspectRatio: false,
         plugins: { legend: { position: 'bottom' } },
-        scales: { y: col.unit === '%' ? { min: 75, max: 100, grid: { display: false } } : { beginAtZero: true, grace: '15%', grid: { display: false } } },
+        scales: { x: { grid: { display: false } }, y: col.unit === '%' ? { min: 75, max: 100 } : { beginAtZero: true, grace: '15%' } },
       },
     }
   }
@@ -151,8 +151,9 @@ function buildMetricComparisonConfig(col, labels, actual, forecast, colors) {
       maintainAspectRatio: false,
       plugins: { legend: { position: 'bottom' } },
       scales: {
+        x: { grid: { display: false } },
         // Extra headroom keeps bar tops (and their labels) clear of the Accuracy line.
-        y: { beginAtZero: col.key !== 'caseRate', grace: '25%', grid: { display: false } },
+        y: { beginAtZero: col.key !== 'caseRate', grace: '25%' },
         // `type: 'linear'` is required here — Chart.js only infers a scale's type
         // automatically for the default 'x'/'y' ids; a non-default id like 'y1'
         // silently falls back to a category scale without it, which is why the
@@ -209,7 +210,7 @@ export default function CcoDashboard({ view }) {
         responsive: true,
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, grace: '15%', grid: { display: false } } },
+        scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grace: '15%' } },
       },
     }
   }, [periods, seed, colors])
@@ -228,7 +229,7 @@ export default function CcoDashboard({ view }) {
         responsive: true,
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, grace: '15%', grid: { display: false } } },
+        scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grace: '15%' } },
       },
     }
   }, [periods, seed, colors])
@@ -254,8 +255,8 @@ export default function CcoDashboard({ view }) {
         maintainAspectRatio: false,
         plugins: { legend: { position: 'bottom' } },
         scales: {
-          x: { stacked: true },
-          y: { stacked: true, beginAtZero: true, grace: '25%', grid: { display: false } },
+          x: { stacked: true, grid: { display: false } },
+          y: { stacked: true, beginAtZero: true, grace: '25%' },
           // `type: 'linear'` is required — a non-default scale id like 'y1' otherwise
           // falls back to a category scale and the line silently fails to render.
           y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false } },
@@ -286,7 +287,7 @@ export default function CcoDashboard({ view }) {
         responsive: true,
         maintainAspectRatio: false,
         plugins: { legend: { position: 'bottom' } },
-        scales: { y: { min: 0, max: 100, ticks: { callback: (v) => v + '%' }, grid: { display: false } } },
+        scales: { x: { grid: { display: false } }, y: { min: 0, max: 100, ticks: { callback: (v) => v + '%' } } },
       },
     }
   }, [periods, seed, colors, slaChannelFilterSel])
@@ -344,8 +345,8 @@ export default function CcoDashboard({ view }) {
         maintainAspectRatio: false,
         plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } } },
         scales: {
-          x: { stacked: true, ticks: { font: { size: 9 } } },
-          y: { stacked: true, beginAtZero: col.key !== 'caseRate', grace: '25%', grid: { display: false } },
+          x: { stacked: true, ticks: { font: { size: 9 } }, grid: { display: false } },
+          y: { stacked: true, beginAtZero: col.key !== 'caseRate', grace: '25%' },
           // `type: 'linear'` is required — a non-default scale id like 'y1' otherwise
           // falls back to a category scale and the line silently fails to render.
           y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, ticks: { callback: (v) => v + '%' } },
@@ -444,7 +445,7 @@ export default function CcoDashboard({ view }) {
         responsive: true,
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, grace: '15%', grid: { display: false } } },
+        scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grace: '15%' } },
       },
     }
   }, [issueDrillKey, periods, seed, colors])

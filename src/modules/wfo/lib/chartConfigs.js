@@ -17,10 +17,10 @@ export function issueTypeBarConfig(labels, actual, unit = '', colors = DEFAULT_C
       maintainAspectRatio: false,
       plugins: LEGEND_BOTTOM,
       scales: {
-        x: { ticks: { maxRotation: 45, minRotation: 45, font: { size: 10 } } },
         // Grace headroom keeps the tallest bar's data label clear of the card edge.
-        // Horizontal gridlines off — only the vertical (x-axis) lines are kept.
-        y: { beginAtZero: true, grace: '15%', grid: { display: false } },
+        // Vertical gridlines off — only the horizontal (y-axis) lines are kept.
+        x: { ticks: { maxRotation: 45, minRotation: 45, font: { size: 10 } }, grid: { display: false } },
+        y: { beginAtZero: true, grace: '15%' },
       },
     },
   }
@@ -36,7 +36,7 @@ export function stackedBarConfig(labels, datasets, unit = '') {
       responsive: true,
       maintainAspectRatio: false,
       plugins: LEGEND_BOTTOM,
-      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, grace: '15%', grid: { display: false } } },
+      scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true, grace: '15%' } },
     },
   }
 }
@@ -132,7 +132,7 @@ export function waterfallConfig(steps, colors) {
         },
       },
       scales: {
-        x: { stacked: true },
+        x: { stacked: true, grid: { display: false } },
         // Headroom (grace) keeps the topmost bar's label clear of the card edge;
         // the axis itself is hidden since only the % labels above each bar matter here.
         y: { stacked: true, display: false, grace: '25%' },
@@ -193,8 +193,8 @@ export function trendLineConfig(weeks, series, colors, opts = {}) {
       maintainAspectRatio: false,
       plugins: { legend: { position: 'bottom', align: 'center', labels: { boxWidth: 10, font: { size: 10 } } } },
       scales: {
-        x: {},
-        y: { beginAtZero: true, ticks: unit ? { callback: (v) => v + unit } : undefined, grid: { display: false } },
+        x: { grid: { display: false } },
+        y: { beginAtZero: true, ticks: unit ? { callback: (v) => v + unit } : undefined },
       },
     },
     plugins: [pastWeeksShadingPlugin(splitIndex)],
