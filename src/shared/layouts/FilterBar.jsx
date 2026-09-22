@@ -65,7 +65,7 @@ export default function FilterBar() {
                   <MultiSelectDropdown options={QUARTERS} selected={ccoFilters.quarter} onChange={(v) => setCcoFilter('quarter', v)} />
                 </div>
                 <div className="filter-group">
-                  <label>Fiscal Week (52 Weeks Total)</label>
+                  <label>Fiscal Week</label>
                   <MultiSelectDropdown options={weeksForQuarters(ccoFilters.quarter)} selected={ccoFilters.week} onChange={(v) => setCcoFilter('week', v)} allLabel="All Weeks" />
                 </div>
                 <div className="filter-group">
@@ -86,7 +86,7 @@ export default function FilterBar() {
                   <MultiSelectDropdown options={QUARTERS} selected={outageFilters.quarter} onChange={(v) => setOutageFilter('quarter', v)} />
                 </div>
                 <div className="filter-group">
-                  <label>Fiscal Week (52 Weeks Total)</label>
+                  <label>Fiscal Week</label>
                   <MultiSelectDropdown options={weeksForQuarters(outageFilters.quarter)} selected={outageFilters.week} onChange={(v) => setOutageFilter('week', v)} allLabel="All Weeks" />
                 </div>
                 <div className="filter-group">
