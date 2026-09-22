@@ -19,7 +19,8 @@ export function issueTypeBarConfig(labels, actual, unit = '', colors = DEFAULT_C
       scales: {
         x: { ticks: { maxRotation: 45, minRotation: 45, font: { size: 10 } } },
         // Grace headroom keeps the tallest bar's data label clear of the card edge.
-        y: { beginAtZero: true, grace: '15%' },
+        // Horizontal gridlines off — only the vertical (x-axis) lines are kept.
+        y: { beginAtZero: true, grace: '15%', grid: { display: false } },
       },
     },
   }
@@ -35,7 +36,7 @@ export function stackedBarConfig(labels, datasets, unit = '') {
       responsive: true,
       maintainAspectRatio: false,
       plugins: LEGEND_BOTTOM,
-      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, grace: '15%' } },
+      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, grace: '15%', grid: { display: false } } },
     },
   }
 }
@@ -81,7 +82,7 @@ export function waterfallConfig(steps, colors) {
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { stacked: true, grid: { display: false } },
+        x: { stacked: true },
         // Headroom (grace) keeps the topmost bar's label clear of the card edge;
         // the axis itself is hidden since only the % labels above each bar matter here.
         y: { stacked: true, display: false, grace: '25%' },
@@ -141,8 +142,8 @@ export function trendLineConfig(weeks, series, colors, opts = {}) {
       maintainAspectRatio: false,
       plugins: { legend: { position: 'bottom', align: 'center', labels: { boxWidth: 10, font: { size: 10 } } } },
       scales: {
-        x: { grid: { display: false } },
-        y: { beginAtZero: true, ticks: unit ? { callback: (v) => v + unit } : undefined },
+        x: {},
+        y: { beginAtZero: true, ticks: unit ? { callback: (v) => v + unit } : undefined, grid: { display: false } },
       },
     },
     plugins: [pastWeeksShadingPlugin(splitIndex)],
