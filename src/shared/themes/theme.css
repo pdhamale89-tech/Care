@@ -310,12 +310,9 @@ body {
 [data-theme="dark"] .kpi-value.tone-g { color: var(--dds-green-30); }
 .kpi-value.tone-r { color: var(--dds-red-70); }
 [data-theme="dark"] .kpi-value.tone-r { color: var(--dds-red-30); }
-.kpi-value.tone-y { color: var(--dds-yellow-80); }
-[data-theme="dark"] .kpi-value.tone-y { color: var(--dds-yellow-30); }
-.kpi-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
 @media (max-width: 1200px) { .kpi-grid.cols-7 { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 1024px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } .kpi-grid.cols-7 { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 640px) { .kpi-grid { grid-template-columns: 1fr; } .kpi-grid.cols-7 { grid-template-columns: 1fr; } .kpi-grid.cols-3 { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .kpi-grid { grid-template-columns: 1fr; } .kpi-grid.cols-7 { grid-template-columns: 1fr; } }
 
 /* ===== Outage adherence % tones ===== */
 .outage-pct-bad { color: var(--dds-red-70); font-weight: 500; }
@@ -352,8 +349,6 @@ tr.group-row td { background: var(--table-header); font-weight: 700; color: var(
 .badge-mini { height: var(--dds-badge-h-mini); font-size: .625rem; padding: 0 .4rem; }
 .badge.pos { background: var(--dds-green-10); color: var(--dds-green-70); }
 .badge.neg { background: var(--dds-red-10); color: var(--dds-red-70); }
-.badge.warn { background: var(--dds-yellow-10); color: var(--dds-yellow-80); }
-[data-theme="dark"] .badge.warn { background: rgba(255,174,0,.16); color: var(--dds-yellow-30); }
 .status-pill { height: var(--dds-badge-h-md); padding: 0 .65rem; border-radius: 999px; font-size: .75rem; font-weight: 500; display: inline-flex; align-items: center; white-space: nowrap; }
 .status-pill.available { background: var(--dds-green-10); color: var(--dds-green-70); }
 .status-pill.unplanned { background: var(--dds-red-10); color: var(--dds-red-70); }

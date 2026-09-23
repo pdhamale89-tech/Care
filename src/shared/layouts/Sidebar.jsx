@@ -19,7 +19,6 @@ const NAV_SECTIONS = [
     label: 'Planning',
     items: [
       { id: 'whatIf', label: 'What-If Simulator', icon: 'calculator' },
-      { id: 'whatIfAdvanced', label: 'What-If Simulator (Advanced)', icon: 'calculator' },
     ],
   },
   {
