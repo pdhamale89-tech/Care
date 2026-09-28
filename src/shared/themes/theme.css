@@ -302,6 +302,12 @@ body {
 .kpi-card.clickable:hover { box-shadow: var(--dds-elevation-2); }
 .kpi-label { font-size: .8125rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 4px; }
 .kpi-value { font-size: 1.75rem; line-height: 2.25rem; font-weight: 300; letter-spacing: -.2px; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+.kpi-value-arrow { font-size: 1.125rem; font-weight: 400; color: var(--text-muted); }
+.kpi-value-new { font-size: 1.125rem; font-weight: 500; }
+.kpi-value-new.tone-g { color: var(--dds-green-70); }
+[data-theme="dark"] .kpi-value-new.tone-g { color: var(--dds-green-30); }
+.kpi-value-new.tone-r { color: var(--dds-red-70); }
+[data-theme="dark"] .kpi-value-new.tone-r { color: var(--dds-red-30); }
 .kpi-sub { font-size: .75rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
 .kpi-sub + .kpi-sub { margin-top: 2px; }
 .kpi-delta { font-weight: 500; display: inline-flex; align-items: center; gap: 3px; }

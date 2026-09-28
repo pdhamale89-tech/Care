@@ -247,7 +247,15 @@ export default function WhatIfSimulator() {
         {SCENARIO_METRICS.map((m) => (
           <div className="kpi-card" key={m.key}>
             <div className="kpi-label">{m.label}</div>
-            <div className="kpi-value">{fmt(scenario[m.key])}{m.unit}</div>
+            <div className="kpi-value">
+              {fmt(baseline[m.key])}{m.unit}
+              {changePct[m.key] !== 0 && (
+                <>
+                  {' '}<span className="kpi-value-arrow">→</span>{' '}
+                  <span className={'kpi-value-new ' + (changePct[m.key] >= 0 ? 'tone-g' : 'tone-r')}>{fmt(scenario[m.key])}{m.unit}</span>
+                </>
+              )}
+            </div>
             <div className="kpi-sub">Baseline: {fmt(baseline[m.key])}{m.unit}</div>
             <div className={'kpi-sub kpi-delta ' + (changePct[m.key] >= 0 ? 'up' : 'down')}>{changePct[m.key] >= 0 ? '▲' : '▼'} {Math.abs(changePct[m.key])}% change</div>
           </div>
