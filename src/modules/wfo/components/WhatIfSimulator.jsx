@@ -49,14 +49,18 @@ export default function WhatIfSimulator() {
     () => hashSeed(subRegion.join(',') + quarter.join(',') + week.join(',') + classification.join(',') + activeRegions.join(',') + ccoView),
     [subRegion, quarter, week, classification, activeRegions, ccoView],
   )
+  // Baseline always uses the most recent period within the active filter selection
+  // (e.g. FQ4 / the last filtered week) — surfaced to the user via activePeriodLabel below
+  // so "Projected Impact" doesn't read as a fixed/static period.
+  const periods = useMemo(() => getPeriodsForView(ccoView, quarter, week), [ccoView, quarter, week])
+  const activePeriodLabel = periods[periods.length - 1]
   const baseline = useMemo(() => {
-    const periods = getPeriodsForView(ccoView, quarter, week)
     const li = periods.length - 1
     return Object.fromEntries(SCENARIO_METRICS.map((m, mi) => {
       const { actual } = genKpiValue(m.base, seed + li * 7 + mi * 3, m.decimals)
       return [m.key, actual]
     }))
-  }, [seed, ccoView, quarter, week])
+  }, [seed, periods])
 
   const scenario = useMemo(() => Object.fromEntries(SCENARIO_METRICS.map((m) => {
     const factor = Math.pow(10, m.decimals)
@@ -129,6 +133,7 @@ export default function WhatIfSimulator() {
 
       <div className="section-div">
         <h2>Projected Impact</h2>
+        <p>Note: baseline values reflect <strong>{activePeriodLabel}</strong> — the most recent {ccoView === 'weekly' ? 'week' : 'quarter'} in your current filter selection. Adjust the Fiscal Quarter/Week filters above to simulate a different period.</p>
       </div>
       <div className="kpi-grid">
         {SCENARIO_METRICS.map((m) => (
