@@ -31,6 +31,13 @@ export default function FilterBar() {
   const isOutage = currentTab === 'outage'
   const isEpicenter = currentTab === 'epiHc'
 
+  const regionFilter = (
+    <div className="filter-group">
+      <label>Region</label>
+      <MultiSelectDropdown options={REGIONS} selected={activeRegions} onChange={setActiveRegions} />
+    </div>
+  )
+
   return (
     <div className="filter-panel">
       <div className="filter-panel-head">
@@ -50,17 +57,10 @@ export default function FilterBar() {
       {expanded && (
         <>
           <div className="filter-grid">
-            <div className="filter-group">
-              <label>Region</label>
-              <MultiSelectDropdown options={REGIONS} selected={activeRegions} onChange={setActiveRegions} />
-            </div>
+            {!isCco && regionFilter}
 
             {isCco && (
               <>
-                <div className="filter-group">
-                  <label>Sub Region / Country</label>
-                  <MultiSelectDropdown options={countries} selected={ccoFilters.subRegion} onChange={(v) => setCcoFilter('subRegion', v)} />
-                </div>
                 <div className="filter-group">
                   <label>Fiscal Year</label>
                   <MultiSelectDropdown options={FISCAL_YEARS} selected={ccoFilters.fiscalYear} onChange={(v) => setCcoFilter('fiscalYear', v)} />
@@ -72,6 +72,11 @@ export default function FilterBar() {
                 <div className="filter-group">
                   <label>Fiscal Week</label>
                   <MultiSelectDropdown options={weeksForQuarters(ccoFilters.quarter)} selected={ccoFilters.week} onChange={(v) => setCcoFilter('week', v)} allLabel="All Weeks" />
+                </div>
+                {regionFilter}
+                <div className="filter-group">
+                  <label>Sub Region / Country</label>
+                  <MultiSelectDropdown options={countries} selected={ccoFilters.subRegion} onChange={(v) => setCcoFilter('subRegion', v)} />
                 </div>
                 <div className="filter-group">
                   <label>Classification</label>
