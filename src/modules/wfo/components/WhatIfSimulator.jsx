@@ -37,9 +37,9 @@ function clamp(n, min, max) {
 }
 
 export default function WhatIfSimulator() {
-  const { theme, activeRegions, ccoFilters, ccoView } = useApp()
+  const { theme, activeRegions, whatIfFilters, ccoView } = useApp()
   const colors = getColors(theme)
-  const { subRegion, quarter, week, classification, fiscalYear } = ccoFilters
+  const { subRegion, quarter, week, classification, fiscalYear } = whatIfFilters
 
   const [changePct, setChangePct] = useState(DEFAULT_CHANGES)
   const [planQuarter, setPlanQuarter] = useState(QUARTERS[0])

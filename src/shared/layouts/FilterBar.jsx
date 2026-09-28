@@ -18,7 +18,7 @@ function weeksForQuarters(quarters) {
 export default function FilterBar() {
   const {
     currentTab, showFilters, activeRegions, setActiveRegions,
-    ccoFilters, setCcoFilter, ccoView, setCcoView, outageFilters, setOutageFilter,
+    ccoFilters, setCcoFilter, whatIfFilters, setWhatIfFilter, ccoView, setCcoView, outageFilters, setOutageFilter,
     epicenterFilters, setEpicenterFilter,
     clearFilters,
   } = useApp()
@@ -27,9 +27,14 @@ export default function FilterBar() {
   if (!showFilters) return null
 
   const countries = countriesForRegions(activeRegions)
-  const isCco = currentTab === 'cco' || currentTab === 'whatIf'
+  const isWhatIf = currentTab === 'whatIf'
+  const isCco = currentTab === 'cco' || isWhatIf
   const isOutage = currentTab === 'outage'
   const isEpicenter = currentTab === 'epiHc'
+  // CCO Overview and What-If Simulator show the same filter set (Fiscal Year/Quarter/Week,
+  // Region, Sub Region, Classification) but each keeps its own independent selections.
+  const activeFilters = isWhatIf ? whatIfFilters : ccoFilters
+  const setActiveFilter = isWhatIf ? setWhatIfFilter : setCcoFilter
 
   const regionFilter = (
     <div className="filter-group">
@@ -63,24 +68,24 @@ export default function FilterBar() {
               <>
                 <div className="filter-group">
                   <label>Fiscal Year</label>
-                  <MultiSelectDropdown options={FISCAL_YEARS} selected={ccoFilters.fiscalYear} onChange={(v) => setCcoFilter('fiscalYear', v)} />
+                  <MultiSelectDropdown options={FISCAL_YEARS} selected={activeFilters.fiscalYear} onChange={(v) => setActiveFilter('fiscalYear', v)} />
                 </div>
                 <div className="filter-group">
                   <label>Fiscal Quarter</label>
-                  <MultiSelectDropdown options={QUARTERS} selected={ccoFilters.quarter} onChange={(v) => setCcoFilter('quarter', v)} />
+                  <MultiSelectDropdown options={QUARTERS} selected={activeFilters.quarter} onChange={(v) => setActiveFilter('quarter', v)} />
                 </div>
                 <div className="filter-group">
                   <label>Fiscal Week</label>
-                  <MultiSelectDropdown options={weeksForQuarters(ccoFilters.quarter)} selected={ccoFilters.week} onChange={(v) => setCcoFilter('week', v)} allLabel="All Weeks" />
+                  <MultiSelectDropdown options={weeksForQuarters(activeFilters.quarter)} selected={activeFilters.week} onChange={(v) => setActiveFilter('week', v)} allLabel="All Weeks" />
                 </div>
                 {regionFilter}
                 <div className="filter-group">
                   <label>Sub Region / Country</label>
-                  <MultiSelectDropdown options={countries} selected={ccoFilters.subRegion} onChange={(v) => setCcoFilter('subRegion', v)} />
+                  <MultiSelectDropdown options={countries} selected={activeFilters.subRegion} onChange={(v) => setActiveFilter('subRegion', v)} />
                 </div>
                 <div className="filter-group">
                   <label>Classification</label>
-                  <MultiSelectDropdown options={CLASSIFICATIONS} selected={ccoFilters.classification} onChange={(v) => setCcoFilter('classification', v)} />
+                  <MultiSelectDropdown options={CLASSIFICATIONS} selected={activeFilters.classification} onChange={(v) => setActiveFilter('classification', v)} />
                 </div>
               </>
             )}

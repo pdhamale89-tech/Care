@@ -30,6 +30,7 @@ export function AppProvider({ children }) {
   const [activeRegions, setActiveRegionsState] = useState(['All'])
 
   const [ccoFilters, setCcoFilters] = useState(CCO_FILTERS_DEFAULT)
+  const [whatIfFilters, setWhatIfFilters] = useState(CCO_FILTERS_DEFAULT)
   const [ccoView, setCcoView] = useState('weekly')
   const [outageFilters, setOutageFilters] = useState(OUTAGE_FILTERS_DEFAULT)
   const [epicenterFilters, setEpicenterFilters] = useState(EPICENTER_FILTERS_DEFAULT)
@@ -53,11 +54,15 @@ export function AppProvider({ children }) {
   const setActiveRegions = useCallback((regions) => {
     setActiveRegionsState(regions)
     setCcoFilters((prev) => ({ ...prev, subRegion: ['All'] }))
+    setWhatIfFilters((prev) => ({ ...prev, subRegion: ['All'] }))
     setOutageFilters((prev) => ({ ...prev, country: ['All'] }))
   }, [])
 
   const setCcoFilter = useCallback((key, value) => {
     setCcoFilters((prev) => ({ ...prev, [key]: value, ...(key === 'quarter' ? { week: ['All'] } : {}) }))
+  }, [])
+  const setWhatIfFilter = useCallback((key, value) => {
+    setWhatIfFilters((prev) => ({ ...prev, [key]: value, ...(key === 'quarter' ? { week: ['All'] } : {}) }))
   }, [])
   const setOutageFilter = useCallback((key, value) => {
     setOutageFilters((prev) => ({ ...prev, [key]: value, ...(key === 'quarter' ? { week: ['All'] } : {}) }))
@@ -67,7 +72,8 @@ export function AppProvider({ children }) {
   }, [])
 
   const clearFilters = useCallback(() => {
-    if (currentTab === 'cco' || currentTab === 'whatIf') { setCcoFilters(CCO_FILTERS_DEFAULT); setCcoView('weekly') }
+    if (currentTab === 'cco') { setCcoFilters(CCO_FILTERS_DEFAULT); setCcoView('weekly') }
+    else if (currentTab === 'whatIf') { setWhatIfFilters(CCO_FILTERS_DEFAULT); setCcoView('weekly') }
     else if (currentTab === 'outage') setOutageFilters(OUTAGE_FILTERS_DEFAULT)
     else if (currentTab === 'epiHc') setEpicenterFilters(EPICENTER_FILTERS_DEFAULT)
   }, [currentTab])
@@ -82,7 +88,7 @@ export function AppProvider({ children }) {
     sidenavOpen, toggleSidenav,
     currentTab, navTo, breadcrumb, showFilters,
     activeRegions, setActiveRegions,
-    ccoFilters, setCcoFilter, ccoView, setCcoView,
+    ccoFilters, setCcoFilter, whatIfFilters, setWhatIfFilter, ccoView, setCcoView,
     outageFilters, setOutageFilter,
     epicenterFilters, setEpicenterFilter,
     clearFilters,
@@ -90,7 +96,7 @@ export function AppProvider({ children }) {
   }), [
     theme, toggleTheme, lastUpdated, sidenavOpen, toggleSidenav, currentTab, navTo, breadcrumb, showFilters,
     activeRegions, setActiveRegions,
-    ccoFilters, setCcoFilter, ccoView, outageFilters, setOutageFilter,
+    ccoFilters, setCcoFilter, whatIfFilters, setWhatIfFilter, ccoView, outageFilters, setOutageFilter,
     epicenterFilters, setEpicenterFilter,
     clearFilters, toast, showToast,
   ])
