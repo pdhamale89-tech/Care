@@ -5,7 +5,6 @@ import { fmt, genKpiValue, hashSeed, getWeeksForQuarter } from '../lib/mockGener
 import { getColors } from '../../../shared/themes/colors.js'
 import { barDataLabels } from '../lib/datalabels.js'
 import InfoBtn from '../../../shared/components/InfoBtn.jsx'
-import Icon from '../../../shared/components/Icon.jsx'
 
 const QUARTERS = ['FQ1', 'FQ2', 'FQ3', 'FQ4']
 
@@ -128,8 +127,6 @@ export default function WhatIfSimulator() {
     }
   }, [changePct, colors])
 
-  const changedMetrics = SCENARIO_METRICS.filter((m) => changePct[m.key] !== 0)
-
   return (
     <div className="tab-panel active">
       <div className="section-div">
@@ -186,23 +183,6 @@ export default function WhatIfSimulator() {
             </table>
           </div>
         )}
-      </div>
-
-      <div className="ai-story">
-        <div className="ai-icon-box"><Icon name="calculator" size={18} /></div>
-        <div>
-          <div className="ai-story-title">Scenario Summary</div>
-          <div className="ai-story-text">
-            {changedMetrics.length === 0
-              ? 'No scenario changes applied — every value below reflects the live baseline from CCO Overview.'
-              : <>You've adjusted {changedMetrics.map((m, i) => (
-                <span key={m.key}>
-                  {i > 0 && ', '}
-                  <strong>{m.label} {changePct[m.key] >= 0 ? '+' : ''}{changePct[m.key]}%</strong>
-                </span>
-              ))} — see the projected value for each metric below.</>}
-          </div>
-        </div>
       </div>
 
       <div className="section-div">
