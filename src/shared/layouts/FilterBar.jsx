@@ -4,6 +4,7 @@ import { countriesForRegions, managers, getWeeksForQuarter, REGIONS, vendors, we
 import MultiSelectDropdown from '../components/MultiSelectDropdown.jsx'
 import Icon from '../components/Icon.jsx'
 
+const FISCAL_YEARS = ['FY26', 'FY27', 'FY28']
 const QUARTERS = ['FQ1', 'FQ2', 'FQ3', 'FQ4']
 const CLASSIFICATIONS = ['FED', 'Global Sales', 'Consumer']
 const STATUSES = ['Available', 'Unplanned Outage', 'Scheduled Off']
@@ -59,6 +60,10 @@ export default function FilterBar() {
                 <div className="filter-group">
                   <label>Sub Region / Country</label>
                   <MultiSelectDropdown options={countries} selected={ccoFilters.subRegion} onChange={(v) => setCcoFilter('subRegion', v)} />
+                </div>
+                <div className="filter-group">
+                  <label>Fiscal Year</label>
+                  <MultiSelectDropdown options={FISCAL_YEARS} selected={ccoFilters.fiscalYear} onChange={(v) => setCcoFilter('fiscalYear', v)} />
                 </div>
                 <div className="filter-group">
                   <label>Fiscal Quarter</label>

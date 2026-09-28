@@ -168,7 +168,7 @@ export default function CcoDashboard({ view }) {
   const { theme, activeRegions, ccoFilters } = useApp()
   const colors = getColors(theme)
   const cfg = VIEW_CONFIG[view]
-  const { subRegion, quarter, week, classification } = ccoFilters
+  const { subRegion, quarter, week, classification, fiscalYear } = ccoFilters
   const [slaModalOpen, setSlaModalOpen] = useState(false)
   const [slaChannelFilterSel, setSlaChannelFilterSel] = useState('All')
   const [channelModalKey, setChannelModalKey] = useState(null)
@@ -181,8 +181,8 @@ export default function CcoDashboard({ view }) {
   const [weeklyPlanRegion, setWeeklyPlanRegion] = useState(REGIONS[0])
 
   const seed = useMemo(
-    () => hashSeed(subRegion.join(',') + quarter.join(',') + week.join(',') + classification.join(',') + activeRegions.join(',') + view),
-    [subRegion, quarter, week, classification, activeRegions, view],
+    () => hashSeed(subRegion.join(',') + quarter.join(',') + week.join(',') + classification.join(',') + activeRegions.join(',') + view + fiscalYear.join(',')),
+    [subRegion, quarter, week, classification, activeRegions, view, fiscalYear],
   )
   const periods = useMemo(() => getPeriodsForView(view, quarter, week), [view, quarter, week])
 

@@ -38,7 +38,7 @@ function clamp(n, min, max) {
 export default function WhatIfSimulator() {
   const { theme, activeRegions, ccoFilters, ccoView } = useApp()
   const colors = getColors(theme)
-  const { subRegion, quarter, week, classification } = ccoFilters
+  const { subRegion, quarter, week, classification, fiscalYear } = ccoFilters
 
   const [changePct, setChangePct] = useState(DEFAULT_CHANGES)
 
@@ -60,8 +60,8 @@ export default function WhatIfSimulator() {
   // Baseline — pulled live from the same generation formula CCO Overview uses,
   // so this simulation is grounded in the numbers actually shown there.
   const seed = useMemo(
-    () => hashSeed(subRegion.join(',') + quarter.join(',') + week.join(',') + classification.join(',') + activeRegions.join(',') + ccoView),
-    [subRegion, quarter, week, classification, activeRegions, ccoView],
+    () => hashSeed(subRegion.join(',') + quarter.join(',') + week.join(',') + classification.join(',') + activeRegions.join(',') + ccoView + fiscalYear.join(',')),
+    [subRegion, quarter, week, classification, activeRegions, ccoView, fiscalYear],
   )
   // Baseline always uses the most recent period within the active filter selection
   // (e.g. FQ4 / the last filtered week) — surfaced to the user via activePeriodLabel below

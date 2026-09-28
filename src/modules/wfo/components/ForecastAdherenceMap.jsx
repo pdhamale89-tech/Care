@@ -33,7 +33,7 @@ export default function ForecastAdherenceMap() {
   const colors = getColors(theme)
 
   const seed = useMemo(
-    () => hashSeed(ccoFilters.subRegion.join(',') + ccoFilters.quarter.join(',') + ccoFilters.week.join(',') + ccoView + 'overallSlaMap'),
+    () => hashSeed(ccoFilters.subRegion.join(',') + ccoFilters.quarter.join(',') + ccoFilters.week.join(',') + ccoView + 'overallSlaMap' + ccoFilters.fiscalYear.join(',')),
     [ccoFilters, ccoView],
   )
   const { regionAcc, subregionAcc } = useMemo(() => computeAccuracy(seed), [seed])

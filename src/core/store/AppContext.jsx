@@ -18,7 +18,7 @@ const BREADCRUMBS = {
   settings: 'System › Settings',
 }
 
-const CCO_FILTERS_DEFAULT = { subRegion: ['All'], quarter: ['All'], week: ['All'], classification: ['All'] }
+const CCO_FILTERS_DEFAULT = { subRegion: ['All'], quarter: ['All'], week: ['All'], classification: ['All'], fiscalYear: ['All'] }
 const OUTAGE_FILTERS_DEFAULT = { country: ['All'], quarter: ['All'], week: ['All'], manager: ['All'], status: ['All'], search: '' }
 const EPICENTER_FILTERS_DEFAULT = { weekEnding: ['All'], vendor: ['All'], manager: ['All'], dbOsp: ['All'] }
 
