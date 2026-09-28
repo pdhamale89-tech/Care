@@ -22,6 +22,7 @@ const PAGE_META = {
   whatIf: { title: 'What-If Simulator', description: 'Staffing, hiring plan, sourcing mix, and backlog scenarios in one place.' },
   reports: { title: 'Reports', description: 'Linked reporting shortcuts for voice queue, agent and Genesys skill data.' },
   fiscalCalendar: { title: 'Fiscal Calendar', description: 'Fiscal year weeks, quarters and holiday schedule for planning.' },
+  glossary: { title: 'Glossary', description: 'Metric definitions and formulas used across the dashboard.' },
 }
 
 function TabRouter() {
