@@ -7,6 +7,8 @@ import { barDataLabels } from '../lib/datalabels.js'
 import InfoBtn from '../../../shared/components/InfoBtn.jsx'
 import Icon from '../../../shared/components/Icon.jsx'
 
+const QUARTERS = ['FQ1', 'FQ2', 'FQ3', 'FQ4']
+
 const SCENARIO_METRICS = [
   { key: 'volume', label: 'Volume', base: 2200, unit: '', decimals: 0 },
   { key: 'caseRate', label: 'Case Rate', base: 12.5, unit: '%', decimals: 1 },
@@ -41,6 +43,9 @@ export default function WhatIfSimulator() {
   const { subRegion, quarter, week, classification, fiscalYear } = ccoFilters
 
   const [changePct, setChangePct] = useState(DEFAULT_CHANGES)
+  const [planQuarter, setPlanQuarter] = useState(QUARTERS[0])
+  const [planWeek, setPlanWeek] = useState('All')
+  const [planSnapshot, setPlanSnapshot] = useState(null)
 
   function setChange(key, value) {
     setChangePct((prev) => ({ ...prev, [key]: value }))
@@ -55,6 +60,24 @@ export default function WhatIfSimulator() {
   }
   function reset() {
     setChangePct(DEFAULT_CHANGES)
+  }
+
+  // Plan Snapshot — a separate, explicitly-submitted lookup of a specific Plan
+  // Quarter/Week's baseline, pulled via the same deterministic generation formula
+  // as everything else (not a new data source), so it can be compared against the
+  // current live scenario below. Deliberately deferred behind Submit rather than
+  // recomputing live, since picking a plan period is a one-off lookup, not a
+  // continuously-adjusted input like the sliders above.
+  function handleSubmitPlan() {
+    const planWeeksArr = planWeek === 'All' ? ['All'] : [planWeek]
+    const planPeriods = getPeriodsForView(ccoView, [planQuarter], planWeeksArr)
+    const planLi = planPeriods.length - 1
+    const planSeed = hashSeed(subRegion.join(',') + [planQuarter].join(',') + planWeeksArr.join(',') + classification.join(',') + activeRegions.join(',') + ccoView + fiscalYear.join(','))
+    const values = Object.fromEntries(SCENARIO_METRICS.map((m, mi) => {
+      const { actual } = genKpiValue(m.base, planSeed + planLi * 7 + mi * 3, m.decimals)
+      return [m.key, actual]
+    }))
+    setPlanSnapshot({ label: planQuarter + (planWeek === 'All' ? ' (Full Quarter)' : ' / ' + planWeek), values })
   }
 
   // Baseline — pulled live from the same generation formula CCO Overview uses,
@@ -109,6 +132,62 @@ export default function WhatIfSimulator() {
 
   return (
     <div className="tab-panel active">
+      <div className="section-div">
+        <h2>
+          Plan Snapshot <InfoBtn tip="<strong>Purpose</strong>Pick a specific Plan Quarter/Week to pull that period's baseline as a fixed reference point, independent of the main Fiscal Quarter/Week filters above. Submit to fetch it, then compare against your current scenario below." />
+        </h2>
+      </div>
+      <div className="card">
+        <div className="filter-grid">
+          <div className="filter-group">
+            <label>Plan Quarter</label>
+            <select value={planQuarter} onChange={(e) => { setPlanQuarter(e.target.value); setPlanWeek('All') }}>
+              {QUARTERS.map((q) => <option key={q} value={q}>{q}</option>)}
+            </select>
+          </div>
+          <div className="filter-group">
+            <label>Plan Week</label>
+            <select value={planWeek} onChange={(e) => setPlanWeek(e.target.value)}>
+              <option value="All">Full Quarter</option>
+              {getWeeksForQuarter(planQuarter).map((w) => <option key={w} value={w}>{w}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="filter-clear-row">
+          <button type="button" className="btn btn-sm btn-primary" onClick={handleSubmitPlan}>Submit</button>
+        </div>
+
+        {planSnapshot && (
+          <div className="tw" style={{ marginTop: 14 }}>
+            <table>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left' }}>Metric</th>
+                  <th>Plan ({planSnapshot.label})</th>
+                  <th>Current Scenario</th>
+                  <th>Variance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {SCENARIO_METRICS.map((m) => {
+                  const planVal = planSnapshot.values[m.key]
+                  const curVal = scenario[m.key]
+                  const variance = curVal - planVal
+                  return (
+                    <tr key={m.key}>
+                      <td style={{ textAlign: 'left' }}>{m.label}</td>
+                      <td>{fmt(planVal)}{m.unit}</td>
+                      <td>{fmt(curVal)}{m.unit}</td>
+                      <td className={variance >= 0 ? 'tbl-pos' : 'tbl-neg'}>{variance >= 0 ? '+' : ''}{fmt(variance)}{m.unit}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       <div className="ai-story">
         <div className="ai-icon-box"><Icon name="calculator" size={18} /></div>
         <div>
