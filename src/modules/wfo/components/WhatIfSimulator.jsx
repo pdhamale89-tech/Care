@@ -28,6 +28,12 @@ function getPeriodsForView(view, quarters, weeks) {
 }
 
 const DEFAULT_CHANGES = Object.fromEntries(SCENARIO_METRICS.map((m) => [m.key, 0]))
+const CHANGE_MIN = -30
+const CHANGE_MAX = 50
+
+function clamp(n, min, max) {
+  return Math.min(max, Math.max(min, n))
+}
 
 export default function WhatIfSimulator() {
   const { theme, activeRegions, ccoFilters, ccoView } = useApp()
@@ -38,6 +44,14 @@ export default function WhatIfSimulator() {
 
   function setChange(key, value) {
     setChangePct((prev) => ({ ...prev, [key]: value }))
+  }
+  function handleTypedChange(key, raw) {
+    // Let the user keep typing (empty string, a lone "-") without snapping the field
+    // back to the last committed value — only commit once it parses to a real number.
+    if (raw === '' || raw === '-') return
+    const num = Number(raw)
+    if (Number.isNaN(num)) return
+    setChange(key, clamp(num, CHANGE_MIN, CHANGE_MAX))
   }
   function reset() {
     setChangePct(DEFAULT_CHANGES)
@@ -121,8 +135,23 @@ export default function WhatIfSimulator() {
         <div className="wis-grid">
           {SCENARIO_METRICS.map((m) => (
             <div className="wis-control" key={m.key}>
-              <div className="wis-control-head"><span>{m.label} Change</span><b>{changePct[m.key] >= 0 ? '+' : ''}{changePct[m.key]}%</b></div>
-              <input type="range" min={-30} max={50} step={5} value={changePct[m.key]} onChange={(e) => setChange(m.key, Number(e.target.value))} />
+              <div className="wis-control-head">
+                <span>{m.label} Change</span>
+                <span className="wis-num-wrap">
+                  <input
+                    type="number"
+                    className="wis-num-input"
+                    min={CHANGE_MIN}
+                    max={CHANGE_MAX}
+                    step={5}
+                    value={changePct[m.key]}
+                    onChange={(e) => handleTypedChange(m.key, e.target.value)}
+                    onBlur={(e) => { e.target.value = String(changePct[m.key]) }}
+                    aria-label={m.label + ' change percent'}
+                  />%
+                </span>
+              </div>
+              <input type="range" min={CHANGE_MIN} max={CHANGE_MAX} step={5} value={changePct[m.key]} onChange={(e) => setChange(m.key, Number(e.target.value))} />
             </div>
           ))}
         </div>

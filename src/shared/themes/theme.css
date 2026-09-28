@@ -199,6 +199,14 @@ body {
 .wis-control { display: flex; flex-direction: column; gap: 6px; }
 .wis-control-head { display: flex; align-items: center; justify-content: space-between; font-size: .75rem; color: var(--text-secondary); }
 .wis-control-head b { color: var(--text-primary); font-size: .8125rem; }
+.wis-num-wrap { display: flex; align-items: center; gap: 3px; color: var(--text-primary); font-size: .8125rem; font-weight: 500; }
+.wis-num-input {
+  width: 44px; text-align: right; font: inherit; color: var(--text-primary); font-weight: 500;
+  background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: var(--dds-radius-sm);
+  padding: 1px 4px; font-variant-numeric: tabular-nums;
+}
+.wis-num-input:focus { outline: none; border-color: var(--dds-blue-60); box-shadow: 0 0 0 2px rgba(6,114,203,.15); }
+.wis-num-input::-webkit-inner-spin-button, .wis-num-input::-webkit-outer-spin-button { margin-left: 2px; }
 .wis-control input[type="range"] { width: 100%; accent-color: var(--dds-blue-60); cursor: pointer; }
 .clear-all-btn { height: var(--dds-button-h-sm); font-size: .75rem; font-weight: 500; color: var(--dds-red-70); background: transparent; border: 1px solid var(--dds-red-60); border-radius: var(--dds-radius-sm); padding: 1px var(--dds-spacing-md); cursor: pointer; white-space: nowrap; font-family: inherit; }
 .clear-all-btn:hover { background: var(--dds-red-10); }
