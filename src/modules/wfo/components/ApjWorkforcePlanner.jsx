@@ -1,17 +1,19 @@
 import { useMemo, useState } from 'react'
 import { Bar, Line } from 'react-chartjs-2'
+import { useApp } from '../../../core/hooks/useApp.js'
+import { getColors } from '../../../shared/themes/colors.js'
 import {
   APJ_COUNTRIES, defaultStartQuarter, getQuarters,
   buildDummyData, ensureQuarters, calcAllCountries, f0, f1, f2, fp,
 } from '../lib/apjWorkforceData.js'
-import './ApjWorkforcePlanner.css'
+import InfoBtn from '../../../shared/components/InfoBtn.jsx'
 
 // Ported from a standalone reference tool ("APJ Workforce Planner") supplied as a
-// finished HTML file, kept visually as-is (its own Dell navy/blue theme, scoped under
-// .apj-wfp so it can never collide with Care's own theme.css). The Excel import/export
-// machinery from that source tool is intentionally left out per request — this seeds the
-// same data shape with fixed dummy numbers (src/modules/wfo/lib/apjWorkforceData.js)
-// instead of requiring an uploaded file, so every screen works with no import step.
+// finished HTML file, restyled to match Care's own DDS look (cards/kpi-grid/tabs/tables)
+// instead of the source tool's own Dell navy/blue theme, per request. The Excel
+// import/export machinery from that source tool is left out — this seeds the same data
+// shape with fixed dummy numbers (src/modules/wfo/lib/apjWorkforceData.js) instead of
+// requiring an uploaded file, so every screen works with no import step.
 
 function safeNumber(raw) {
   if (raw === '' || raw === '-' || /\.$/.test(raw)) return undefined
@@ -19,43 +21,16 @@ function safeNumber(raw) {
   return Number.isNaN(n) ? undefined : n
 }
 
-function QuarterBar({ quarters, selQ, onSelect }) {
+function PickerTabs({ options, value, onChange, ariaLabel }) {
   return (
-    <div className="apj-qbar">
-      <span className="apj-ql">Quarter:</span>
-      {quarters.map((q, i) => (
-        <button key={q.key} type="button" className={'apj-qp' + (i === selQ ? ' on' : '')} onClick={() => onSelect(i)}>
-          {q.q}<span className="apj-qs">{q.fy}</span>
+    <div className="tabs" role="tablist" aria-label={ariaLabel} style={{ marginBottom: 14 }}>
+      {options.map((opt) => (
+        <button key={opt.value} type="button" role="tab" aria-selected={value === opt.value} className="tab" onClick={() => onChange(opt.value)}>
+          {opt.label}
         </button>
       ))}
     </div>
   )
-}
-
-function RegionBar({ selReg, onSelect }) {
-  return (
-    <div className="apj-qbar">
-      <span className="apj-ql">Region:</span>
-      <button type="button" className={'apj-qp' + (selReg === 'ALL' ? ' on' : '')} onClick={() => onSelect('ALL')}>APJ Total</button>
-      {APJ_COUNTRIES.map((c) => (
-        <button key={c.id} type="button" className={'apj-qp' + (selReg === c.id ? ' on' : '')} onClick={() => onSelect(c.id)}>{c.name}</button>
-      ))}
-    </div>
-  )
-}
-
-const CHART_OPT_BASE = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: { legend: { display: false, labels: { font: { family: 'Arial' } } } },
-  scales: {
-    y: { beginAtZero: true, ticks: { font: { family: 'Arial', size: 10 } } },
-    x: { ticks: { font: { family: 'Arial', size: 10 } } },
-  },
-}
-const CHART_OPT_LEGEND = {
-  ...CHART_OPT_BASE,
-  plugins: { legend: { position: 'top', labels: { font: { family: 'Arial', size: 10, weight: 'bold' } } } },
 }
 
 const QUICK_SCENARIOS = [
@@ -66,10 +41,51 @@ const QUICK_SCENARIOS = [
   { key: 'pessimistic', label: 'Worst Case (+40% Ord, +25% CR)', mods: { orders: 40, caserate: 25, cpsr: 20 }, text: 'Worst Case Scenario', desc: 'Orders +40%, CR +25%, CPSR +20% — Maximum HC pressure' },
 ]
 const DEFAULT_MODS = { orders: 0, caserate: 0, cpsr: 0, crw: 0 }
-const SENS_RANGE = [-40, -30, -20, -10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+const SENS_RANGE = [-40, -20, 0, 20, 40, 60, 80, 100]
+
+function exportCsv(data, quarters, mods) {
+  let csv = 'APJ Capacity Plan\n\n'
+  quarters.forEach((q) => {
+    const all = calcAllCountries(data, q.key)
+    const t = all.totals
+    csv += `\n${q.label}\nCountry,GS Ord,CS Ord,Total,Cases,CR,TCD,CPSR,CRW,HC\n`
+    APJ_COUNTRIES.forEach((c) => {
+      const r = all.countries[c.id]
+      csv += `${c.name},${r.gsO},${r.csO},${r.totO},${r.totCs.toFixed(2)},${(r.cr * 100).toFixed(2)}%,${r.totTCD.toFixed(2)},${r.cpsr.toFixed(2)},${r.crw},${r.hc}\n`
+    })
+    csv += `TOTAL,${t.gsO},${t.csO},${t.totO},${t.totCs.toFixed(2)},${(t.cr * 100).toFixed(2)}%,${t.totTCD.toFixed(2)},${t.cpsr.toFixed(2)},,${t.hc}\n`
+  })
+  if (mods.orders || mods.caserate || mods.cpsr || mods.crw) {
+    csv += `\n\nWHAT-IF SCENARIO\nOrders: ${mods.orders > 0 ? '+' : ''}${mods.orders}%  Case Rate: ${mods.caserate > 0 ? '+' : ''}${mods.caserate}%  CPSR: ${mods.cpsr > 0 ? '+' : ''}${mods.cpsr}%  CRW: ${mods.crw > 0 ? '+' : ''}${mods.crw}%\n`
+    quarters.forEach((q) => {
+      const all = calcAllCountries(data, q.key, mods)
+      const base = calcAllCountries(data, q.key)
+      csv += `\n${q.label} (SCENARIO)\nCountry,Scen Orders,Scen Cases,Scen HC,Base HC,Delta\n`
+      APJ_COUNTRIES.forEach((c) => {
+        const r = all.countries[c.id]
+        const br = base.countries[c.id]
+        csv += `${c.name},${r.totO},${r.totCs.toFixed(2)},${r.hc},${br.hc},${r.hc - br.hc}\n`
+      })
+    })
+  }
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
+  a.download = 'APJ_Workforce_Plan.csv'
+  a.click()
+}
+
+function DeltaCell({ base, scenario }) {
+  const diff = scenario - base
+  const pct = base === 0 ? 0 : (diff / base * 100)
+  if (diff === 0) return <span style={{ color: 'var(--text-muted)' }}>0 (0.0%)</span>
+  const cls = diff > 0 ? 'pos' : 'neg'
+  const sign = diff > 0 ? '+' : ''
+  return <span className={'badge ' + cls}>{sign}{f0(diff)} ({sign}{pct.toFixed(1)}%)</span>
+}
 
 export default function ApjWorkforcePlanner() {
-  const [dark, setDark] = useState(false)
+  const { theme } = useApp()
+  const colors = getColors(theme)
   const [activeTab, setActiveTab] = useState('input')
   const [{ startQ, startFY }, setStart] = useState(defaultStartQuarter)
   const quarters = useMemo(() => getQuarters(startQ, startFY), [startQ, startFY])
@@ -81,6 +97,8 @@ export default function ApjWorkforcePlanner() {
   const [scenario, setScenario] = useState(null)
 
   const qk = quarters[selQ]?.key
+  const quarterOptions = quarters.map((q, i) => ({ value: i, label: q.label }))
+  const regionOptions = [{ value: 'ALL', label: 'APJ Total' }, ...APJ_COUNTRIES.map((c) => ({ value: c.id, label: c.name }))]
 
   function handleStartChange(nextStartQ, nextStartFY) {
     const nextQuarters = getQuarters(nextStartQ, nextStartFY)
@@ -122,46 +140,6 @@ export default function ApjWorkforcePlanner() {
     setScenario({ text: s.text, desc: s.desc })
   }
 
-  function exportCSV() {
-    let csv = 'APJ Capacity Plan\nInternal Use - Confidential\n\n'
-    quarters.forEach((q) => {
-      const all = calcAllCountries(data, q.key)
-      const t = all.totals
-      csv += `\n${q.label}\nCountry,GS Ord,CS Ord,Total,Cases,CR,TCD,CPSR,CRW,HC\n`
-      APJ_COUNTRIES.forEach((c) => {
-        const r = all.countries[c.id]
-        csv += `${c.name},${r.gsO},${r.csO},${r.totO},${r.totCs.toFixed(2)},${(r.cr * 100).toFixed(2)}%,${r.totTCD.toFixed(2)},${r.cpsr.toFixed(2)},${r.crw},${r.hc}\n`
-      })
-      csv += `TOTAL,${t.gsO},${t.csO},${t.totO},${t.totCs.toFixed(2)},${(t.cr * 100).toFixed(2)}%,${t.totTCD.toFixed(2)},${t.cpsr.toFixed(2)},,${t.hc}\n`
-    })
-    if (mods.orders || mods.caserate || mods.cpsr || mods.crw) {
-      csv += `\n\nWHAT-IF SCENARIO\nOrders: ${mods.orders > 0 ? '+' : ''}${mods.orders}%  Case Rate: ${mods.caserate > 0 ? '+' : ''}${mods.caserate}%  CPSR: ${mods.cpsr > 0 ? '+' : ''}${mods.cpsr}%  CRW: ${mods.crw > 0 ? '+' : ''}${mods.crw}%\n`
-      quarters.forEach((q) => {
-        const all = calcAllCountries(data, q.key, mods)
-        const base = calcAllCountries(data, q.key)
-        csv += `\n${q.label} (SCENARIO)\nCountry,Scen Orders,Scen Cases,Scen HC,Base HC,Delta\n`
-        APJ_COUNTRIES.forEach((c) => {
-          const r = all.countries[c.id]
-          const br = base.countries[c.id]
-          csv += `${c.name},${r.totO},${r.totCs.toFixed(2)},${r.hc},${br.hc},${r.hc - br.hc}\n`
-        })
-      })
-    }
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
-    a.download = 'APJ_Workforce_Plan.csv'
-    a.click()
-  }
-
-  const [savedFlash, setSavedFlash] = useState(false)
-  function saveData() {
-    try {
-      localStorage.setItem('apj_wfp_dell', JSON.stringify({ data, startQ, startFY }))
-    } catch { /* private browsing / quota — nothing to persist, no-op */ }
-    setSavedFlash(true)
-    setTimeout(() => setSavedFlash(false), 2000)
-  }
-
   const allForQ = useMemo(() => calcAllCountries(data, qk), [data, qk])
   const dSel = selReg === 'ALL' ? allForQ.totals : allForQ.countries[selReg]
 
@@ -187,19 +165,16 @@ export default function ApjWorkforcePlanner() {
     { label: 'Total Contacts', bv: wiBaseSel.totTCD, sv: wiScenSel.totTCD },
     { label: 'Case Rate', bv: wiBaseSel.cr * 100, sv: wiScenSel.cr * 100, fmt: 'pct' },
     { label: 'Avg CPSR', bv: wiBaseSel.cpsr, sv: wiScenSel.cpsr, fmt: 'dec' },
-    { label: 'HC Required', bv: wiBaseSel.hc, sv: wiScenSel.hc, hl: true },
+    { label: 'HC Required', bv: wiBaseSel.hc, sv: wiScenSel.hc },
   ]
 
   const sensitivity = useMemo(() => {
-    const sensOrd = [], sensCR = [], sensCP = [], sensCW = []
-    SENS_RANGE.forEach((v) => {
-      const pick = (m) => (selReg === 'ALL' ? calcAllCountries(data, qk, m).totals : calcAllCountries(data, qk, m).countries[selReg])
-      sensOrd.push(pick({ orders: v }).hc)
-      sensCR.push(pick({ caserate: v }).hc)
-      sensCP.push(pick({ cpsr: v }).hc)
-      sensCW.push(pick({ crw: v }).hc)
-    })
-    return { sensOrd, sensCR, sensCP, sensCW }
+    const rows = [
+      { key: 'orders', label: 'Volume' }, { key: 'caserate', label: 'Case Rate' },
+      { key: 'cpsr', label: 'CPSR' }, { key: 'crw', label: 'CRW' },
+    ]
+    const pick = (m) => (selReg === 'ALL' ? calcAllCountries(data, qk, m).totals : calcAllCountries(data, qk, m).countries[selReg])
+    return rows.map((r) => ({ label: r.label, series: SENS_RANGE.map((v) => pick({ [r.key]: v }).hc) }))
   }, [data, qk, selReg])
 
   const wiTrend = useMemo(() => {
@@ -212,61 +187,51 @@ export default function ApjWorkforcePlanner() {
     return { labels: quarters.map((q) => q.label), baseQ, scenQ }
   }, [data, quarters, selReg, mods])
 
+  const barOpt = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grace: '10%' } } }
+  const lineOptLegend = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grace: '10%' } } }
+
   return (
-    <div className={'apj-wfp' + (dark ? ' dark' : '')}>
-      <div className="apj-hdr">
-        <div className="apj-hl"><div className="apj-brand"><h1>APJ Workforce Planner</h1></div></div>
-        <div className="apj-hr">
-          <button type="button" className="apj-hb" onClick={exportCSV}>Export CSV</button>
-          <button type="button" className="apj-hb" onClick={() => window.print()}>Print</button>
-          <button type="button" className="apj-hb sv" onClick={saveData}>{savedFlash ? '✅ Saved!' : 'Save'}</button>
-          <button type="button" className={'apj-tgl' + (dark ? ' on' : '')} onClick={() => setDark((d) => !d)} aria-label="Toggle dark mode" />
-        </div>
-      </div>
-      <div className="apj-accent-bar" />
+    <div className="tab-panel active">
+      <PickerTabs options={[{ value: 'input', label: 'Data Input' }, { value: 'results', label: 'Results' }, { value: 'whatif', label: 'What-If' }]} value={activeTab} onChange={setActiveTab} ariaLabel="APJ Workforce Planner section" />
 
-      <div className="apj-main">
-        <div className="apj-tab-bar">
-          <button type="button" className={'apj-tab' + (activeTab === 'input' ? ' on' : '')} onClick={() => setActiveTab('input')}>Data Input <span className="apj-bg">1</span></button>
-          <button type="button" className={'apj-tab' + (activeTab === 'results' ? ' on' : '')} onClick={() => setActiveTab('results')}>Results <span className="apj-bg">2</span></button>
-          <button type="button" className={'apj-tab' + (activeTab === 'whatif' ? ' on' : '')} onClick={() => setActiveTab('whatif')}>What-If <span className="apj-bg">3</span></button>
-        </div>
-
-        {activeTab === 'input' && (
-          <div className="apj-pnl">
-            <div className="apj-sth">
-              <h2>Orders + Parameters</h2>
-              <div className="apj-acts">
-                <button type="button" className="apj-sb g" onClick={resetToSample}>Reset to Sample Data</button>
+      {activeTab === 'input' && (
+        <>
+          <div className="section-div">
+            <h2>Orders + Parameters <InfoBtn tip="<strong>Purpose</strong>Editable GS/CS order volumes and target rates (Case Rate, CPSR, CRW) per country and quarter, seeded with a sample dataset. Drives every downstream calculation in Results and What-If." /></h2>
+          </div>
+          <div className="card">
+            <div className="card-header">
+              <div className="card-title">Sample Data — {quarters[selQ]?.label}</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button type="button" className="btn btn-sm btn-neutral" onClick={() => exportCsv(data, quarters, mods)}>Export CSV</button>
+                <button type="button" className="clear-all-btn" onClick={resetToSample}>✕ Reset to Sample Data</button>
               </div>
             </div>
-            <div className="apj-config-bar">
-              <QuarterBar quarters={quarters} selQ={selQ} onSelect={setSelQ} />
-              <div className="apj-config-sep" />
-              <div className="apj-config-inline">
-                <span className="apj-config-label">START QTR:</span>
-                <select className="apj-di" style={{ width: 55, padding: 5, margin: 0 }} value={startQ} onChange={(e) => handleStartChange(Number(e.target.value), startFY)}>
+
+            <div className="filter-grid" style={{ margin: '14px 18px 0' }}>
+              <div className="filter-group">
+                <label>Start Quarter</label>
+                <select value={startQ} onChange={(e) => handleStartChange(Number(e.target.value), startFY)}>
                   <option value={1}>Q1</option><option value={2}>Q2</option><option value={3}>Q3</option><option value={4}>Q4</option>
                 </select>
-                <span className="apj-config-label">FY:</span>
-                <input type="number" className="apj-di" style={{ width: 65, padding: 5, margin: 0 }} value={startFY} onChange={(e) => handleStartChange(startQ, Number(e.target.value) || startFY)} />
+              </div>
+              <div className="filter-group">
+                <label>Start Fiscal Year</label>
+                <input type="number" value={startFY} onChange={(e) => handleStartChange(startQ, Number(e.target.value) || startFY)} />
               </div>
             </div>
-            <div className="apj-divider"><span>Orders + Parameters (Editable, Sample Data)</span></div>
-            <div className="apj-dc">
-              <table className="apj-dt">
-                <colgroup><col style={{ width: 160 }} /><col /><col /><col style={{ width: 70 }} /><col /><col /><col /><col /></colgroup>
+
+            <div style={{ padding: '14px 18px 0' }}>
+              <PickerTabs options={quarterOptions} value={selQ} onChange={setSelQ} ariaLabel="Quarter" />
+            </div>
+
+            <div className="tw" style={{ padding: '0 18px' }}>
+              <table>
                 <thead>
-                  <tr className="apj-cg">
-                    <th></th>
-                    <th colSpan={3}>ORDERS <span style={{ fontSize: 9, opacity: .7 }}>({quarters[selQ]?.label})</span></th>
-                    <th colSpan={2}>CASE RATE (%)</th>
-                    <th>CPSR</th>
-                    <th>CRW</th>
-                  </tr>
                   <tr>
-                    <th style={{ textAlign: 'left' }}>COUNTRY</th>
-                    <th>GS ORDERS</th><th>CS ORDERS</th><th>TOTAL</th><th>GS RATE</th><th>CS RATE</th><th>CPSR</th><th>CRW</th>
+                    <th style={{ textAlign: 'left' }}>Country</th>
+                    <th>GS Orders</th><th>CS Orders</th><th>Total</th>
+                    <th>GS Rate %</th><th>CS Rate %</th><th>CPSR</th><th>CRW</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -277,303 +242,313 @@ export default function ApjWorkforcePlanner() {
                     const cv = c.hasCS ? Math.round(o.cs || 0) : 0
                     return (
                       <tr key={c.id}>
-                        <td><div className="apj-cc-cell"><span className="apj-cd">{c.cc}</span>{c.name}{!c.hasCS && <small style={{ color: 'var(--dell-gray-light)' }}> (GS)</small>}</div></td>
-                        <td><input className="apj-di" type="number" step={1} min={0} value={gv} onChange={(e) => updOrd(c.id, 'gs', e.target.value)} /></td>
-                        <td>{c.hasCS ? <input className="apj-di" type="number" step={1} min={0} value={cv} onChange={(e) => updOrd(c.id, 'cs', e.target.value)} /> : <input className="apj-di" disabled value="N/A" readOnly />}</td>
-                        <td><span className="apj-tot-val">{f0(gv + cv)}</span></td>
-                        <td><input className="apj-di" type="number" step={0.01} value={p.gsRate ? Number((p.gsRate * 100).toFixed(3)) : ''} onChange={(e) => updPar(c.id, 'gsRate', e.target.value)} /></td>
-                        <td>{c.hasCS ? <input className="apj-di" type="number" step={0.01} value={p.csRate ? Number((p.csRate * 100).toFixed(3)) : ''} onChange={(e) => updPar(c.id, 'csRate', e.target.value)} /> : <input className="apj-di" disabled value="N/A" readOnly />}</td>
-                        <td><input className="apj-di" type="number" step={0.01} value={p.cpsr || ''} onChange={(e) => updPar(c.id, 'cpsr', e.target.value)} /></td>
-                        <td><input className="apj-di" type="number" step={1} value={p.crw || ''} onChange={(e) => updPar(c.id, 'crw', e.target.value)} /></td>
+                        <td style={{ textAlign: 'left' }}>
+                          <span className="pill-tag" style={{ marginRight: 8 }}>{c.cc}</span>{c.name}{!c.hasCS && <span style={{ color: 'var(--text-muted)', fontSize: '.75rem' }}> (GS only)</span>}
+                        </td>
+                        <td><input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={gv} onChange={(e) => updOrd(c.id, 'gs', e.target.value)} /></td>
+                        <td>{c.hasCS ? <input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={cv} onChange={(e) => updOrd(c.id, 'cs', e.target.value)} /> : <span style={{ color: 'var(--text-muted)' }}>N/A</span>}</td>
+                        <td><strong>{f0(gv + cv)}</strong></td>
+                        <td><input className="wis-num-input" type="number" step={0.01} value={p.gsRate ? Number((p.gsRate * 100).toFixed(3)) : ''} onChange={(e) => updPar(c.id, 'gsRate', e.target.value)} /></td>
+                        <td>{c.hasCS ? <input className="wis-num-input" type="number" step={0.01} value={p.csRate ? Number((p.csRate * 100).toFixed(3)) : ''} onChange={(e) => updPar(c.id, 'csRate', e.target.value)} /> : <span style={{ color: 'var(--text-muted)' }}>N/A</span>}</td>
+                        <td><input className="wis-num-input" type="number" step={0.01} value={p.cpsr || ''} onChange={(e) => updPar(c.id, 'cpsr', e.target.value)} /></td>
+                        <td><input className="wis-num-input" type="number" step={1} value={p.crw || ''} onChange={(e) => updPar(c.id, 'crw', e.target.value)} /></td>
                       </tr>
                     )
                   })}
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <td><strong>APJ TOTAL</strong></td>
+                  <tr className="tot-row">
+                    <td style={{ textAlign: 'left' }}>APJ TOTAL</td>
                     <td>{f0(APJ_COUNTRIES.reduce((s, c) => s + (data[c.id].quarters[qk]?.gs || 0), 0))}</td>
                     <td>{f0(APJ_COUNTRIES.reduce((s, c) => s + (data[c.id].quarters[qk]?.cs || 0), 0))}</td>
-                    <td><strong>{f0(APJ_COUNTRIES.reduce((s, c) => s + (data[c.id].quarters[qk]?.gs || 0) + (data[c.id].quarters[qk]?.cs || 0), 0))}</strong></td>
+                    <td>{f0(APJ_COUNTRIES.reduce((s, c) => s + (data[c.id].quarters[qk]?.gs || 0) + (data[c.id].quarters[qk]?.cs || 0), 0))}</td>
                     <td colSpan={4}></td>
                   </tr>
-                </tfoot>
+                </tbody>
               </table>
-              <div className="apj-nb">
-                <button type="button" className="apj-sb gn" onClick={() => setActiveTab('results')}>View Results →</button>
-                <button type="button" className="apj-sb t" style={{ background: 'var(--dell-royal)' }} onClick={() => setActiveTab('whatif')}>What-If Analysis →</button>
-              </div>
             </div>
-            <div className="apj-hcs">
-              {APJ_COUNTRIES.map((c) => (
-                <div className="apj-hcc" key={c.id}><div className="apj-h1">{c.cc}</div><div className="apj-h2">{c.name}</div><div className="apj-h3">{f0(allForQ.countries[c.id].hc)}</div></div>
-              ))}
-              <div className="apj-hcc tot"><div className="apj-h1">TOTAL HC</div><div className="apj-h2">ALL REGIONS</div><div className="apj-h3">{f0(allForQ.totals.hc)}</div></div>
+            <div className="filter-clear-row" style={{ padding: '14px 18px' }}>
+              <button type="button" className="btn btn-sm btn-neutral" onClick={() => setActiveTab('results')}>View Results →</button>
+              <button type="button" className="btn btn-sm btn-primary" onClick={() => setActiveTab('whatif')}>What-If Analysis →</button>
             </div>
           </div>
-        )}
 
-        {activeTab === 'results' && (
-          <div className="apj-pnl">
-            <div className="apj-config-bar">
-              <QuarterBar quarters={quarters} selQ={selQ} onSelect={setSelQ} />
-              <div className="apj-config-sep" />
-              <RegionBar selReg={selReg} onSelect={setSelReg} />
-            </div>
-            <div className="apj-kr">
-              <div className="apj-kc o1"><div className="apj-kl">TOTAL ORDERS</div><div className="apj-kv">{f0(dSel.totO)}</div></div>
-              <div className="apj-kc o2"><div className="apj-kl">CASE RATE</div><div className="apj-kv">{(dSel.cr * 100).toFixed(1)}%</div></div>
-              <div className="apj-kc o3"><div className="apj-kl">TOTAL CASES</div><div className="apj-kv">{f0(dSel.totCs)}</div></div>
-              <div className="apj-kc o4"><div className="apj-kl">CPSR</div><div className="apj-kv">{f2(dSel.cpsr)}</div></div>
-              <div className="apj-kc o5"><div className="apj-kl">TOTAL CONTACTS</div><div className="apj-kv">{f0(dSel.totTCD)}</div></div>
-              <div className="apj-kc o6"><div className="apj-kl">HC REQUIRED</div><div className="apj-kv">{f0(dSel.hc)}</div></div>
-            </div>
-            <div className="apj-ec">
-              <div className="apj-eh">
-                <h2>{selReg === 'ALL' ? 'Executive Summary' : APJ_COUNTRIES.find((x) => x.id === selReg).name + ' Summary'}</h2>
-                <button type="button" className={'apj-dtb' + (showDet ? ' on' : '')} onClick={() => setShowDet((d) => !d)}>{showDet ? 'Summary' : 'Detailed'}</button>
-              </div>
-              <div style={{ overflowX: 'auto' }}>
-                <table className="apj-et">
-                  <thead>
-                    <tr>
-                      <th style={{ textAlign: 'left' }}>COUNTRY</th>
-                      <th>GS ORD</th><th>CS ORD</th><th>TOTAL</th>
-                      {showDet && <><th>GS CASES</th><th>CS CASES</th></>}
-                      <th>CASES</th><th>CR</th><th>TCD</th><th>CPSR</th><th>CRW</th><th>HC</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(selReg === 'ALL' ? APJ_COUNTRIES : [APJ_COUNTRIES.find((x) => x.id === selReg)]).map((c) => {
-                      const r = allForQ.countries[c.id]
-                      return (
-                        <tr key={c.id}>
-                          <td style={{ textAlign: 'left' }}><b style={{ color: 'var(--dell-gray-mid)', fontSize: 9, marginRight: 4 }}>{c.cc}</b>{c.name}</td>
-                          <td>{f0(r.gsO)}</td><td>{c.hasCS ? f0(r.csO) : '—'}</td><td style={{ fontWeight: 700 }}>{f0(r.totO)}</td>
-                          {showDet && <><td>{f0(r.gsCs)}</td><td>{c.hasCS ? f0(r.csCs) : '—'}</td></>}
-                          <td style={{ fontWeight: 700 }}>{f0(r.totCs)}</td><td>{fp(r.cr)}</td><td>{f0(r.totTCD)}</td><td>{f2(r.cpsr)}</td><td>{f1(r.crw)}</td>
-                          <td className="apj-hcv">{f0(r.hc)}</td>
-                        </tr>
-                      )
-                    })}
-                    {selReg === 'ALL' && (
-                      <tr className="apj-tr">
-                        <td style={{ textAlign: 'left' }}><b>APJ TOTAL</b></td>
-                        <td>{f0(allForQ.totals.gsO)}</td><td>{f0(allForQ.totals.csO)}</td><td>{f0(allForQ.totals.totO)}</td>
-                        {showDet && <><td>{f0(allForQ.totals.gsCs)}</td><td>{f0(allForQ.totals.csCs)}</td></>}
-                        <td>{f0(allForQ.totals.totCs)}</td><td>{fp(allForQ.totals.cr)}</td><td>{f0(allForQ.totals.totTCD)}</td><td>{f2(allForQ.totals.cpsr)}</td><td>—</td>
-                        <td className="apj-hcv" style={{ fontSize: 15 }}>{f0(allForQ.totals.hc)}</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <div className="apj-chg">
-              <div className="apj-chc"><h3><span className="apj-dot" style={{ background: 'var(--dell-blue)' }} /> Orders Trend</h3><div style={{ position: 'relative', width: '100%', height: 300 }}>
-                <Bar data={{ labels: trendSeries.labels, datasets: [{ data: trendSeries.tO, backgroundColor: '#0672CB', borderRadius: 4 }] }} options={CHART_OPT_BASE} />
-              </div></div>
-              <div className="apj-chc"><h3><span className="apj-dot" style={{ background: 'var(--dell-green)' }} /> Cases Trend</h3><div style={{ position: 'relative', width: '100%', height: 300 }}>
-                <Line data={{ labels: trendSeries.labels, datasets: [{ data: trendSeries.tC, borderColor: '#247554', backgroundColor: 'rgba(36,117,84,.08)', fill: true, tension: .3, borderWidth: 3 }] }} options={CHART_OPT_BASE} />
-              </div></div>
-              <div className="apj-chc"><h3><span className="apj-dot" style={{ background: 'var(--dell-royal)' }} /> Contacts Trend</h3><div style={{ position: 'relative', width: '100%', height: 300 }}>
-                <Line data={{ labels: trendSeries.labels, datasets: [{ data: trendSeries.tT, borderColor: '#0C32A4', backgroundColor: 'rgba(12,50,164,.08)', fill: true, tension: .3, borderWidth: 3 }] }} options={CHART_OPT_BASE} />
-              </div></div>
-              <div className="apj-chc"><h3><span className="apj-dot" style={{ background: 'var(--dell-orange)' }} /> Headcount Trend</h3><div style={{ position: 'relative', width: '100%', height: 300 }}>
-                <Bar data={{ labels: trendSeries.labels, datasets: [{ data: trendSeries.tH, backgroundColor: '#FBAE40', borderRadius: 4 }] }} options={CHART_OPT_BASE} />
-              </div></div>
-            </div>
+          <div className="section-div">
+            <h2>Headcount by Country <InfoBtn tip="<strong>Purpose</strong>Required Headcount per country for the selected quarter, computed as Total Contacts / CRW / 13 weeks." /></h2>
           </div>
-        )}
+          <div className="kpi-grid cols-7">
+            {APJ_COUNTRIES.map((c) => (
+              <div className="kpi-card" key={c.id}><div className="kpi-label">{c.name}</div><div className="kpi-value">{f0(allForQ.countries[c.id].hc)}</div></div>
+            ))}
+            <div className="kpi-card"><div className="kpi-label">APJ Total</div><div className="kpi-value">{f0(allForQ.totals.hc)}</div></div>
+          </div>
+        </>
+      )}
 
-        {activeTab === 'whatif' && (
-          <div className="apj-pnl">
-            <div className="apj-config-bar">
-              <QuarterBar quarters={quarters} selQ={selQ} onSelect={setSelQ} />
-              <div className="apj-config-sep" />
-              <RegionBar selReg={selReg} onSelect={setSelReg} />
+      {activeTab === 'results' && (
+        <>
+          <PickerTabs options={quarterOptions} value={selQ} onChange={setSelQ} ariaLabel="Quarter" />
+          <PickerTabs options={regionOptions} value={selReg} onChange={setSelReg} ariaLabel="Region" />
+
+          <div className="kpi-grid">
+            <div className="kpi-card"><div className="kpi-label">Total Orders</div><div className="kpi-value">{f0(dSel.totO)}</div></div>
+            <div className="kpi-card"><div className="kpi-label">Case Rate</div><div className="kpi-value">{(dSel.cr * 100).toFixed(1)}%</div></div>
+            <div className="kpi-card"><div className="kpi-label">Total Cases</div><div className="kpi-value">{f0(dSel.totCs)}</div></div>
+            <div className="kpi-card"><div className="kpi-label">CPSR</div><div className="kpi-value">{f2(dSel.cpsr)}</div></div>
+            <div className="kpi-card"><div className="kpi-label">Total Contacts</div><div className="kpi-value">{f0(dSel.totTCD)}</div></div>
+            <div className="kpi-card"><div className="kpi-label">HC Required</div><div className="kpi-value">{f0(dSel.hc)}</div></div>
+          </div>
+
+          <div className="card">
+            <div className="card-header">
+              <div className="card-title">{selReg === 'ALL' ? 'Executive Summary' : APJ_COUNTRIES.find((x) => x.id === selReg).name + ' Summary'}</div>
+              <button type="button" className={'btn btn-sm ' + (showDet ? 'btn-primary' : 'btn-neutral')} onClick={() => setShowDet((d) => !d)}>{showDet ? 'Summary' : 'Detailed'}</button>
             </div>
-            <div className="apj-wi-container">
-              <div className="apj-wi-panel">
-                <h3>Scenario Builder</h3>
-                {[
-                  { field: 'orders', label: 'Orders Change', id: 'wiOrdVal', slider: 'orders', presets: [-20, -10, 0, 10, 20, 50] },
-                  { field: 'caserate', label: 'Case Rate Change', id: 'wiCRVal', slider: 'caserate', presets: [-20, -10, 0, 10, 25, 50] },
-                  { field: 'cpsr', label: 'CPSR Change', id: 'wiCPVal', slider: 'cpsr', presets: [-20, -10, 0, 10, 25, 50] },
-                  { field: 'crw', label: 'CRW (Productivity)', id: 'wiCWVal', slider: 'crw', presets: [-20, -10, 0, 10, 25, 50] },
-                ].map((g) => {
-                  const v = mods[g.field]
-                  const tone = v > 0 ? 'pos' : v < 0 ? 'neg' : 'zero'
-                  return (
-                    <div className="apj-wi-group" key={g.field}>
-                      <div className="apj-wi-label"><span>{g.label}</span><span className={'apj-wi-val ' + tone}>{(v > 0 ? '+' : '') + v + '%'}</span></div>
-                      <input type="range" className={'apj-wi-slider ' + g.slider} min={-50} max={100} step={1} value={v} onChange={(e) => setWI(g.field, Number(e.target.value))} />
-                      <div className="apj-wi-range"><span>-50%</span><span>0%</span><span>+100%</span></div>
-                      <div className="apj-wi-preset">
-                        {g.presets.map((p) => (
-                          <button type="button" key={p} onClick={() => setWI(g.field, p)}>{p === 0 ? 'Base' : (p > 0 ? '+' : '') + p + '%'}</button>
-                        ))}
-                      </div>
-                    </div>
-                  )
-                })}
-                <button type="button" className="apj-wi-reset" onClick={resetWI}>Reset All to Baseline</button>
-                <div className="apj-wi-quick-box">
-                  <div className="apj-wi-quick-label">QUICK SCENARIOS</div>
-                  <div className="apj-wi-quick-list">
-                    {QUICK_SCENARIOS.map((s) => (
-                      <button type="button" key={s.key} className="apj-sb g" onClick={() => applyScenario(s.key)}>{s.label}</button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="apj-wi-right">
-                {scenario && (
-                  <div className="apj-wi-scenario-name">
-                    <div><div className="apj-sn-text">{scenario.text}</div><div className="apj-sn-desc">{scenario.desc}</div></div>
-                  </div>
-                )}
-                <div className="apj-impact-grid">
-                  {impactMetrics.map((m) => {
-                    const diff = m.sv - m.bv
-                    const pct = m.bv === 0 ? 0 : (diff / m.bv * 100)
-                    const cls = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same'
-                    const sign = diff > 0 ? '+' : ''
-                    let bvF, svF, diffF
-                    if (m.fmt === 'pct') { bvF = m.bv.toFixed(1) + '%'; svF = m.sv.toFixed(1) + '%'; diffF = sign + diff.toFixed(1) + 'pp' }
-                    else if (m.fmt === 'dec') { bvF = f2(m.bv); svF = f2(m.sv); diffF = sign + f2(diff) }
-                    else { bvF = f0(m.bv); svF = f0(m.sv); diffF = sign + f0(diff) + ' (' + sign + pct.toFixed(1) + '%)' }
+            <div className="tw">
+              <table>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left' }}>Country</th>
+                    <th>GS Ord</th><th>CS Ord</th><th>Total</th>
+                    {showDet && <><th>GS Cases</th><th>CS Cases</th></>}
+                    <th>Cases</th><th>CR</th><th>TCD</th><th>CPSR</th><th>CRW</th><th>HC</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(selReg === 'ALL' ? APJ_COUNTRIES : [APJ_COUNTRIES.find((x) => x.id === selReg)]).map((c) => {
+                    const r = allForQ.countries[c.id]
                     return (
-                      <div className={'apj-impact-card' + (m.hl ? ' highlight' : '')} key={m.label}>
-                        <div className="apj-ic-label">{m.label}</div>
-                        <div className="apj-ic-row"><span className="apj-ic-base">{bvF}</span><span className="apj-ic-arrow">→</span><span className="apj-ic-scenario">{svF}</span></div>
-                        <div className={'apj-ic-delta ' + cls}>{diffF}</div>
-                      </div>
+                      <tr key={c.id}>
+                        <td style={{ textAlign: 'left' }}><span className="pill-tag" style={{ marginRight: 8 }}>{c.cc}</span>{c.name}</td>
+                        <td>{f0(r.gsO)}</td><td>{c.hasCS ? f0(r.csO) : '—'}</td><td><strong>{f0(r.totO)}</strong></td>
+                        {showDet && <><td>{f0(r.gsCs)}</td><td>{c.hasCS ? f0(r.csCs) : '—'}</td></>}
+                        <td><strong>{f0(r.totCs)}</strong></td><td>{fp(r.cr)}</td><td>{f0(r.totTCD)}</td><td>{f2(r.cpsr)}</td><td>{f1(r.crw)}</td>
+                        <td><strong>{f0(r.hc)}</strong></td>
+                      </tr>
                     )
                   })}
-                </div>
-                <div className="apj-ec">
-                  <div className="apj-eh">
-                    <h2>Baseline vs Scenario Comparison</h2>
-                    <div style={{ display: 'flex', gap: 10 }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, color: 'var(--dell-gray-mid)' }}><span style={{ width: 10, height: 10, borderRadius: 3, background: 'var(--dell-card-bg)', border: '1px solid var(--dell-border)', display: 'inline-block' }} />Baseline</span>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, color: 'var(--dell-blue)' }}><span style={{ width: 10, height: 10, borderRadius: 3, background: 'var(--dell-ice)', border: '1px solid var(--dell-blue)', display: 'inline-block' }} />Scenario</span>
-                    </div>
-                  </div>
-                  <div style={{ overflowX: 'auto' }}>
-                    <table className="apj-wi-table">
-                      <thead>
-                        <tr><th style={{ textAlign: 'left' }}>COUNTRY</th><th>BASE ORD</th><th>SCEN ORD</th><th>&Delta; ORD</th><th>BASE CASES</th><th>SCEN CASES</th><th>&Delta; CASES</th><th>BASE HC</th><th>SCEN HC</th><th>&Delta; HC</th></tr>
-                      </thead>
-                      <tbody>
-                        {(selReg === 'ALL' ? APJ_COUNTRIES : [APJ_COUNTRIES.find((x) => x.id === selReg)]).map((c) => {
-                          const br = wiBase.countries[c.id]
-                          const sr = wiScenario.countries[c.id]
-                          const hcDiff = sr.hc - br.hc
-                          const hcCls = hcDiff > 0 ? 'up' : hcDiff < 0 ? 'down' : 'same'
-                          return (
-                            <tr key={c.id}>
-                              <td style={{ textAlign: 'left' }}><b style={{ color: 'var(--dell-gray-mid)', fontSize: 9, marginRight: 4 }}>{c.cc}</b>{c.name}</td>
-                              <td>{f0(br.totO)}</td><td>{f0(sr.totO)}</td><td><DeltaBadge base={br.totO} scenario={sr.totO} /></td>
-                              <td>{f0(br.totCs)}</td><td>{f0(sr.totCs)}</td><td><DeltaBadge base={br.totCs} scenario={sr.totCs} /></td>
-                              <td style={{ fontWeight: 700 }}>{f0(br.hc)}</td><td className="apj-hcv">{f0(sr.hc)}</td>
-                              <td><span className={'apj-delta-badge ' + hcCls}>{(hcDiff > 0 ? '+' : '') + f0(hcDiff)}</span></td>
-                            </tr>
-                          )
-                        })}
-                        {selReg === 'ALL' && (() => {
-                          const bt = wiBase.totals, st = wiScenario.totals, hcD = st.hc - bt.hc, hcC = hcD > 0 ? 'up' : hcD < 0 ? 'down' : 'same'
-                          return (
-                            <tr className="apj-tr">
-                              <td style={{ textAlign: 'left' }}><b>APJ TOTAL</b></td>
-                              <td>{f0(bt.totO)}</td><td>{f0(st.totO)}</td><td><DeltaBadge base={bt.totO} scenario={st.totO} /></td>
-                              <td>{f0(bt.totCs)}</td><td>{f0(st.totCs)}</td><td><DeltaBadge base={bt.totCs} scenario={st.totCs} /></td>
-                              <td style={{ fontWeight: 700, fontSize: 14 }}>{f0(bt.hc)}</td><td className="apj-hcv" style={{ fontSize: 15 }}>{f0(st.hc)}</td>
-                              <td><span className={'apj-delta-badge ' + hcC} style={{ fontSize: 12, fontWeight: 900 }}>{(hcD > 0 ? '+' : '') + f0(hcD)}</span></td>
-                            </tr>
-                          )
-                        })()}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-                <div className="apj-chg">
-                  <div className="apj-chc"><h3><span className="apj-dot" style={{ background: 'var(--dell-blue)' }} /> HC Comparison</h3><div style={{ position: 'relative', width: '100%', height: 300 }}>
-                    <Bar
-                      data={{
-                        labels: selReg === 'ALL' ? APJ_COUNTRIES.map((c) => c.cc) : [APJ_COUNTRIES.find((x) => x.id === selReg).cc],
-                        datasets: [
-                          { label: 'Baseline', data: selReg === 'ALL' ? APJ_COUNTRIES.map((c) => wiBase.countries[c.id].hc) : [wiBase.countries[selReg].hc], backgroundColor: 'rgba(204,205,224,.4)', borderColor: '#CCCDE0', borderWidth: 2, borderRadius: 4 },
-                          { label: 'Scenario', data: selReg === 'ALL' ? APJ_COUNTRIES.map((c) => wiScenario.countries[c.id].hc) : [wiScenario.countries[selReg].hc], backgroundColor: 'rgba(6,114,203,.25)', borderColor: '#0672CB', borderWidth: 2, borderRadius: 4 },
-                        ],
-                      }}
-                      options={CHART_OPT_LEGEND}
-                    />
-                  </div></div>
-                  <div className="apj-chc"><h3><span className="apj-dot" style={{ background: 'var(--dell-royal)' }} /> Impact Delta</h3><div style={{ position: 'relative', width: '100%', height: 300 }}>
-                    <Bar
-                      data={{
-                        labels: selReg === 'ALL' ? APJ_COUNTRIES.map((c) => c.cc) : [APJ_COUNTRIES.find((x) => x.id === selReg).cc],
-                        datasets: [{
-                          label: 'HC Change',
-                          data: selReg === 'ALL' ? APJ_COUNTRIES.map((c) => wiScenario.countries[c.id].hc - wiBase.countries[c.id].hc) : [wiScenario.countries[selReg].hc - wiBase.countries[selReg].hc],
-                          backgroundColor: (selReg === 'ALL' ? APJ_COUNTRIES.map((c) => wiScenario.countries[c.id].hc - wiBase.countries[c.id].hc) : [wiScenario.countries[selReg].hc - wiBase.countries[selReg].hc]).map((v) => (v > 0 ? '#E02D4C' : v < 0 ? '#247554' : '#AAAAAA')),
-                          borderRadius: 4,
-                        }],
-                      }}
-                      options={CHART_OPT_BASE}
-                    />
-                  </div></div>
-                </div>
-                <div className="apj-chg">
-                  <div className="apj-chc"><h3><span className="apj-dot" style={{ background: 'var(--dell-green)' }} /> Sensitivity Analysis</h3><div style={{ position: 'relative', width: '100%', height: 300 }}>
-                    <Line
-                      data={{
-                        labels: SENS_RANGE.map((v) => (v > 0 ? '+' : '') + v + '%'),
-                        datasets: [
-                          { label: 'Orders', data: sensitivity.sensOrd, borderColor: '#0672CB', borderWidth: 2, tension: .3, pointRadius: 2 },
-                          { label: 'Case Rate', data: sensitivity.sensCR, borderColor: '#247554', borderWidth: 2, tension: .3, pointRadius: 2 },
-                          { label: 'CPSR', data: sensitivity.sensCP, borderColor: '#C93B8C', borderWidth: 2, tension: .3, pointRadius: 2 },
-                          { label: 'CRW', data: sensitivity.sensCW, borderColor: '#0C32A4', borderWidth: 2, tension: .3, pointRadius: 2, borderDash: [5, 3] },
-                        ],
-                      }}
-                      options={{ ...CHART_OPT_BASE, plugins: { legend: { position: 'top', labels: { font: { family: 'Arial', size: 9, weight: 'bold' } } } } }}
-                    />
-                  </div></div>
-                  <div className="apj-chc"><h3><span className="apj-dot" style={{ background: 'var(--dell-orange)' }} /> Quarterly HC Trend</h3><div style={{ position: 'relative', width: '100%', height: 300 }}>
-                    <Line
-                      data={{
-                        labels: wiTrend.labels,
-                        datasets: [
-                          { label: 'Baseline HC', data: wiTrend.baseQ, borderColor: '#AAAAAA', backgroundColor: 'rgba(170,170,170,.08)', fill: true, borderWidth: 2, tension: .3, borderDash: [5, 3] },
-                          { label: 'Scenario HC', data: wiTrend.scenQ, borderColor: '#FBAE40', backgroundColor: 'rgba(251,174,64,.08)', fill: true, borderWidth: 3, tension: .3 },
-                        ],
-                      }}
-                      options={CHART_OPT_LEGEND}
-                    />
-                  </div></div>
-                </div>
+                  {selReg === 'ALL' && (
+                    <tr className="tot-row">
+                      <td style={{ textAlign: 'left' }}>APJ TOTAL</td>
+                      <td>{f0(allForQ.totals.gsO)}</td><td>{f0(allForQ.totals.csO)}</td><td>{f0(allForQ.totals.totO)}</td>
+                      {showDet && <><td>{f0(allForQ.totals.gsCs)}</td><td>{f0(allForQ.totals.csCs)}</td></>}
+                      <td>{f0(allForQ.totals.totCs)}</td><td>{fp(allForQ.totals.cr)}</td><td>{f0(allForQ.totals.totTCD)}</td><td>{f2(allForQ.totals.cpsr)}</td><td>—</td>
+                      <td>{f0(allForQ.totals.hc)}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="s-grid">
+            <div className="card">
+              <div className="card-header"><div className="card-title">Orders Trend</div></div>
+              <div className="chart-container">
+                <Bar data={{ labels: trendSeries.labels, datasets: [{ data: trendSeries.tO, backgroundColor: colors.accentBlue, borderRadius: 4 }] }} options={barOpt} />
+              </div>
+            </div>
+            <div className="card">
+              <div className="card-header"><div className="card-title">Cases Trend</div></div>
+              <div className="chart-container">
+                <Line data={{ labels: trendSeries.labels, datasets: [{ data: trendSeries.tC, borderColor: colors.accentGreen, backgroundColor: colors.accentGreen, fill: false, tension: .3, borderWidth: 2, pointRadius: 3 }] }} options={barOpt} />
               </div>
             </div>
           </div>
-        )}
-      </div>
+          <div className="s-grid">
+            <div className="card">
+              <div className="card-header"><div className="card-title">Contacts Trend</div></div>
+              <div className="chart-container">
+                <Line data={{ labels: trendSeries.labels, datasets: [{ data: trendSeries.tT, borderColor: colors.accentPurple, backgroundColor: colors.accentPurple, fill: false, tension: .3, borderWidth: 2, pointRadius: 3 }] }} options={barOpt} />
+              </div>
+            </div>
+            <div className="card">
+              <div className="card-header"><div className="card-title">Headcount Trend</div></div>
+              <div className="chart-container">
+                <Bar data={{ labels: trendSeries.labels, datasets: [{ data: trendSeries.tH, backgroundColor: colors.accentOrange, borderRadius: 4 }] }} options={barOpt} />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
-      <div className="apj-footer">
-        <span className="apj-foot-line" />
-        Internal Use — Confidential
-        <span className="apj-foot-line" />
-        <br /><span style={{ fontSize: 9, marginTop: 4, display: 'inline-block' }}>APJ Workforce Planner v2.0 — Sample Data</span>
-      </div>
+      {activeTab === 'whatif' && (
+        <>
+          <PickerTabs options={quarterOptions} value={selQ} onChange={setSelQ} ariaLabel="Quarter" />
+          <PickerTabs options={regionOptions} value={selReg} onChange={setSelReg} ariaLabel="Region" />
+
+          <div className="section-div">
+            <h2>Scenario Builder <InfoBtn tip="<strong>Purpose</strong>Apply an independent % change to Orders, Case Rate, CPSR and CRW to see the projected impact on headcount, compared against the current baseline." /></h2>
+          </div>
+          <div className="card">
+            <div className="wis-grid">
+              {[
+                { field: 'orders', label: 'Orders Change' },
+                { field: 'caserate', label: 'Case Rate Change' },
+                { field: 'cpsr', label: 'CPSR Change' },
+                { field: 'crw', label: 'CRW (Productivity) Change' },
+              ].map((g) => (
+                <div className="wis-control" key={g.field}>
+                  <div className="wis-control-head">
+                    <span>{g.label}</span>
+                    <span className="wis-num-wrap">
+                      <input
+                        type="number" className="wis-num-input" min={-50} max={100} step={1}
+                        value={mods[g.field]}
+                        onChange={(e) => { const n = safeNumber(e.target.value); if (n !== undefined) setWI(g.field, Math.min(100, Math.max(-50, Math.round(n)))) }}
+                        onBlur={(e) => { e.target.value = String(mods[g.field]) }}
+                      />%
+                    </span>
+                  </div>
+                  <input type="range" min={-50} max={100} step={1} value={mods[g.field]} onChange={(e) => setWI(g.field, Number(e.target.value))} />
+                </div>
+              ))}
+            </div>
+            <div className="filter-clear-row">
+              <button type="button" className="clear-all-btn" onClick={resetWI}>✕ Reset All to Baseline</button>
+            </div>
+          </div>
+
+          <div className="section-div">
+            <h2>Quick Scenarios</h2>
+          </div>
+          <div className="card">
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {QUICK_SCENARIOS.map((s) => (
+                <button type="button" key={s.key} className="btn btn-sm btn-neutral" onClick={() => applyScenario(s.key)}>{s.label}</button>
+              ))}
+            </div>
+            {scenario && (
+              <div className="ai-story" style={{ marginTop: 14 }}>
+                <div><div className="ai-story-title">{scenario.text}</div><div className="ai-story-text">{scenario.desc}</div></div>
+              </div>
+            )}
+          </div>
+
+          <div className="section-div">
+            <h2>Projected Impact</h2>
+          </div>
+          <div className="kpi-grid">
+            {impactMetrics.map((m) => {
+              const diff = m.sv - m.bv
+              const changed = Math.abs(diff) > 1e-9
+              const tone = diff >= 0 ? 'tone-g' : 'tone-r'
+              let bvF, svF
+              if (m.fmt === 'pct') { bvF = m.bv.toFixed(1) + '%'; svF = m.sv.toFixed(1) + '%' }
+              else if (m.fmt === 'dec') { bvF = f2(m.bv); svF = f2(m.sv) }
+              else { bvF = f0(m.bv); svF = f0(m.sv) }
+              return (
+                <div className="kpi-card" key={m.label}>
+                  <div className="kpi-label">{m.label}</div>
+                  <div className="kpi-value">
+                    {bvF}
+                    {changed && <>{' '}<span className="kpi-value-arrow">→</span>{' '}<span className={'kpi-value-new ' + tone}>{svF}</span></>}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="card">
+            <div className="card-header"><div className="card-title">Baseline vs Scenario Comparison</div></div>
+            <div className="tw">
+              <table>
+                <thead>
+                  <tr><th style={{ textAlign: 'left' }}>Country</th><th>Base Ord</th><th>Scen Ord</th><th>&Delta; Ord</th><th>Base Cases</th><th>Scen Cases</th><th>&Delta; Cases</th><th>Base HC</th><th>Scen HC</th><th>&Delta; HC</th></tr>
+                </thead>
+                <tbody>
+                  {(selReg === 'ALL' ? APJ_COUNTRIES : [APJ_COUNTRIES.find((x) => x.id === selReg)]).map((c) => {
+                    const br = wiBase.countries[c.id]
+                    const sr = wiScenario.countries[c.id]
+                    return (
+                      <tr key={c.id}>
+                        <td style={{ textAlign: 'left' }}><span className="pill-tag" style={{ marginRight: 8 }}>{c.cc}</span>{c.name}</td>
+                        <td>{f0(br.totO)}</td><td>{f0(sr.totO)}</td><td><DeltaCell base={br.totO} scenario={sr.totO} /></td>
+                        <td>{f0(br.totCs)}</td><td>{f0(sr.totCs)}</td><td><DeltaCell base={br.totCs} scenario={sr.totCs} /></td>
+                        <td>{f0(br.hc)}</td><td><strong>{f0(sr.hc)}</strong></td><td><DeltaCell base={br.hc} scenario={sr.hc} /></td>
+                      </tr>
+                    )
+                  })}
+                  {selReg === 'ALL' && (
+                    <tr className="tot-row">
+                      <td style={{ textAlign: 'left' }}>APJ TOTAL</td>
+                      <td>{f0(wiBase.totals.totO)}</td><td>{f0(wiScenario.totals.totO)}</td><td><DeltaCell base={wiBase.totals.totO} scenario={wiScenario.totals.totO} /></td>
+                      <td>{f0(wiBase.totals.totCs)}</td><td>{f0(wiScenario.totals.totCs)}</td><td><DeltaCell base={wiBase.totals.totCs} scenario={wiScenario.totals.totCs} /></td>
+                      <td>{f0(wiBase.totals.hc)}</td><td><strong>{f0(wiScenario.totals.hc)}</strong></td><td><DeltaCell base={wiBase.totals.hc} scenario={wiScenario.totals.hc} /></td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="s-grid">
+            <div className="card">
+              <div className="card-header"><div className="card-title">HC Comparison</div></div>
+              <div className="chart-container">
+                <Bar
+                  data={{
+                    labels: selReg === 'ALL' ? APJ_COUNTRIES.map((c) => c.cc) : [APJ_COUNTRIES.find((x) => x.id === selReg).cc],
+                    datasets: [
+                      { label: 'Baseline', data: selReg === 'ALL' ? APJ_COUNTRIES.map((c) => wiBase.countries[c.id].hc) : [wiBase.countries[selReg].hc], backgroundColor: theme === 'dark' ? 'rgba(164,184,205,.35)' : 'rgba(115,115,115,.25)', borderRadius: 4 },
+                      { label: 'Scenario', data: selReg === 'ALL' ? APJ_COUNTRIES.map((c) => wiScenario.countries[c.id].hc) : [wiScenario.countries[selReg].hc], backgroundColor: colors.accentBlue, borderRadius: 4 },
+                    ],
+                  }}
+                  options={lineOptLegend}
+                />
+              </div>
+            </div>
+            <div className="card">
+              <div className="card-header"><div className="card-title">Impact Delta (HC)</div></div>
+              <div className="chart-container">
+                <Bar
+                  data={{
+                    labels: selReg === 'ALL' ? APJ_COUNTRIES.map((c) => c.cc) : [APJ_COUNTRIES.find((x) => x.id === selReg).cc],
+                    datasets: [{
+                      label: 'HC Change',
+                      data: selReg === 'ALL' ? APJ_COUNTRIES.map((c) => wiScenario.countries[c.id].hc - wiBase.countries[c.id].hc) : [wiScenario.countries[selReg].hc - wiBase.countries[selReg].hc],
+                      backgroundColor: (selReg === 'ALL' ? APJ_COUNTRIES.map((c) => wiScenario.countries[c.id].hc - wiBase.countries[c.id].hc) : [wiScenario.countries[selReg].hc - wiBase.countries[selReg].hc]).map((v) => (v > 0 ? colors.accentRed : v < 0 ? colors.accentGreen : colors.textSecondary)),
+                      borderRadius: 4,
+                    }],
+                  }}
+                  options={barOpt}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="s-grid">
+            <div className="card">
+              <div className="card-header"><div className="card-title">Sensitivity Analysis (HC)</div></div>
+              <div className="chart-container">
+                <Line
+                  data={{
+                    labels: SENS_RANGE.map((v) => (v > 0 ? '+' : '') + v + '%'),
+                    datasets: sensitivity.map((s, i) => ({
+                      label: s.label, data: s.series, borderWidth: 2, tension: .3, pointRadius: 2,
+                      borderColor: [colors.accentBlue, colors.accentGreen, colors.accentPurple, colors.accentOrange][i],
+                      backgroundColor: [colors.accentBlue, colors.accentGreen, colors.accentPurple, colors.accentOrange][i],
+                    })),
+                  }}
+                  options={lineOptLegend}
+                />
+              </div>
+            </div>
+            <div className="card">
+              <div className="card-header"><div className="card-title">Quarterly HC Trend</div></div>
+              <div className="chart-container">
+                <Line
+                  data={{
+                    labels: wiTrend.labels,
+                    datasets: [
+                      { label: 'Baseline HC', data: wiTrend.baseQ, borderColor: colors.textSecondary, backgroundColor: colors.textSecondary, borderDash: [5, 3], borderWidth: 2, tension: .3, pointRadius: 2 },
+                      { label: 'Scenario HC', data: wiTrend.scenQ, borderColor: colors.accentOrange, backgroundColor: colors.accentOrange, borderWidth: 2, tension: .3, pointRadius: 3 },
+                    ],
+                  }}
+                  options={lineOptLegend}
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
-}
-
-function DeltaBadge({ base, scenario }) {
-  const diff = scenario - base
-  const pct = base === 0 ? 0 : (diff / base * 100)
-  const cls = diff > 0 ? 'up' : diff < 0 ? 'down' : 'same'
-  const sign = diff > 0 ? '+' : ''
-  return <span className={'apj-delta-badge ' + cls}>{sign}{f0(diff)} ({sign}{pct.toFixed(1)}%)</span>
 }
