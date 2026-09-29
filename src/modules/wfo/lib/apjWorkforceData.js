@@ -5,15 +5,19 @@
 // every other tab's mock data is (hashSeed + genKpiValue), seeded from the shared
 // Filters panel (Fiscal Year, Fiscal Quarter, Fiscal Week, Region, Sub Region,
 // Classification) so every screen reacts to filter changes like the rest of the app.
-import { hashSeed, genKpiValue } from './mockGenerators.js'
+import { hashSeed, genKpiValue, matchesMulti } from './mockGenerators.js'
 
+// Country names/ids match Care's own APJC country list (regionCountryMap.APJC in
+// mockGenerators.js) exactly, so the shared Filters panel's Sub Region/Country selector
+// can genuinely filter which countries this tool shows — not just perturb the numbers.
 export const APJ_COUNTRIES = [
-  { id: 'southasia', name: 'South Asia', cc: 'SA', hasCS: true },
-  { id: 'anz', name: 'Australia / NZ', cc: 'AU', hasCS: true },
-  { id: 'china', name: 'China / HK / TW', cc: 'CN', hasCS: true },
-  { id: 'india', name: 'India', cc: 'IN', hasCS: true },
+  { id: 'china', name: 'China', cc: 'CN', hasCS: true },
   { id: 'japan', name: 'Japan', cc: 'JP', hasCS: true },
   { id: 'korea', name: 'Korea', cc: 'KR', hasCS: false },
+  { id: 'australia', name: 'Australia', cc: 'AU', hasCS: true },
+  { id: 'india', name: 'India', cc: 'IN', hasCS: true },
+  { id: 'singapore', name: 'Singapore', cc: 'SG', hasCS: true },
+  { id: 'taiwan', name: 'Taiwan', cc: 'TW', hasCS: true },
 ]
 
 export const APJ_QUARTERS = ['FQ1', 'FQ2', 'FQ3', 'FQ4']
@@ -22,12 +26,19 @@ export const APJ_QUARTERS = ['FQ1', 'FQ2', 'FQ3', 'FQ4']
 // — genKpiValue jitters around these per the active filter seed, same as every other
 // mock KPI in the app.
 const COUNTRY_BASE = {
-  southasia: { gs: 18000, cs: 7500, gsRate: 14, csRate: 11, cpsr: 4.2, crw: 62 },
-  anz: { gs: 9000, cs: 4200, gsRate: 12, csRate: 10, cpsr: 3.8, crw: 58 },
   china: { gs: 21000, cs: 9500, gsRate: 16, csRate: 13, cpsr: 4.6, crw: 55 },
-  india: { gs: 32000, cs: 15000, gsRate: 15, csRate: 12, cpsr: 4.0, crw: 65 },
   japan: { gs: 14000, cs: 5800, gsRate: 10, csRate: 9, cpsr: 3.5, crw: 50 },
   korea: { gs: 8000, cs: 0, gsRate: 13, csRate: 0, cpsr: 3.9, crw: 60 },
+  australia: { gs: 9000, cs: 4200, gsRate: 12, csRate: 10, cpsr: 3.8, crw: 58 },
+  india: { gs: 32000, cs: 15000, gsRate: 15, csRate: 12, cpsr: 4.0, crw: 65 },
+  singapore: { gs: 11000, cs: 4800, gsRate: 13, csRate: 11, cpsr: 4.0, crw: 56 },
+  taiwan: { gs: 9500, cs: 4100, gsRate: 14, csRate: 12, cpsr: 4.1, crw: 54 },
+}
+
+// Which countries are "active" given the Sub Region/Country filter — same
+// All-means-unfiltered convention used throughout the app (matchesMulti).
+export function activeCountriesFromFilter(subRegion) {
+  return APJ_COUNTRIES.filter((c) => matchesMulti(subRegion, c.name))
 }
 
 // Which Fiscal Quarters are "active" given the Fiscal Quarter filter — same
@@ -101,10 +112,10 @@ export function calcCountry(data, countryId, quarterKey, mods) {
   return { gsO: g, csO: s, totO: tot, gsCs: gc, csCs: sc, totCs: tc, cr, totTCD: tcd, cpsr: cpsrVal, crw: crwVal, hc }
 }
 
-export function calcAllCountries(data, quarterKey, mods) {
+export function calcAllCountries(data, quarterKey, mods, countriesList = APJ_COUNTRIES) {
   const totals = { gsO: 0, csO: 0, totO: 0, gsCs: 0, csCs: 0, totCs: 0, totTCD: 0, hc: 0 }
   const countries = {}
-  APJ_COUNTRIES.forEach((c) => {
+  countriesList.forEach((c) => {
     const r = calcCountry(data, c.id, quarterKey, mods)
     countries[c.id] = r
     totals.gsO += r.gsO; totals.csO += r.csO; totals.totO += r.totO

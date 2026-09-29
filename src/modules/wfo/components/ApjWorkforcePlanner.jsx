@@ -3,7 +3,7 @@ import { Bar, Line } from 'react-chartjs-2'
 import { useApp } from '../../../core/hooks/useApp.js'
 import { getColors } from '../../../shared/themes/colors.js'
 import {
-  APJ_COUNTRIES, activeQuartersFromFilter, buildFilteredData,
+  activeQuartersFromFilter, activeCountriesFromFilter, buildFilteredData,
   calcAllCountries, f0, f1, f2, fp,
 } from '../lib/apjWorkforceData.js'
 import InfoBtn from '../../../shared/components/InfoBtn.jsx'
@@ -45,13 +45,13 @@ const QUICK_SCENARIOS = [
 const DEFAULT_MODS = { orders: 0, caserate: 0, cpsr: 0, crw: 0, cases: 0, tcd: 0, headcount: 0 }
 const SENS_RANGE = [-40, -20, 0, 20, 40, 60, 80, 100]
 
-function exportCsv(data, quarters, mods) {
+function exportCsv(data, quarters, mods, countries) {
   let csv = 'APJ Capacity Plan\n\n'
   quarters.forEach((qKey) => {
-    const all = calcAllCountries(data, qKey)
+    const all = calcAllCountries(data, qKey, undefined, countries)
     const t = all.totals
     csv += `\n${qKey}\nCountry,GS Ord,CS Ord,Total,Cases,CR,TCD,CPSR,CRW,HC\n`
-    APJ_COUNTRIES.forEach((c) => {
+    countries.forEach((c) => {
       const r = all.countries[c.id]
       csv += `${c.name},${r.gsO},${r.csO},${r.totO},${r.totCs.toFixed(2)},${(r.cr * 100).toFixed(2)}%,${r.totTCD.toFixed(2)},${r.cpsr.toFixed(2)},${r.crw},${r.hc}\n`
     })
@@ -60,10 +60,10 @@ function exportCsv(data, quarters, mods) {
   if (mods.orders || mods.caserate || mods.cpsr || mods.crw) {
     csv += `\n\nWHAT-IF SCENARIO\nOrders: ${mods.orders > 0 ? '+' : ''}${mods.orders}%  Case Rate: ${mods.caserate > 0 ? '+' : ''}${mods.caserate}%  CPSR: ${mods.cpsr > 0 ? '+' : ''}${mods.cpsr}%  CRW: ${mods.crw > 0 ? '+' : ''}${mods.crw}%\n`
     quarters.forEach((qKey) => {
-      const all = calcAllCountries(data, qKey, mods)
-      const base = calcAllCountries(data, qKey)
+      const all = calcAllCountries(data, qKey, mods, countries)
+      const base = calcAllCountries(data, qKey, undefined, countries)
       csv += `\n${qKey} (SCENARIO)\nCountry,Scen Orders,Scen Cases,Scen HC,Base HC,Delta\n`
-      APJ_COUNTRIES.forEach((c) => {
+      countries.forEach((c) => {
         const r = all.countries[c.id]
         const br = base.countries[c.id]
         csv += `${c.name},${r.totO},${r.totCs.toFixed(2)},${r.hc},${br.hc},${r.hc - br.hc}\n`
@@ -124,7 +124,14 @@ export default function ApjWorkforcePlanner() {
   const selQ = Math.min(selQIndex, activeQuarters.length - 1)
   const qk = activeQuarters[selQ]
   const quarterOptions = activeQuarters.map((q, i) => ({ value: i, label: q }))
-  const regionOptions = [{ value: 'ALL', label: 'APJ Total' }, ...APJ_COUNTRIES.map((c) => ({ value: c.id, label: c.name }))]
+
+  // Sub Region/Country filter narrows which countries this tool shows (same
+  // All-means-unfiltered convention as Fiscal Quarter above) — falls back to APJ Total
+  // if the previously-picked country drops out of the filtered set, without losing the
+  // selection in case the filter changes back.
+  const countries = useMemo(() => activeCountriesFromFilter(apjFilters.subRegion), [apjFilters.subRegion])
+  const safeSelReg = countries.some((c) => c.id === selReg) ? selReg : 'ALL'
+  const regionOptions = [{ value: 'ALL', label: 'APJ Total' }, ...countries.map((c) => ({ value: c.id, label: c.name }))]
 
   function updOrd(cid, field, raw) {
     const n = safeNumber(raw)
@@ -159,24 +166,24 @@ export default function ApjWorkforcePlanner() {
     setScenario({ text: s.text, desc: s.desc })
   }
 
-  const allForQ = useMemo(() => calcAllCountries(data, qk), [data, qk])
-  const dSel = selReg === 'ALL' ? allForQ.totals : allForQ.countries[selReg]
+  const allForQ = useMemo(() => calcAllCountries(data, qk, undefined, countries), [data, qk, countries])
+  const dSel = safeSelReg === 'ALL' ? allForQ.totals : allForQ.countries[safeSelReg]
 
   const trendSeries = useMemo(() => {
     const labels = activeQuarters
     const tO = [], tC = [], tT = [], tH = []
     activeQuarters.forEach((q) => {
-      const a = calcAllCountries(data, q)
-      const d = selReg === 'ALL' ? a.totals : a.countries[selReg]
+      const a = calcAllCountries(data, q, undefined, countries)
+      const d = safeSelReg === 'ALL' ? a.totals : a.countries[safeSelReg]
       tO.push(d.totO); tC.push(d.totCs); tT.push(d.totTCD); tH.push(d.hc)
     })
     return { labels, tO, tC, tT, tH }
-  }, [data, activeQuarters, selReg])
+  }, [data, activeQuarters, countries, safeSelReg])
 
-  const wiBase = useMemo(() => calcAllCountries(data, qk), [data, qk])
-  const wiScenario = useMemo(() => calcAllCountries(data, qk, mods), [data, qk, mods])
-  const wiBaseSel = selReg === 'ALL' ? wiBase.totals : wiBase.countries[selReg]
-  const wiScenSel = selReg === 'ALL' ? wiScenario.totals : wiScenario.countries[selReg]
+  const wiBase = useMemo(() => calcAllCountries(data, qk, undefined, countries), [data, qk, countries])
+  const wiScenario = useMemo(() => calcAllCountries(data, qk, mods, countries), [data, qk, mods, countries])
+  const wiBaseSel = safeSelReg === 'ALL' ? wiBase.totals : wiBase.countries[safeSelReg]
+  const wiScenSel = safeSelReg === 'ALL' ? wiScenario.totals : wiScenario.countries[safeSelReg]
 
   const impactMetrics = [
     { label: 'Total Orders', bv: wiBaseSel.totO, sv: wiScenSel.totO },
@@ -192,19 +199,24 @@ export default function ApjWorkforcePlanner() {
       { key: 'orders', label: 'Volume' }, { key: 'caserate', label: 'Case Rate' },
       { key: 'cpsr', label: 'CPSR' }, { key: 'crw', label: 'CRW' },
     ]
-    const pick = (m) => (selReg === 'ALL' ? calcAllCountries(data, qk, m).totals : calcAllCountries(data, qk, m).countries[selReg])
+    const pick = (m) => {
+      const r = calcAllCountries(data, qk, m, countries)
+      return safeSelReg === 'ALL' ? r.totals : r.countries[safeSelReg]
+    }
     return rows.map((r) => ({ label: r.label, series: SENS_RANGE.map((v) => pick({ [r.key]: v }).hc) }))
-  }, [data, qk, selReg])
+  }, [data, qk, countries, safeSelReg])
 
   const wiTrend = useMemo(() => {
     const baseQ = [], scenQ = []
     activeQuarters.forEach((q) => {
-      const b = selReg === 'ALL' ? calcAllCountries(data, q).totals : calcAllCountries(data, q).countries[selReg]
-      const s = selReg === 'ALL' ? calcAllCountries(data, q, mods).totals : calcAllCountries(data, q, mods).countries[selReg]
+      const bAll = calcAllCountries(data, q, undefined, countries)
+      const sAll = calcAllCountries(data, q, mods, countries)
+      const b = safeSelReg === 'ALL' ? bAll.totals : bAll.countries[safeSelReg]
+      const s = safeSelReg === 'ALL' ? sAll.totals : sAll.countries[safeSelReg]
       baseQ.push(b.hc); scenQ.push(s.hc)
     })
     return { labels: activeQuarters, baseQ, scenQ }
-  }, [data, activeQuarters, selReg, mods])
+  }, [data, activeQuarters, countries, safeSelReg, mods])
 
   const barOpt = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grace: '10%' } } }
   const lineOptLegend = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grace: '10%' } } }
@@ -220,7 +232,7 @@ export default function ApjWorkforcePlanner() {
             <div className="card-header">
               <div className="card-title">Sample Data — {qk}</div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" className="btn btn-sm btn-neutral" onClick={() => exportCsv(data, activeQuarters, mods)}>Export CSV</button>
+                <button type="button" className="btn btn-sm btn-neutral" onClick={() => exportCsv(data, activeQuarters, mods, countries)}>Export CSV</button>
                 <button type="button" className="clear-all-btn" onClick={resetToSample}>✕ Reset to Sample Data</button>
               </div>
             </div>
@@ -239,7 +251,10 @@ export default function ApjWorkforcePlanner() {
                   </tr>
                 </thead>
                 <tbody>
-                  {APJ_COUNTRIES.map((c) => {
+                  {countries.length === 0 && (
+                    <tr><td colSpan={8} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No APJ countries match the current Sub Region/Country filter selection.</td></tr>
+                  )}
+                  {countries.map((c) => {
                     const o = data[c.id].quarters[qk] || { gs: 0, cs: 0 }
                     const p = data[c.id].params
                     const gv = Math.round(o.gs || 0)
@@ -259,13 +274,15 @@ export default function ApjWorkforcePlanner() {
                       </tr>
                     )
                   })}
-                  <tr className="tot-row">
-                    <td style={{ textAlign: 'left' }}>APJ TOTAL</td>
-                    <td>{f0(APJ_COUNTRIES.reduce((s, c) => s + (data[c.id].quarters[qk]?.gs || 0), 0))}</td>
-                    <td>{f0(APJ_COUNTRIES.reduce((s, c) => s + (data[c.id].quarters[qk]?.cs || 0), 0))}</td>
-                    <td>{f0(APJ_COUNTRIES.reduce((s, c) => s + (data[c.id].quarters[qk]?.gs || 0) + (data[c.id].quarters[qk]?.cs || 0), 0))}</td>
-                    <td colSpan={4}></td>
-                  </tr>
+                  {countries.length > 0 && (
+                    <tr className="tot-row">
+                      <td style={{ textAlign: 'left' }}>APJ TOTAL</td>
+                      <td>{f0(countries.reduce((s, c) => s + (data[c.id].quarters[qk]?.gs || 0), 0))}</td>
+                      <td>{f0(countries.reduce((s, c) => s + (data[c.id].quarters[qk]?.cs || 0), 0))}</td>
+                      <td>{f0(countries.reduce((s, c) => s + (data[c.id].quarters[qk]?.gs || 0) + (data[c.id].quarters[qk]?.cs || 0), 0))}</td>
+                      <td colSpan={4}></td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -278,8 +295,8 @@ export default function ApjWorkforcePlanner() {
           <div className="section-div">
             <h2>Headcount by Country <InfoBtn tip="<strong>Purpose</strong>Required Headcount per country for the selected quarter, computed as Total Contacts / CRW / 13 weeks." /></h2>
           </div>
-          <div className="kpi-grid cols-7">
-            {APJ_COUNTRIES.map((c) => (
+          <div className="kpi-grid">
+            {countries.map((c) => (
               <div className="kpi-card" key={c.id}><div className="kpi-label">{c.name}</div><div className="kpi-value">{f0(allForQ.countries[c.id].hc)}</div></div>
             ))}
             <div className="kpi-card"><div className="kpi-label">APJ Total</div><div className="kpi-value">{f0(allForQ.totals.hc)}</div></div>
@@ -291,7 +308,7 @@ export default function ApjWorkforcePlanner() {
         <>
           <NavRow back={{ label: '← Data Input', onClick: () => setActiveTab('input') }} forward={{ label: 'What-If Analysis →', onClick: () => setActiveTab('whatif') }} />
           <PickerTabs options={quarterOptions} value={selQ} onChange={setSelQIndex} ariaLabel="Quarter" />
-          <PickerTabs options={regionOptions} value={selReg} onChange={setSelReg} ariaLabel="Region" />
+          <PickerTabs options={regionOptions} value={safeSelReg} onChange={setSelReg} ariaLabel="Region" />
 
           <div className="kpi-grid">
             <div className="kpi-card"><div className="kpi-label">Total Orders</div><div className="kpi-value">{f0(dSel.totO)}</div></div>
@@ -304,7 +321,7 @@ export default function ApjWorkforcePlanner() {
 
           <div className="card">
             <div className="card-header">
-              <div className="card-title">{selReg === 'ALL' ? 'Executive Summary' : APJ_COUNTRIES.find((x) => x.id === selReg).name + ' Summary'}</div>
+              <div className="card-title">{safeSelReg === 'ALL' ? 'Executive Summary' : countries.find((x) => x.id === safeSelReg).name + ' Summary'}</div>
               <button type="button" className={'btn btn-sm ' + (showDet ? 'btn-primary' : 'btn-neutral')} onClick={() => setShowDet((d) => !d)}>{showDet ? 'Summary' : 'Detailed'}</button>
             </div>
             <div className="tw">
@@ -318,7 +335,10 @@ export default function ApjWorkforcePlanner() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(selReg === 'ALL' ? APJ_COUNTRIES : [APJ_COUNTRIES.find((x) => x.id === selReg)]).map((c) => {
+                  {countries.length === 0 && (
+                    <tr><td colSpan={showDet ? 11 : 9} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No APJ countries match the current Sub Region/Country filter selection.</td></tr>
+                  )}
+                  {(safeSelReg === 'ALL' ? countries : [countries.find((x) => x.id === safeSelReg)]).map((c) => {
                     const r = allForQ.countries[c.id]
                     return (
                       <tr key={c.id}>
@@ -330,7 +350,7 @@ export default function ApjWorkforcePlanner() {
                       </tr>
                     )
                   })}
-                  {selReg === 'ALL' && (
+                  {safeSelReg === 'ALL' && countries.length > 0 && (
                     <tr className="tot-row">
                       <td style={{ textAlign: 'left' }}>APJ TOTAL</td>
                       <td>{f0(allForQ.totals.gsO)}</td><td>{f0(allForQ.totals.csO)}</td><td>{f0(allForQ.totals.totO)}</td>
@@ -379,7 +399,7 @@ export default function ApjWorkforcePlanner() {
         <>
           <NavRow back={{ label: '← Data Input', onClick: () => setActiveTab('input') }} forward={{ label: '← Results', onClick: () => setActiveTab('results') }} />
           <PickerTabs options={quarterOptions} value={selQ} onChange={setSelQIndex} ariaLabel="Quarter" />
-          <PickerTabs options={regionOptions} value={selReg} onChange={setSelReg} ariaLabel="Region" />
+          <PickerTabs options={regionOptions} value={safeSelReg} onChange={setSelReg} ariaLabel="Region" />
 
           <div className="section-div">
             <h2>Scenario Builder <InfoBtn tip="<strong>Purpose</strong>Orders, Case Rate, CPSR and CRW drive Cases &rarr; TCD &rarr; Headcount in sequence. Cases Change, TCD Change and Headcount Change are manual overrides layered on top of that chain at each stage (e.g. a known one-off volume bump beyond what Orders/Case Rate alone would predict), and cascade forward to the metrics after them." /></h2>
@@ -464,7 +484,10 @@ export default function ApjWorkforcePlanner() {
                   <tr><th style={{ textAlign: 'left' }}>Country</th><th>Base Ord</th><th>Scen Ord</th><th>&Delta; Ord</th><th>Base Cases</th><th>Scen Cases</th><th>&Delta; Cases</th><th>Base HC</th><th>Scen HC</th><th>&Delta; HC</th></tr>
                 </thead>
                 <tbody>
-                  {(selReg === 'ALL' ? APJ_COUNTRIES : [APJ_COUNTRIES.find((x) => x.id === selReg)]).map((c) => {
+                  {countries.length === 0 && (
+                    <tr><td colSpan={10} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No APJ countries match the current Sub Region/Country filter selection.</td></tr>
+                  )}
+                  {(safeSelReg === 'ALL' ? countries : [countries.find((x) => x.id === safeSelReg)]).map((c) => {
                     const br = wiBase.countries[c.id]
                     const sr = wiScenario.countries[c.id]
                     return (
@@ -476,7 +499,7 @@ export default function ApjWorkforcePlanner() {
                       </tr>
                     )
                   })}
-                  {selReg === 'ALL' && (
+                  {safeSelReg === 'ALL' && countries.length > 0 && (
                     <tr className="tot-row">
                       <td style={{ textAlign: 'left' }}>APJ TOTAL</td>
                       <td>{f0(wiBase.totals.totO)}</td><td>{f0(wiScenario.totals.totO)}</td><td><DeltaCell base={wiBase.totals.totO} scenario={wiScenario.totals.totO} /></td>
@@ -495,10 +518,10 @@ export default function ApjWorkforcePlanner() {
               <div className="chart-container">
                 <Bar
                   data={{
-                    labels: selReg === 'ALL' ? APJ_COUNTRIES.map((c) => c.cc) : [APJ_COUNTRIES.find((x) => x.id === selReg).cc],
+                    labels: safeSelReg === 'ALL' ? countries.map((c) => c.cc) : [countries.find((x) => x.id === safeSelReg).cc],
                     datasets: [
-                      { label: 'Baseline', data: selReg === 'ALL' ? APJ_COUNTRIES.map((c) => wiBase.countries[c.id].hc) : [wiBase.countries[selReg].hc], backgroundColor: theme === 'dark' ? 'rgba(164,184,205,.35)' : 'rgba(115,115,115,.25)', borderRadius: 4 },
-                      { label: 'Scenario', data: selReg === 'ALL' ? APJ_COUNTRIES.map((c) => wiScenario.countries[c.id].hc) : [wiScenario.countries[selReg].hc], backgroundColor: colors.accentBlue, borderRadius: 4 },
+                      { label: 'Baseline', data: safeSelReg === 'ALL' ? countries.map((c) => wiBase.countries[c.id].hc) : [wiBase.countries[safeSelReg].hc], backgroundColor: theme === 'dark' ? 'rgba(164,184,205,.35)' : 'rgba(115,115,115,.25)', borderRadius: 4 },
+                      { label: 'Scenario', data: safeSelReg === 'ALL' ? countries.map((c) => wiScenario.countries[c.id].hc) : [wiScenario.countries[safeSelReg].hc], backgroundColor: colors.accentBlue, borderRadius: 4 },
                     ],
                   }}
                   options={lineOptLegend}
@@ -510,11 +533,11 @@ export default function ApjWorkforcePlanner() {
               <div className="chart-container">
                 <Bar
                   data={{
-                    labels: selReg === 'ALL' ? APJ_COUNTRIES.map((c) => c.cc) : [APJ_COUNTRIES.find((x) => x.id === selReg).cc],
+                    labels: safeSelReg === 'ALL' ? countries.map((c) => c.cc) : [countries.find((x) => x.id === safeSelReg).cc],
                     datasets: [{
                       label: 'HC Change',
-                      data: selReg === 'ALL' ? APJ_COUNTRIES.map((c) => wiScenario.countries[c.id].hc - wiBase.countries[c.id].hc) : [wiScenario.countries[selReg].hc - wiBase.countries[selReg].hc],
-                      backgroundColor: (selReg === 'ALL' ? APJ_COUNTRIES.map((c) => wiScenario.countries[c.id].hc - wiBase.countries[c.id].hc) : [wiScenario.countries[selReg].hc - wiBase.countries[selReg].hc]).map((v) => (v > 0 ? colors.accentRed : v < 0 ? colors.accentGreen : colors.textSecondary)),
+                      data: safeSelReg === 'ALL' ? countries.map((c) => wiScenario.countries[c.id].hc - wiBase.countries[c.id].hc) : [wiScenario.countries[safeSelReg].hc - wiBase.countries[safeSelReg].hc],
+                      backgroundColor: (safeSelReg === 'ALL' ? countries.map((c) => wiScenario.countries[c.id].hc - wiBase.countries[c.id].hc) : [wiScenario.countries[safeSelReg].hc - wiBase.countries[safeSelReg].hc]).map((v) => (v > 0 ? colors.accentRed : v < 0 ? colors.accentGreen : colors.textSecondary)),
                       borderRadius: 4,
                     }],
                   }}
