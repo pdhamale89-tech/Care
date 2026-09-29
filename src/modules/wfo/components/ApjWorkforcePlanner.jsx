@@ -126,8 +126,15 @@ export default function ApjWorkforcePlanner() {
 
   const [data, setData] = useState(() => buildFilteredData(activeQuarters, seedInputs, countries))
   const [dataKey, setDataKey] = useState(filterKey)
+  // `countries` (and activeQuarters) update immediately within this render via useMemo,
+  // but `data` state only catches up on the *next* render once setData below commits —
+  // for this one render they'd be inconsistent (data still keyed by the old country/
+  // quarter set) if we read `data` directly, causing calcAllCountries to look up a
+  // country that isn't in it yet. currentData is the render-consistent value to use
+  // everywhere below instead of the (possibly stale-for-one-render) `data` state.
+  const currentData = filterKey === dataKey ? data : buildFilteredData(activeQuarters, seedInputs, countries)
   if (filterKey !== dataKey) {
-    setData(buildFilteredData(activeQuarters, seedInputs, countries))
+    setData(currentData)
     setDataKey(filterKey)
   }
 
@@ -168,22 +175,22 @@ export default function ApjWorkforcePlanner() {
     setScenario({ text: s.text, desc: s.desc })
   }
 
-  const allForQ = useMemo(() => calcAllCountries(data, qk, undefined, countries), [data, qk, countries])
+  const allForQ = useMemo(() => calcAllCountries(currentData, qk, undefined, countries), [currentData, qk, countries])
   const dSel = safeSelReg === 'ALL' ? allForQ.totals : allForQ.countries[safeSelReg]
 
   const trendSeries = useMemo(() => {
     const labels = activeQuarters
     const tO = [], tC = [], tT = [], tH = []
     activeQuarters.forEach((q) => {
-      const a = calcAllCountries(data, q, undefined, countries)
+      const a = calcAllCountries(currentData, q, undefined, countries)
       const d = safeSelReg === 'ALL' ? a.totals : a.countries[safeSelReg]
       tO.push(d.totO); tC.push(d.totCs); tT.push(d.totTCD); tH.push(d.hc)
     })
     return { labels, tO, tC, tT, tH }
-  }, [data, activeQuarters, countries, safeSelReg])
+  }, [currentData, activeQuarters, countries, safeSelReg])
 
-  const wiBase = useMemo(() => calcAllCountries(data, qk, undefined, countries), [data, qk, countries])
-  const wiScenario = useMemo(() => calcAllCountries(data, qk, mods, countries), [data, qk, mods, countries])
+  const wiBase = useMemo(() => calcAllCountries(currentData, qk, undefined, countries), [currentData, qk, countries])
+  const wiScenario = useMemo(() => calcAllCountries(currentData, qk, mods, countries), [currentData, qk, mods, countries])
   const wiBaseSel = safeSelReg === 'ALL' ? wiBase.totals : wiBase.countries[safeSelReg]
   const wiScenSel = safeSelReg === 'ALL' ? wiScenario.totals : wiScenario.countries[safeSelReg]
 
@@ -202,23 +209,23 @@ export default function ApjWorkforcePlanner() {
       { key: 'cpsr', label: 'CPSR' }, { key: 'crw', label: 'CRW' },
     ]
     const pick = (m) => {
-      const r = calcAllCountries(data, qk, m, countries)
+      const r = calcAllCountries(currentData, qk, m, countries)
       return safeSelReg === 'ALL' ? r.totals : r.countries[safeSelReg]
     }
     return rows.map((r) => ({ label: r.label, series: SENS_RANGE.map((v) => pick({ [r.key]: v }).hc) }))
-  }, [data, qk, countries, safeSelReg])
+  }, [currentData, qk, countries, safeSelReg])
 
   const wiTrend = useMemo(() => {
     const baseQ = [], scenQ = []
     activeQuarters.forEach((q) => {
-      const bAll = calcAllCountries(data, q, undefined, countries)
-      const sAll = calcAllCountries(data, q, mods, countries)
+      const bAll = calcAllCountries(currentData, q, undefined, countries)
+      const sAll = calcAllCountries(currentData, q, mods, countries)
       const b = safeSelReg === 'ALL' ? bAll.totals : bAll.countries[safeSelReg]
       const s = safeSelReg === 'ALL' ? sAll.totals : sAll.countries[safeSelReg]
       baseQ.push(b.hc); scenQ.push(s.hc)
     })
     return { labels: activeQuarters, baseQ, scenQ }
-  }, [data, activeQuarters, countries, safeSelReg, mods])
+  }, [currentData, activeQuarters, countries, safeSelReg, mods])
 
   const barOpt = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grace: '10%' } } }
   const lineOptLegend = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grace: '10%' } } }
@@ -234,7 +241,7 @@ export default function ApjWorkforcePlanner() {
             <div className="card-header">
               <div className="card-title">Sample Data — {qk}</div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" className="btn btn-sm btn-neutral" onClick={() => exportCsv(data, activeQuarters, mods, countries)}>Export CSV</button>
+                <button type="button" className="btn btn-sm btn-neutral" onClick={() => exportCsv(currentData, activeQuarters, mods, countries)}>Export CSV</button>
                 <button type="button" className="clear-all-btn" onClick={resetToSample}>✕ Reset to Sample Data</button>
               </div>
             </div>
@@ -257,8 +264,8 @@ export default function ApjWorkforcePlanner() {
                     <tr><td colSpan={8} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No APJ countries match the current Sub Region/Country filter selection.</td></tr>
                   )}
                   {countries.map((c) => {
-                    const o = data[c.id].quarters[qk] || { gs: 0, cs: 0 }
-                    const p = data[c.id].params
+                    const o = currentData[c.id].quarters[qk] || { gs: 0, cs: 0 }
+                    const p = currentData[c.id].params
                     const gv = Math.round(o.gs || 0)
                     const cv = c.hasCS ? Math.round(o.cs || 0) : 0
                     return (
@@ -279,9 +286,9 @@ export default function ApjWorkforcePlanner() {
                   {countries.length > 0 && (
                     <tr className="tot-row">
                       <td style={{ textAlign: 'left' }}>GRAND TOTAL</td>
-                      <td>{f0(countries.reduce((s, c) => s + (data[c.id].quarters[qk]?.gs || 0), 0))}</td>
-                      <td>{f0(countries.reduce((s, c) => s + (data[c.id].quarters[qk]?.cs || 0), 0))}</td>
-                      <td>{f0(countries.reduce((s, c) => s + (data[c.id].quarters[qk]?.gs || 0) + (data[c.id].quarters[qk]?.cs || 0), 0))}</td>
+                      <td>{f0(countries.reduce((s, c) => s + (currentData[c.id].quarters[qk]?.gs || 0), 0))}</td>
+                      <td>{f0(countries.reduce((s, c) => s + (currentData[c.id].quarters[qk]?.cs || 0), 0))}</td>
+                      <td>{f0(countries.reduce((s, c) => s + (currentData[c.id].quarters[qk]?.gs || 0) + (currentData[c.id].quarters[qk]?.cs || 0), 0))}</td>
                       <td colSpan={4}></td>
                     </tr>
                   )}
