@@ -23,7 +23,7 @@ const PAGE_META = {
   reports: { title: 'Reports', description: 'Linked reporting shortcuts for voice queue, agent and Genesys skill data.' },
   fiscalCalendar: { title: 'Fiscal Calendar', description: 'Fiscal year weeks, quarters and holiday schedule for planning.' },
   glossary: { title: 'Glossary', description: 'Metric definitions and formulas used across the dashboard.' },
-  apjPlanner: { title: 'APJ Workforce Planner', description: 'Country-level order, case, and headcount planning with what-if scenarios for the APJ region.' },
+  apjPlanner: { title: 'Workforce Planner', description: 'Country-level order, case, and headcount planning with what-if scenarios, for any region.' },
 }
 
 function TabRouter() {

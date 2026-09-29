@@ -1,44 +1,55 @@
-// Data model and calc engine for the APJ Workforce Planner tab — a faithful port of a
+// Data model and calc engine for the Workforce Planner tab — a faithful port of a
 // standalone reference tool (3 sections: Data Input, Results, What-If) supplied as a
-// finished HTML file. The Excel import/export machinery from that source tool is
-// intentionally not ported (per request); sample data is instead generated the same way
-// every other tab's mock data is (hashSeed + genKpiValue), seeded from the shared
-// Filters panel (Fiscal Year, Fiscal Quarter, Fiscal Week, Region, Sub Region,
-// Classification) so every screen reacts to filter changes like the rest of the app.
-import { hashSeed, genKpiValue, matchesMulti } from './mockGenerators.js'
-
-// Country names/ids match Care's own APJC country list (regionCountryMap.APJC in
-// mockGenerators.js) exactly, so the shared Filters panel's Sub Region/Country selector
-// can genuinely filter which countries this tool shows — not just perturb the numbers.
-export const APJ_COUNTRIES = [
-  { id: 'china', name: 'China', cc: 'CN', hasCS: true },
-  { id: 'japan', name: 'Japan', cc: 'JP', hasCS: true },
-  { id: 'korea', name: 'Korea', cc: 'KR', hasCS: false },
-  { id: 'australia', name: 'Australia', cc: 'AU', hasCS: true },
-  { id: 'india', name: 'India', cc: 'IN', hasCS: true },
-  { id: 'singapore', name: 'Singapore', cc: 'SG', hasCS: true },
-  { id: 'taiwan', name: 'Taiwan', cc: 'TW', hasCS: true },
-]
+// finished HTML file, originally scoped to a fixed 6-country APJ list. Generalized to
+// cover every region in Care's own taxonomy (regionCountryMap in mockGenerators.js) —
+// the Region and Sub Region/Country filters now genuinely narrow which countries this
+// tool shows, the same way they filter every other tab, rather than being fixed to APJ.
+// The source tool's Excel import/export machinery is intentionally not ported (per
+// request); sample data is instead generated the same way every other tab's mock data
+// is (hashSeed + genKpiValue).
+import { hashSeed, genKpiValue, matchesMulti, countriesForRegions } from './mockGenerators.js'
 
 export const APJ_QUARTERS = ['FQ1', 'FQ2', 'FQ3', 'FQ4']
 
-// Fixed per-country baseline magnitudes (stands in for an imported Targets/Orders sheet)
-// — genKpiValue jitters around these per the active filter seed, same as every other
-// mock KPI in the app.
-const COUNTRY_BASE = {
-  china: { gs: 21000, cs: 9500, gsRate: 16, csRate: 13, cpsr: 4.6, crw: 55 },
-  japan: { gs: 14000, cs: 5800, gsRate: 10, csRate: 9, cpsr: 3.5, crw: 50 },
-  korea: { gs: 8000, cs: 0, gsRate: 13, csRate: 0, cpsr: 3.9, crw: 60 },
-  australia: { gs: 9000, cs: 4200, gsRate: 12, csRate: 10, cpsr: 3.8, crw: 58 },
-  india: { gs: 32000, cs: 15000, gsRate: 15, csRate: 12, cpsr: 4.0, crw: 65 },
-  singapore: { gs: 11000, cs: 4800, gsRate: 13, csRate: 11, cpsr: 4.0, crw: 56 },
-  taiwan: { gs: 9500, cs: 4100, gsRate: 14, csRate: 12, cpsr: 4.1, crw: 54 },
+// Short codes for every country in Care's regionCountryMap (mockGenerators.js) — falls
+// back to the first two letters for anything not listed, so a new country added to that
+// map elsewhere in the app still gets a reasonable code here automatically.
+const COUNTRY_CODES = {
+  China: 'CN', Japan: 'JP', Korea: 'KR', Australia: 'AU', India: 'IN', Singapore: 'SG', Taiwan: 'TW',
+  Brazil: 'BR', 'United Kingdom': 'GB', UK: 'GB', Germany: 'DE', France: 'FR', UAE: 'AE',
+  'South Africa': 'ZA', Spain: 'ES', Italy: 'IT', USA: 'US', Mexico: 'MX', Argentina: 'AR',
+  Chile: 'CL', Colombia: 'CO', Peru: 'PE', Canada: 'CA',
 }
 
-// Which countries are "active" given the Sub Region/Country filter — same
-// All-means-unfiltered convention used throughout the app (matchesMulti).
-export function activeCountriesFromFilter(subRegion) {
-  return APJ_COUNTRIES.filter((c) => matchesMulti(subRegion, c.name))
+function slugify(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '')
+}
+
+// Builds the active country list from Care's shared Region + Sub Region/Country filters
+// (same countriesForRegions/matchesMulti utilities every other tab uses) — Region=All
+// shows every country across every region; picking a Region narrows to that region's
+// countries; Sub Region/Country narrows further within that.
+export function buildCountryList(activeRegions, subRegion) {
+  const names = countriesForRegions(activeRegions).filter((n) => matchesMulti(subRegion, n))
+  return names.map((name) => {
+    const seed = hashSeed(name)
+    return { id: slugify(name), name, cc: COUNTRY_CODES[name] || name.slice(0, 2).toUpperCase(), hasCS: seed % 4 !== 0 }
+  })
+}
+
+// Deterministic per-country baseline magnitudes derived from the country name itself
+// (not a hand-curated table, since the country set is now dynamic/unbounded) —
+// genKpiValue jitters further around these per the active filter seed.
+function deriveCountryBase(name) {
+  const s = hashSeed(name)
+  return {
+    gs: 6000 + (s % 27000),
+    cs: 2000 + (s % 12000),
+    gsRate: 8 + (s % 900) / 100,
+    csRate: 7 + (s % 700) / 100,
+    cpsr: 3 + (s % 250) / 100,
+    crw: 40 + (s % 30),
+  }
 }
 
 // Which Fiscal Quarters are "active" given the Fiscal Quarter filter — same
@@ -48,10 +59,10 @@ export function activeQuartersFromFilter(quarter) {
   return list.length ? APJ_QUARTERS.filter((q) => list.includes(q)) : APJ_QUARTERS
 }
 
-// Builds the full country/quarter dataset for the given active quarters, seeded from
-// the shared Filters panel selection (subRegion/week/classification/fiscalYear) plus
-// the global Region filter — changing any of them reseeds every number in the tool.
-export function buildFilteredData(activeQuarters, filters) {
+// Builds the full country/quarter dataset for the given active quarters and country
+// list, seeded from the shared Filters panel (Fiscal Year/Week, Classification) —
+// changing any of them reseeds every number in the tool.
+export function buildFilteredData(activeQuarters, filters, countryList) {
   const seedStr = [
     (filters.activeRegions || []).join(','),
     (filters.subRegion || []).join(','),
@@ -61,8 +72,8 @@ export function buildFilteredData(activeQuarters, filters) {
   ].join('|')
   const baseSeed = hashSeed(seedStr)
   const data = {}
-  APJ_COUNTRIES.forEach((c, ci) => {
-    const base = COUNTRY_BASE[c.id]
+  countryList.forEach((c, ci) => {
+    const base = deriveCountryBase(c.name)
     const paramSeed = baseSeed + ci * 17
     const gsRate = genKpiValue(base.gsRate, paramSeed + 1, 2).actual / 100
     const csRate = c.hasCS ? genKpiValue(base.csRate, paramSeed + 2, 2).actual / 100 : 0
@@ -81,10 +92,9 @@ export function buildFilteredData(activeQuarters, filters) {
 
 const sd = (a, b) => (b === 0 ? 0 : a / b)
 
-export function calcCountry(data, countryId, quarterKey, mods) {
-  const country = APJ_COUNTRIES.find((c) => c.id === countryId)
-  const p = data[countryId].params
-  const o = data[countryId].quarters[quarterKey] || { gs: 0, cs: 0 }
+export function calcCountry(data, country, quarterKey, mods) {
+  const p = data[country.id].params
+  const o = data[country.id].quarters[quarterKey] || { gs: 0, cs: 0 }
   const om = mods ? 1 + (mods.orders || 0) / 100 : 1
   const crm = mods ? 1 + (mods.caserate || 0) / 100 : 1
   const cpm = mods ? 1 + (mods.cpsr || 0) / 100 : 1
@@ -112,11 +122,11 @@ export function calcCountry(data, countryId, quarterKey, mods) {
   return { gsO: g, csO: s, totO: tot, gsCs: gc, csCs: sc, totCs: tc, cr, totTCD: tcd, cpsr: cpsrVal, crw: crwVal, hc }
 }
 
-export function calcAllCountries(data, quarterKey, mods, countriesList = APJ_COUNTRIES) {
+export function calcAllCountries(data, quarterKey, mods, countryList) {
   const totals = { gsO: 0, csO: 0, totO: 0, gsCs: 0, csCs: 0, totCs: 0, totTCD: 0, hc: 0 }
   const countries = {}
-  countriesList.forEach((c) => {
-    const r = calcCountry(data, c.id, quarterKey, mods)
+  countryList.forEach((c) => {
+    const r = calcCountry(data, c, quarterKey, mods)
     countries[c.id] = r
     totals.gsO += r.gsO; totals.csO += r.csO; totals.totO += r.totO
     totals.gsCs += r.gsCs; totals.csCs += r.csCs; totals.totCs += r.totCs

@@ -3,19 +3,22 @@ import { Bar, Line } from 'react-chartjs-2'
 import { useApp } from '../../../core/hooks/useApp.js'
 import { getColors } from '../../../shared/themes/colors.js'
 import {
-  activeQuartersFromFilter, activeCountriesFromFilter, buildFilteredData,
+  activeQuartersFromFilter, buildCountryList, buildFilteredData,
   calcAllCountries, f0, f1, f2, fp,
 } from '../lib/apjWorkforceData.js'
 import InfoBtn from '../../../shared/components/InfoBtn.jsx'
 
 // Ported from a standalone reference tool ("APJ Workforce Planner") supplied as a
-// finished HTML file, restyled to match Care's own DDS look. Sample data is generated
-// via the shared Filters panel (Fiscal Year, Fiscal Quarter, Fiscal Week, Region,
-// Sub Region, Classification) exactly like every other tab's mock data — changing any
-// of them reseeds the numbers shown here. The source tool's own Excel import and its
-// separate Start Quarter/FY + top section-tab navigation are dropped: Fiscal Quarter
-// now drives which quarter(s) are shown, and simple back/forward buttons replace the
-// top tab bar (the Data Input table already has its own View Results/What-If buttons).
+// finished HTML file, restyled to match Care's own DDS look and generalized beyond its
+// original fixed APJ-only country list — Region and Sub Region/Country now genuinely
+// narrow which countries this tool covers, the same way every other tab's filters work
+// (see buildCountryList in apjWorkforceData.js). Sample data is generated via the
+// shared Filters panel (Fiscal Year, Fiscal Quarter, Fiscal Week, Region, Sub Region,
+// Classification) exactly like every other tab's mock data — changing any of them
+// reseeds the numbers shown here. The source tool's own Excel import and its separate
+// Start Quarter/FY + top section-tab navigation are dropped: Fiscal Quarter now drives
+// which quarter(s) are shown, and simple back/forward buttons replace the top tab bar
+// (the Data Input table already has its own View Results/What-If buttons).
 
 function safeNumber(raw) {
   if (raw === '' || raw === '-' || /\.$/.test(raw)) return undefined
@@ -46,7 +49,7 @@ const DEFAULT_MODS = { orders: 0, caserate: 0, cpsr: 0, crw: 0, cases: 0, tcd: 0
 const SENS_RANGE = [-40, -20, 0, 20, 40, 60, 80, 100]
 
 function exportCsv(data, quarters, mods, countries) {
-  let csv = 'APJ Capacity Plan\n\n'
+  let csv = 'Workforce Capacity Plan\n\n'
   quarters.forEach((qKey) => {
     const all = calcAllCountries(data, qKey, undefined, countries)
     const t = all.totals
@@ -72,7 +75,7 @@ function exportCsv(data, quarters, mods, countries) {
   }
   const a = document.createElement('a')
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
-  a.download = 'APJ_Workforce_Plan.csv'
+  a.download = 'Workforce_Plan.csv'
   a.click()
 }
 
@@ -105,33 +108,32 @@ export default function ApjWorkforcePlanner() {
   const [scenario, setScenario] = useState(null)
 
   // Fiscal Quarter filter narrows which quarters are shown (same "All = unfiltered"
-  // convention as CCO Overview/What-If); every other filter + Region reseeds the sample
-  // numbers, same as the rest of the app's mock data.
+  // convention as CCO Overview/What-If). Region + Sub Region/Country genuinely narrow
+  // which countries this tool covers (same countriesForRegions/matchesMulti utilities
+  // every other tab uses) — Region=All spans every region in Care's taxonomy, not just
+  // APJ. Falls back to "All Countries" if the previously-picked country drops out of the
+  // filtered set, without losing the selection in case the filter changes back.
   const activeQuarters = useMemo(() => activeQuartersFromFilter(apjFilters.quarter), [apjFilters.quarter])
+  const countries = useMemo(() => buildCountryList(activeRegions, apjFilters.subRegion), [activeRegions, apjFilters.subRegion])
+  const safeSelReg = countries.some((c) => c.id === selReg) ? selReg : 'ALL'
+  const regionOptions = [{ value: 'ALL', label: 'All Countries' }, ...countries.map((c) => ({ value: c.id, label: c.name }))]
+
   const seedInputs = useMemo(() => ({
     activeRegions, subRegion: apjFilters.subRegion, week: apjFilters.week,
     classification: apjFilters.classification, fiscalYear: apjFilters.fiscalYear,
   }), [activeRegions, apjFilters.subRegion, apjFilters.week, apjFilters.classification, apjFilters.fiscalYear])
-  const filterKey = JSON.stringify({ activeQuarters, seedInputs })
+  const filterKey = JSON.stringify({ activeQuarters, seedInputs, countryIds: countries.map((c) => c.id) })
 
-  const [data, setData] = useState(() => buildFilteredData(activeQuarters, seedInputs))
+  const [data, setData] = useState(() => buildFilteredData(activeQuarters, seedInputs, countries))
   const [dataKey, setDataKey] = useState(filterKey)
   if (filterKey !== dataKey) {
-    setData(buildFilteredData(activeQuarters, seedInputs))
+    setData(buildFilteredData(activeQuarters, seedInputs, countries))
     setDataKey(filterKey)
   }
 
   const selQ = Math.min(selQIndex, activeQuarters.length - 1)
   const qk = activeQuarters[selQ]
   const quarterOptions = activeQuarters.map((q, i) => ({ value: i, label: q }))
-
-  // Sub Region/Country filter narrows which countries this tool shows (same
-  // All-means-unfiltered convention as Fiscal Quarter above) — falls back to APJ Total
-  // if the previously-picked country drops out of the filtered set, without losing the
-  // selection in case the filter changes back.
-  const countries = useMemo(() => activeCountriesFromFilter(apjFilters.subRegion), [apjFilters.subRegion])
-  const safeSelReg = countries.some((c) => c.id === selReg) ? selReg : 'ALL'
-  const regionOptions = [{ value: 'ALL', label: 'APJ Total' }, ...countries.map((c) => ({ value: c.id, label: c.name }))]
 
   function updOrd(cid, field, raw) {
     const n = safeNumber(raw)
@@ -150,7 +152,7 @@ export default function ApjWorkforcePlanner() {
   }
   function resetToSample() {
     if (!window.confirm('Reset all Data Input values back to the sample dataset for the current filters?')) return
-    setData(buildFilteredData(activeQuarters, seedInputs))
+    setData(buildFilteredData(activeQuarters, seedInputs, countries))
   }
 
   function setWI(field, val) {
@@ -276,7 +278,7 @@ export default function ApjWorkforcePlanner() {
                   })}
                   {countries.length > 0 && (
                     <tr className="tot-row">
-                      <td style={{ textAlign: 'left' }}>APJ TOTAL</td>
+                      <td style={{ textAlign: 'left' }}>GRAND TOTAL</td>
                       <td>{f0(countries.reduce((s, c) => s + (data[c.id].quarters[qk]?.gs || 0), 0))}</td>
                       <td>{f0(countries.reduce((s, c) => s + (data[c.id].quarters[qk]?.cs || 0), 0))}</td>
                       <td>{f0(countries.reduce((s, c) => s + (data[c.id].quarters[qk]?.gs || 0) + (data[c.id].quarters[qk]?.cs || 0), 0))}</td>
@@ -299,7 +301,7 @@ export default function ApjWorkforcePlanner() {
             {countries.map((c) => (
               <div className="kpi-card" key={c.id}><div className="kpi-label">{c.name}</div><div className="kpi-value">{f0(allForQ.countries[c.id].hc)}</div></div>
             ))}
-            <div className="kpi-card"><div className="kpi-label">APJ Total</div><div className="kpi-value">{f0(allForQ.totals.hc)}</div></div>
+            <div className="kpi-card"><div className="kpi-label">All Countries</div><div className="kpi-value">{f0(allForQ.totals.hc)}</div></div>
           </div>
         </>
       )}
@@ -352,7 +354,7 @@ export default function ApjWorkforcePlanner() {
                   })}
                   {safeSelReg === 'ALL' && countries.length > 0 && (
                     <tr className="tot-row">
-                      <td style={{ textAlign: 'left' }}>APJ TOTAL</td>
+                      <td style={{ textAlign: 'left' }}>GRAND TOTAL</td>
                       <td>{f0(allForQ.totals.gsO)}</td><td>{f0(allForQ.totals.csO)}</td><td>{f0(allForQ.totals.totO)}</td>
                       {showDet && <><td>{f0(allForQ.totals.gsCs)}</td><td>{f0(allForQ.totals.csCs)}</td></>}
                       <td>{f0(allForQ.totals.totCs)}</td><td>{fp(allForQ.totals.cr)}</td><td>{f0(allForQ.totals.totTCD)}</td><td>{f2(allForQ.totals.cpsr)}</td><td>—</td>
@@ -501,7 +503,7 @@ export default function ApjWorkforcePlanner() {
                   })}
                   {safeSelReg === 'ALL' && countries.length > 0 && (
                     <tr className="tot-row">
-                      <td style={{ textAlign: 'left' }}>APJ TOTAL</td>
+                      <td style={{ textAlign: 'left' }}>GRAND TOTAL</td>
                       <td>{f0(wiBase.totals.totO)}</td><td>{f0(wiScenario.totals.totO)}</td><td><DeltaCell base={wiBase.totals.totO} scenario={wiScenario.totals.totO} /></td>
                       <td>{f0(wiBase.totals.totCs)}</td><td>{f0(wiScenario.totals.totCs)}</td><td><DeltaCell base={wiBase.totals.totCs} scenario={wiScenario.totals.totCs} /></td>
                       <td>{f0(wiBase.totals.hc)}</td><td><strong>{f0(wiScenario.totals.hc)}</strong></td><td><DeltaCell base={wiBase.totals.hc} scenario={wiScenario.totals.hc} /></td>

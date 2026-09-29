@@ -10,7 +10,7 @@ const BREADCRUMBS = {
   outage: 'Workforce Reports › Outage Report',
   epiHc: 'Workforce Reports › Epi HC',
   whatIf: 'Planning › What-If Simulator',
-  apjPlanner: 'Planning › APJ Workforce Planner',
+  apjPlanner: 'Planning › Workforce Planner',
   reports: 'Tools › Reports',
   calendar: 'Tools › Calendar',
   fiscalCalendar: 'Tools › Calendar › Fiscal Calendar',
