@@ -256,12 +256,12 @@ export default function ApjWorkforcePlanner() {
                   <tr>
                     <th style={{ textAlign: 'left' }}>Country</th>
                     <th>GS Orders</th><th>CS Orders</th><th>Total</th>
-                    <th>GS Rate %</th><th>CS Rate %</th><th>CPSR</th><th>CRW</th>
+                    <th>GS Rate %</th><th>CS Rate %</th><th>CPSR</th><th>CRW</th><th>Headcount</th>
                   </tr>
                 </thead>
                 <tbody>
                   {countries.length === 0 && (
-                    <tr><td colSpan={8} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No APJ countries match the current Sub Region/Country filter selection.</td></tr>
+                    <tr><td colSpan={9} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No APJ countries match the current Sub Region/Country filter selection.</td></tr>
                   )}
                   {countries.map((c) => {
                     const o = currentData[c.id].quarters[qk] || { gs: 0, cs: 0 }
@@ -280,6 +280,7 @@ export default function ApjWorkforcePlanner() {
                         <td>{c.hasCS ? <input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} value={p.csRate ? Number((p.csRate * 100).toFixed(3)) : ''} onChange={(e) => updPar(c.id, 'csRate', e.target.value)} /> : <span style={{ color: 'var(--text-muted)' }}>N/A</span>}</td>
                         <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} value={p.cpsr || ''} onChange={(e) => updPar(c.id, 'cpsr', e.target.value)} /></td>
                         <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={1} value={p.crw || ''} onChange={(e) => updPar(c.id, 'crw', e.target.value)} /></td>
+                        <td><strong>{f0(allForQ.countries[c.id].hc)}</strong></td>
                       </tr>
                     )
                   })}
@@ -289,7 +290,8 @@ export default function ApjWorkforcePlanner() {
                       <td>{f0(countries.reduce((s, c) => s + (currentData[c.id].quarters[qk]?.gs || 0), 0))}</td>
                       <td>{f0(countries.reduce((s, c) => s + (currentData[c.id].quarters[qk]?.cs || 0), 0))}</td>
                       <td>{f0(countries.reduce((s, c) => s + (currentData[c.id].quarters[qk]?.gs || 0) + (currentData[c.id].quarters[qk]?.cs || 0), 0))}</td>
-                      <td colSpan={4}></td>
+                      <td colSpan={3}></td>
+                      <td>{f0(allForQ.totals.hc)}</td>
                     </tr>
                   )}
                 </tbody>
@@ -299,16 +301,6 @@ export default function ApjWorkforcePlanner() {
               <button type="button" className="btn btn-sm btn-neutral" onClick={() => setActiveTab('results')}>View Results →</button>
               <button type="button" className="btn btn-sm btn-primary" onClick={() => setActiveTab('whatif')}>What-If Analysis →</button>
             </div>
-          </div>
-
-          <div className="section-div">
-            <h2>Headcount by Country <InfoBtn tip="<strong>Purpose</strong>Required Headcount per country for the selected quarter, computed as Total Contacts / CRW / 13 weeks." /></h2>
-          </div>
-          <div className="kpi-grid">
-            {countries.map((c) => (
-              <div className="kpi-card" key={c.id}><div className="kpi-label">{c.name}</div><div className="kpi-value">{f0(allForQ.countries[c.id].hc)}</div></div>
-            ))}
-            <div className="kpi-card"><div className="kpi-label">All Countries</div><div className="kpi-value">{f0(allForQ.totals.hc)}</div></div>
           </div>
         </>
       )}
