@@ -1,8 +1,12 @@
 // Data model and calc engine for the APJ Workforce Planner tab — a faithful port of a
-// standalone reference tool (3 sub-tabs: Data Input, Results, What-If) supplied as a
+// standalone reference tool (3 sections: Data Input, Results, What-If) supplied as a
 // finished HTML file. The Excel import/export machinery from that source tool is
-// intentionally not ported (per request); this seeds the same data shape with fixed
-// dummy numbers instead, so every screen renders meaningful data with no import step.
+// intentionally not ported (per request); sample data is instead generated the same way
+// every other tab's mock data is (hashSeed + genKpiValue), seeded from the shared
+// Filters panel (Fiscal Year, Fiscal Quarter, Fiscal Week, Region, Sub Region,
+// Classification) so every screen reacts to filter changes like the rest of the app.
+import { hashSeed, genKpiValue } from './mockGenerators.js'
+
 export const APJ_COUNTRIES = [
   { id: 'southasia', name: 'South Asia', cc: 'SA', hasCS: true },
   { id: 'anz', name: 'Australia / NZ', cc: 'AU', hasCS: true },
@@ -12,79 +16,56 @@ export const APJ_COUNTRIES = [
   { id: 'korea', name: 'Korea', cc: 'KR', hasCS: false },
 ]
 
-export const APJ_CHART_COLORS = ['#0672CB', '#247554', '#F4BB5E', '#C93B8C', '#0C32A4', '#E02D4C']
+export const APJ_QUARTERS = ['FQ1', 'FQ2', 'FQ3', 'FQ4']
 
-function buildQuarters(startQ, startFY) {
-  const qs = []
-  let q = startQ
-  let fy = startFY
-  for (let i = 0; i < 4; i++) {
-    qs.push({ q: 'Q' + q, fy: 'FY' + String(fy).slice(-2), label: 'Q' + q + ' FY' + String(fy).slice(-2), key: 'Q' + q + '_FY' + String(fy).slice(-2) })
-    q++
-    if (q > 4) { q = 1; fy++ }
-  }
-  return qs
-}
-
-// Rolling 4-quarter window starting from the current fiscal quarter — same Feb/May/Aug/Nov
-// fiscal-quarter boundary logic as the source tool.
-export function defaultStartQuarter() {
-  const now = new Date()
-  const m = now.getMonth()
-  if (m >= 1 && m <= 3) return { startQ: 1, startFY: (now.getFullYear() + 1) % 100 }
-  if (m >= 4 && m <= 6) return { startQ: 2, startFY: (now.getFullYear() + 1) % 100 }
-  if (m >= 7 && m <= 9) return { startQ: 3, startFY: (now.getFullYear() + 1) % 100 }
-  return { startQ: 4, startFY: (m >= 10 ? now.getFullYear() + 1 : now.getFullYear()) % 100 }
-}
-
-export function getQuarters(startQ, startFY) {
-  return buildQuarters(startQ, startFY)
-}
-
-// Fixed dummy baseline per country (stands in for an imported Targets sheet) plus a
-// modest quarter-over-quarter order growth curve (stands in for an imported Orders sheet).
+// Fixed per-country baseline magnitudes (stands in for an imported Targets/Orders sheet)
+// — genKpiValue jitters around these per the active filter seed, same as every other
+// mock KPI in the app.
 const COUNTRY_BASE = {
-  southasia: { gs: 18000, cs: 7500, gsRate: 0.14, csRate: 0.11, cpsr: 4.2, crw: 62 },
-  anz: { gs: 9000, cs: 4200, gsRate: 0.12, csRate: 0.10, cpsr: 3.8, crw: 58 },
-  china: { gs: 21000, cs: 9500, gsRate: 0.16, csRate: 0.13, cpsr: 4.6, crw: 55 },
-  india: { gs: 32000, cs: 15000, gsRate: 0.15, csRate: 0.12, cpsr: 4.0, crw: 65 },
-  japan: { gs: 14000, cs: 5800, gsRate: 0.10, csRate: 0.09, cpsr: 3.5, crw: 50 },
-  korea: { gs: 8000, cs: 0, gsRate: 0.13, csRate: 0, cpsr: 3.9, crw: 60 },
+  southasia: { gs: 18000, cs: 7500, gsRate: 14, csRate: 11, cpsr: 4.2, crw: 62 },
+  anz: { gs: 9000, cs: 4200, gsRate: 12, csRate: 10, cpsr: 3.8, crw: 58 },
+  china: { gs: 21000, cs: 9500, gsRate: 16, csRate: 13, cpsr: 4.6, crw: 55 },
+  india: { gs: 32000, cs: 15000, gsRate: 15, csRate: 12, cpsr: 4.0, crw: 65 },
+  japan: { gs: 14000, cs: 5800, gsRate: 10, csRate: 9, cpsr: 3.5, crw: 50 },
+  korea: { gs: 8000, cs: 0, gsRate: 13, csRate: 0, cpsr: 3.9, crw: 60 },
 }
-const GROWTH_BY_QUARTER = [1, 1.04, 1.07, 1.11]
 
-export function buildDummyData(quarters) {
+// Which Fiscal Quarters are "active" given the Fiscal Quarter filter — same
+// All-means-unfiltered convention used by getPeriodsForView elsewhere in the app.
+export function activeQuartersFromFilter(quarter) {
+  const list = (quarter || []).filter((q) => q !== 'All')
+  return list.length ? APJ_QUARTERS.filter((q) => list.includes(q)) : APJ_QUARTERS
+}
+
+// Builds the full country/quarter dataset for the given active quarters, seeded from
+// the shared Filters panel selection (subRegion/week/classification/fiscalYear) plus
+// the global Region filter — changing any of them reseeds every number in the tool.
+export function buildFilteredData(activeQuarters, filters) {
+  const seedStr = [
+    (filters.activeRegions || []).join(','),
+    (filters.subRegion || []).join(','),
+    (filters.week || []).join(','),
+    (filters.classification || []).join(','),
+    (filters.fiscalYear || []).join(','),
+  ].join('|')
+  const baseSeed = hashSeed(seedStr)
   const data = {}
-  APJ_COUNTRIES.forEach((c) => {
+  APJ_COUNTRIES.forEach((c, ci) => {
     const base = COUNTRY_BASE[c.id]
-    data[c.id] = {
-      params: { gsRate: base.gsRate, csRate: base.csRate, cpsr: base.cpsr, crw: base.crw },
-      quarters: {},
-    }
-    quarters.forEach((q, qi) => {
-      const growth = GROWTH_BY_QUARTER[qi] || 1
-      data[c.id].quarters[q.key] = {
-        gs: Math.round(base.gs * growth),
-        cs: c.hasCS ? Math.round(base.cs * growth) : 0,
-      }
+    const paramSeed = baseSeed + ci * 17
+    const gsRate = genKpiValue(base.gsRate, paramSeed + 1, 2).actual / 100
+    const csRate = c.hasCS ? genKpiValue(base.csRate, paramSeed + 2, 2).actual / 100 : 0
+    const cpsr = genKpiValue(base.cpsr, paramSeed + 3, 2).actual
+    const crw = genKpiValue(base.crw, paramSeed + 4, 1).actual
+    data[c.id] = { params: { gsRate, csRate, cpsr, crw }, quarters: {} }
+    activeQuarters.forEach((q, qi) => {
+      const qSeed = baseSeed + ci * 17 + qi * 5
+      const gs = genKpiValue(base.gs, qSeed + 101, 0).actual
+      const cs = c.hasCS ? genKpiValue(base.cs, qSeed + 202, 0).actual : 0
+      data[c.id].quarters[q] = { gs, cs }
     })
   })
   return data
-}
-
-// Ensures every quarter in `quarters` has an entry in every country's data (e.g. after
-// the rolling window shifts), defaulting new ones to zero rather than dummy values —
-// matches the source tool's behavior when the quarter window changes.
-export function ensureQuarters(data, quarters) {
-  const next = { ...data }
-  APJ_COUNTRIES.forEach((c) => {
-    const country = { ...next[c.id], quarters: { ...next[c.id].quarters } }
-    quarters.forEach((q) => {
-      if (!country.quarters[q.key]) country.quarters[q.key] = { gs: 0, cs: 0 }
-    })
-    next[c.id] = country
-  })
-  return next
 }
 
 const sd = (a, b) => (b === 0 ? 0 : a / b)

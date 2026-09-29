@@ -3,10 +3,7 @@ import { formatIST } from '../utils/dateUtils.js'
 
 export const AppContext = createContext(null)
 
-// apjPlanner is a fully self-contained tool with its own header, quarter/region
-// navigation and dummy dataset (ported from a standalone reference tool), so it skips
-// Care's shared FilterBar the same way reports/calendar/glossary already do.
-export const NO_FILTER_TABS = ['reports', 'calendar', 'fiscalCalendar', 'glossary', 'notifications', 'settings', 'apjPlanner']
+export const NO_FILTER_TABS = ['reports', 'calendar', 'fiscalCalendar', 'glossary', 'notifications', 'settings']
 
 const BREADCRUMBS = {
   cco: 'Performance Reports › CCO Overview',
@@ -35,6 +32,7 @@ export function AppProvider({ children }) {
 
   const [ccoFilters, setCcoFilters] = useState(CCO_FILTERS_DEFAULT)
   const [whatIfFilters, setWhatIfFilters] = useState(CCO_FILTERS_DEFAULT)
+  const [apjFilters, setApjFilters] = useState(CCO_FILTERS_DEFAULT)
   const [ccoView, setCcoView] = useState('weekly')
   const [outageFilters, setOutageFilters] = useState(OUTAGE_FILTERS_DEFAULT)
   const [epicenterFilters, setEpicenterFilters] = useState(EPICENTER_FILTERS_DEFAULT)
@@ -59,6 +57,7 @@ export function AppProvider({ children }) {
     setActiveRegionsState(regions)
     setCcoFilters((prev) => ({ ...prev, subRegion: ['All'] }))
     setWhatIfFilters((prev) => ({ ...prev, subRegion: ['All'] }))
+    setApjFilters((prev) => ({ ...prev, subRegion: ['All'] }))
     setOutageFilters((prev) => ({ ...prev, country: ['All'] }))
   }, [])
 
@@ -67,6 +66,9 @@ export function AppProvider({ children }) {
   }, [])
   const setWhatIfFilter = useCallback((key, value) => {
     setWhatIfFilters((prev) => ({ ...prev, [key]: value, ...(key === 'quarter' ? { week: ['All'] } : {}) }))
+  }, [])
+  const setApjFilter = useCallback((key, value) => {
+    setApjFilters((prev) => ({ ...prev, [key]: value, ...(key === 'quarter' ? { week: ['All'] } : {}) }))
   }, [])
   const setOutageFilter = useCallback((key, value) => {
     setOutageFilters((prev) => ({ ...prev, [key]: value, ...(key === 'quarter' ? { week: ['All'] } : {}) }))
@@ -78,6 +80,7 @@ export function AppProvider({ children }) {
   const clearFilters = useCallback(() => {
     if (currentTab === 'cco') { setCcoFilters(CCO_FILTERS_DEFAULT); setCcoView('weekly') }
     else if (currentTab === 'whatIf') { setWhatIfFilters(CCO_FILTERS_DEFAULT); setCcoView('weekly') }
+    else if (currentTab === 'apjPlanner') setApjFilters(CCO_FILTERS_DEFAULT)
     else if (currentTab === 'outage') setOutageFilters(OUTAGE_FILTERS_DEFAULT)
     else if (currentTab === 'epiHc') setEpicenterFilters(EPICENTER_FILTERS_DEFAULT)
   }, [currentTab])
@@ -92,7 +95,7 @@ export function AppProvider({ children }) {
     sidenavOpen, toggleSidenav,
     currentTab, navTo, breadcrumb, showFilters,
     activeRegions, setActiveRegions,
-    ccoFilters, setCcoFilter, whatIfFilters, setWhatIfFilter, ccoView, setCcoView,
+    ccoFilters, setCcoFilter, whatIfFilters, setWhatIfFilter, apjFilters, setApjFilter, ccoView, setCcoView,
     outageFilters, setOutageFilter,
     epicenterFilters, setEpicenterFilter,
     clearFilters,
@@ -100,7 +103,7 @@ export function AppProvider({ children }) {
   }), [
     theme, toggleTheme, lastUpdated, sidenavOpen, toggleSidenav, currentTab, navTo, breadcrumb, showFilters,
     activeRegions, setActiveRegions,
-    ccoFilters, setCcoFilter, whatIfFilters, setWhatIfFilter, ccoView, outageFilters, setOutageFilter,
+    ccoFilters, setCcoFilter, whatIfFilters, setWhatIfFilter, apjFilters, setApjFilter, ccoView, outageFilters, setOutageFilter,
     epicenterFilters, setEpicenterFilter,
     clearFilters, toast, showToast,
   ])

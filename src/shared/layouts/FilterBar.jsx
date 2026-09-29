@@ -18,7 +18,8 @@ function weeksForQuarters(quarters) {
 export default function FilterBar() {
   const {
     currentTab, showFilters, activeRegions, setActiveRegions,
-    ccoFilters, setCcoFilter, whatIfFilters, setWhatIfFilter, ccoView, setCcoView, outageFilters, setOutageFilter,
+    ccoFilters, setCcoFilter, whatIfFilters, setWhatIfFilter, apjFilters, setApjFilter,
+    ccoView, setCcoView, outageFilters, setOutageFilter,
     epicenterFilters, setEpicenterFilter,
     clearFilters,
   } = useApp()
@@ -28,13 +29,18 @@ export default function FilterBar() {
 
   const countries = countriesForRegions(activeRegions)
   const isWhatIf = currentTab === 'whatIf'
-  const isCco = currentTab === 'cco' || isWhatIf
+  const isApj = currentTab === 'apjPlanner'
+  const isCco = currentTab === 'cco' || isWhatIf || isApj
+  // Weekly/Quarterly is a CCO Overview/What-If-only concept — APJ Workforce Planner
+  // has its own Fiscal Quarter-driven period selector instead.
+  const showViewToggle = currentTab === 'cco' || isWhatIf
   const isOutage = currentTab === 'outage'
   const isEpicenter = currentTab === 'epiHc'
-  // CCO Overview and What-If Simulator show the same filter set (Fiscal Year/Quarter/Week,
-  // Region, Sub Region, Classification) but each keeps its own independent selections.
-  const activeFilters = isWhatIf ? whatIfFilters : ccoFilters
-  const setActiveFilter = isWhatIf ? setWhatIfFilter : setCcoFilter
+  // CCO Overview, What-If Simulator and APJ Workforce Planner show the same filter set
+  // (Fiscal Year/Quarter/Week, Region, Sub Region, Classification) but each keeps its
+  // own independent selections.
+  const activeFilters = isApj ? apjFilters : isWhatIf ? whatIfFilters : ccoFilters
+  const setActiveFilter = isApj ? setApjFilter : isWhatIf ? setWhatIfFilter : setCcoFilter
 
   const regionFilter = (
     <div className="filter-group">
@@ -50,7 +56,7 @@ export default function FilterBar() {
           <span className="filter-panel-icon"><Icon name="search" size={14} /></span>Filters
           <span className={'filter-panel-caret' + (expanded ? '' : ' collapsed')}>▾</span>
         </div>
-        {isCco && (
+        {showViewToggle && (
           <div className="tabs" role="tablist" aria-label="View" style={{ margin: 0 }}>
             {[['weekly', 'Weekly'], ['quarterly', 'Quarterly']].map(([v, label]) => (
               <button key={v} type="button" role="tab" aria-selected={ccoView === v} className="tab" onClick={() => setCcoView(v)}>{label}</button>

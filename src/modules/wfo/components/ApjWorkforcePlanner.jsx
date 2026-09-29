@@ -3,17 +3,19 @@ import { Bar, Line } from 'react-chartjs-2'
 import { useApp } from '../../../core/hooks/useApp.js'
 import { getColors } from '../../../shared/themes/colors.js'
 import {
-  APJ_COUNTRIES, defaultStartQuarter, getQuarters,
-  buildDummyData, ensureQuarters, calcAllCountries, f0, f1, f2, fp,
+  APJ_COUNTRIES, activeQuartersFromFilter, buildFilteredData,
+  calcAllCountries, f0, f1, f2, fp,
 } from '../lib/apjWorkforceData.js'
 import InfoBtn from '../../../shared/components/InfoBtn.jsx'
 
 // Ported from a standalone reference tool ("APJ Workforce Planner") supplied as a
-// finished HTML file, restyled to match Care's own DDS look (cards/kpi-grid/tabs/tables)
-// instead of the source tool's own Dell navy/blue theme, per request. The Excel
-// import/export machinery from that source tool is left out — this seeds the same data
-// shape with fixed dummy numbers (src/modules/wfo/lib/apjWorkforceData.js) instead of
-// requiring an uploaded file, so every screen works with no import step.
+// finished HTML file, restyled to match Care's own DDS look. Sample data is generated
+// via the shared Filters panel (Fiscal Year, Fiscal Quarter, Fiscal Week, Region,
+// Sub Region, Classification) exactly like every other tab's mock data — changing any
+// of them reseeds the numbers shown here. The source tool's own Excel import and its
+// separate Start Quarter/FY + top section-tab navigation are dropped: Fiscal Quarter
+// now drives which quarter(s) are shown, and simple back/forward buttons replace the
+// top tab bar (the Data Input table already has its own View Results/What-If buttons).
 
 function safeNumber(raw) {
   if (raw === '' || raw === '-' || /\.$/.test(raw)) return undefined
@@ -45,10 +47,10 @@ const SENS_RANGE = [-40, -20, 0, 20, 40, 60, 80, 100]
 
 function exportCsv(data, quarters, mods) {
   let csv = 'APJ Capacity Plan\n\n'
-  quarters.forEach((q) => {
-    const all = calcAllCountries(data, q.key)
+  quarters.forEach((qKey) => {
+    const all = calcAllCountries(data, qKey)
     const t = all.totals
-    csv += `\n${q.label}\nCountry,GS Ord,CS Ord,Total,Cases,CR,TCD,CPSR,CRW,HC\n`
+    csv += `\n${qKey}\nCountry,GS Ord,CS Ord,Total,Cases,CR,TCD,CPSR,CRW,HC\n`
     APJ_COUNTRIES.forEach((c) => {
       const r = all.countries[c.id]
       csv += `${c.name},${r.gsO},${r.csO},${r.totO},${r.totCs.toFixed(2)},${(r.cr * 100).toFixed(2)}%,${r.totTCD.toFixed(2)},${r.cpsr.toFixed(2)},${r.crw},${r.hc}\n`
@@ -57,10 +59,10 @@ function exportCsv(data, quarters, mods) {
   })
   if (mods.orders || mods.caserate || mods.cpsr || mods.crw) {
     csv += `\n\nWHAT-IF SCENARIO\nOrders: ${mods.orders > 0 ? '+' : ''}${mods.orders}%  Case Rate: ${mods.caserate > 0 ? '+' : ''}${mods.caserate}%  CPSR: ${mods.cpsr > 0 ? '+' : ''}${mods.cpsr}%  CRW: ${mods.crw > 0 ? '+' : ''}${mods.crw}%\n`
-    quarters.forEach((q) => {
-      const all = calcAllCountries(data, q.key, mods)
-      const base = calcAllCountries(data, q.key)
-      csv += `\n${q.label} (SCENARIO)\nCountry,Scen Orders,Scen Cases,Scen HC,Base HC,Delta\n`
+    quarters.forEach((qKey) => {
+      const all = calcAllCountries(data, qKey, mods)
+      const base = calcAllCountries(data, qKey)
+      csv += `\n${qKey} (SCENARIO)\nCountry,Scen Orders,Scen Cases,Scen HC,Base HC,Delta\n`
       APJ_COUNTRIES.forEach((c) => {
         const r = all.countries[c.id]
         const br = base.countries[c.id]
@@ -83,29 +85,46 @@ function DeltaCell({ base, scenario }) {
   return <span className={'badge ' + cls}>{sign}{f0(diff)} ({sign}{pct.toFixed(1)}%)</span>
 }
 
+function NavRow({ back, forward }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
+      {back ? <button type="button" className="btn btn-sm btn-neutral" onClick={back.onClick}>{back.label}</button> : <span />}
+      {forward ? <button type="button" className="btn btn-sm btn-primary" onClick={forward.onClick}>{forward.label}</button> : <span />}
+    </div>
+  )
+}
+
 export default function ApjWorkforcePlanner() {
-  const { theme } = useApp()
+  const { theme, activeRegions, apjFilters } = useApp()
   const colors = getColors(theme)
   const [activeTab, setActiveTab] = useState('input')
-  const [{ startQ, startFY }, setStart] = useState(defaultStartQuarter)
-  const quarters = useMemo(() => getQuarters(startQ, startFY), [startQ, startFY])
-  const [data, setData] = useState(() => buildDummyData(quarters))
-  const [selQ, setSelQ] = useState(0)
+  const [selQIndex, setSelQIndex] = useState(0)
   const [selReg, setSelReg] = useState('ALL')
   const [showDet, setShowDet] = useState(false)
   const [mods, setMods] = useState(DEFAULT_MODS)
   const [scenario, setScenario] = useState(null)
 
-  const qk = quarters[selQ]?.key
-  const quarterOptions = quarters.map((q, i) => ({ value: i, label: q.label }))
-  const regionOptions = [{ value: 'ALL', label: 'APJ Total' }, ...APJ_COUNTRIES.map((c) => ({ value: c.id, label: c.name }))]
+  // Fiscal Quarter filter narrows which quarters are shown (same "All = unfiltered"
+  // convention as CCO Overview/What-If); every other filter + Region reseeds the sample
+  // numbers, same as the rest of the app's mock data.
+  const activeQuarters = useMemo(() => activeQuartersFromFilter(apjFilters.quarter), [apjFilters.quarter])
+  const seedInputs = useMemo(() => ({
+    activeRegions, subRegion: apjFilters.subRegion, week: apjFilters.week,
+    classification: apjFilters.classification, fiscalYear: apjFilters.fiscalYear,
+  }), [activeRegions, apjFilters.subRegion, apjFilters.week, apjFilters.classification, apjFilters.fiscalYear])
+  const filterKey = JSON.stringify({ activeQuarters, seedInputs })
 
-  function handleStartChange(nextStartQ, nextStartFY) {
-    const nextQuarters = getQuarters(nextStartQ, nextStartFY)
-    setData((prev) => ensureQuarters(prev, nextQuarters))
-    setStart({ startQ: nextStartQ, startFY: nextStartFY })
-    setSelQ(0)
+  const [data, setData] = useState(() => buildFilteredData(activeQuarters, seedInputs))
+  const [dataKey, setDataKey] = useState(filterKey)
+  if (filterKey !== dataKey) {
+    setData(buildFilteredData(activeQuarters, seedInputs))
+    setDataKey(filterKey)
   }
+
+  const selQ = Math.min(selQIndex, activeQuarters.length - 1)
+  const qk = activeQuarters[selQ]
+  const quarterOptions = activeQuarters.map((q, i) => ({ value: i, label: q }))
+  const regionOptions = [{ value: 'ALL', label: 'APJ Total' }, ...APJ_COUNTRIES.map((c) => ({ value: c.id, label: c.name }))]
 
   function updOrd(cid, field, raw) {
     const n = safeNumber(raw)
@@ -123,8 +142,8 @@ export default function ApjWorkforcePlanner() {
     setData((prev) => ({ ...prev, [cid]: { ...prev[cid], params: { ...prev[cid].params, [field]: val } } }))
   }
   function resetToSample() {
-    if (!window.confirm('Reset all Data Input values back to the sample dataset?')) return
-    setData(buildDummyData(quarters))
+    if (!window.confirm('Reset all Data Input values back to the sample dataset for the current filters?')) return
+    setData(buildFilteredData(activeQuarters, seedInputs))
   }
 
   function setWI(field, val) {
@@ -144,15 +163,15 @@ export default function ApjWorkforcePlanner() {
   const dSel = selReg === 'ALL' ? allForQ.totals : allForQ.countries[selReg]
 
   const trendSeries = useMemo(() => {
-    const labels = quarters.map((q) => q.label)
+    const labels = activeQuarters
     const tO = [], tC = [], tT = [], tH = []
-    quarters.forEach((q) => {
-      const a = calcAllCountries(data, q.key)
+    activeQuarters.forEach((q) => {
+      const a = calcAllCountries(data, q)
       const d = selReg === 'ALL' ? a.totals : a.countries[selReg]
       tO.push(d.totO); tC.push(d.totCs); tT.push(d.totTCD); tH.push(d.hc)
     })
     return { labels, tO, tC, tT, tH }
-  }, [data, quarters, selReg])
+  }, [data, activeQuarters, selReg])
 
   const wiBase = useMemo(() => calcAllCountries(data, qk), [data, qk])
   const wiScenario = useMemo(() => calcAllCountries(data, qk, mods), [data, qk, mods])
@@ -179,50 +198,35 @@ export default function ApjWorkforcePlanner() {
 
   const wiTrend = useMemo(() => {
     const baseQ = [], scenQ = []
-    quarters.forEach((q) => {
-      const b = selReg === 'ALL' ? calcAllCountries(data, q.key).totals : calcAllCountries(data, q.key).countries[selReg]
-      const s = selReg === 'ALL' ? calcAllCountries(data, q.key, mods).totals : calcAllCountries(data, q.key, mods).countries[selReg]
+    activeQuarters.forEach((q) => {
+      const b = selReg === 'ALL' ? calcAllCountries(data, q).totals : calcAllCountries(data, q).countries[selReg]
+      const s = selReg === 'ALL' ? calcAllCountries(data, q, mods).totals : calcAllCountries(data, q, mods).countries[selReg]
       baseQ.push(b.hc); scenQ.push(s.hc)
     })
-    return { labels: quarters.map((q) => q.label), baseQ, scenQ }
-  }, [data, quarters, selReg, mods])
+    return { labels: activeQuarters, baseQ, scenQ }
+  }, [data, activeQuarters, selReg, mods])
 
   const barOpt = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grace: '10%' } } }
   const lineOptLegend = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grace: '10%' } } }
 
   return (
     <div className="tab-panel active">
-      <PickerTabs options={[{ value: 'input', label: 'Data Input' }, { value: 'results', label: 'Results' }, { value: 'whatif', label: 'What-If' }]} value={activeTab} onChange={setActiveTab} ariaLabel="APJ Workforce Planner section" />
-
       {activeTab === 'input' && (
         <>
           <div className="section-div">
-            <h2>Orders + Parameters <InfoBtn tip="<strong>Purpose</strong>Editable GS/CS order volumes and target rates (Case Rate, CPSR, CRW) per country and quarter, seeded with a sample dataset. Drives every downstream calculation in Results and What-If." /></h2>
+            <h2>Orders + Parameters <InfoBtn tip="<strong>Purpose</strong>Editable GS/CS order volumes and target rates (Case Rate, CPSR, CRW) per country and quarter, seeded from the Filters panel above. Drives every downstream calculation in Results and What-If." /></h2>
           </div>
           <div className="card">
             <div className="card-header">
-              <div className="card-title">Sample Data — {quarters[selQ]?.label}</div>
+              <div className="card-title">Sample Data — {qk}</div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" className="btn btn-sm btn-neutral" onClick={() => exportCsv(data, quarters, mods)}>Export CSV</button>
+                <button type="button" className="btn btn-sm btn-neutral" onClick={() => exportCsv(data, activeQuarters, mods)}>Export CSV</button>
                 <button type="button" className="clear-all-btn" onClick={resetToSample}>✕ Reset to Sample Data</button>
               </div>
             </div>
 
-            <div className="filter-grid" style={{ margin: '14px 18px 0' }}>
-              <div className="filter-group">
-                <label>Start Quarter</label>
-                <select value={startQ} onChange={(e) => handleStartChange(Number(e.target.value), startFY)}>
-                  <option value={1}>Q1</option><option value={2}>Q2</option><option value={3}>Q3</option><option value={4}>Q4</option>
-                </select>
-              </div>
-              <div className="filter-group">
-                <label>Start Fiscal Year</label>
-                <input type="number" value={startFY} onChange={(e) => handleStartChange(startQ, Number(e.target.value) || startFY)} />
-              </div>
-            </div>
-
             <div style={{ padding: '14px 18px 0' }}>
-              <PickerTabs options={quarterOptions} value={selQ} onChange={setSelQ} ariaLabel="Quarter" />
+              <PickerTabs options={quarterOptions} value={selQ} onChange={setSelQIndex} ariaLabel="Quarter" />
             </div>
 
             <div className="tw" style={{ padding: '0 18px' }}>
@@ -248,10 +252,10 @@ export default function ApjWorkforcePlanner() {
                         <td><input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={gv} onChange={(e) => updOrd(c.id, 'gs', e.target.value)} /></td>
                         <td>{c.hasCS ? <input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={cv} onChange={(e) => updOrd(c.id, 'cs', e.target.value)} /> : <span style={{ color: 'var(--text-muted)' }}>N/A</span>}</td>
                         <td><strong>{f0(gv + cv)}</strong></td>
-                        <td><input className="wis-num-input" type="number" step={0.01} value={p.gsRate ? Number((p.gsRate * 100).toFixed(3)) : ''} onChange={(e) => updPar(c.id, 'gsRate', e.target.value)} /></td>
-                        <td>{c.hasCS ? <input className="wis-num-input" type="number" step={0.01} value={p.csRate ? Number((p.csRate * 100).toFixed(3)) : ''} onChange={(e) => updPar(c.id, 'csRate', e.target.value)} /> : <span style={{ color: 'var(--text-muted)' }}>N/A</span>}</td>
-                        <td><input className="wis-num-input" type="number" step={0.01} value={p.cpsr || ''} onChange={(e) => updPar(c.id, 'cpsr', e.target.value)} /></td>
-                        <td><input className="wis-num-input" type="number" step={1} value={p.crw || ''} onChange={(e) => updPar(c.id, 'crw', e.target.value)} /></td>
+                        <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} value={p.gsRate ? Number((p.gsRate * 100).toFixed(3)) : ''} onChange={(e) => updPar(c.id, 'gsRate', e.target.value)} /></td>
+                        <td>{c.hasCS ? <input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} value={p.csRate ? Number((p.csRate * 100).toFixed(3)) : ''} onChange={(e) => updPar(c.id, 'csRate', e.target.value)} /> : <span style={{ color: 'var(--text-muted)' }}>N/A</span>}</td>
+                        <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} value={p.cpsr || ''} onChange={(e) => updPar(c.id, 'cpsr', e.target.value)} /></td>
+                        <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={1} value={p.crw || ''} onChange={(e) => updPar(c.id, 'crw', e.target.value)} /></td>
                       </tr>
                     )
                   })}
@@ -285,7 +289,8 @@ export default function ApjWorkforcePlanner() {
 
       {activeTab === 'results' && (
         <>
-          <PickerTabs options={quarterOptions} value={selQ} onChange={setSelQ} ariaLabel="Quarter" />
+          <NavRow back={{ label: '← Data Input', onClick: () => setActiveTab('input') }} forward={{ label: 'What-If Analysis →', onClick: () => setActiveTab('whatif') }} />
+          <PickerTabs options={quarterOptions} value={selQ} onChange={setSelQIndex} ariaLabel="Quarter" />
           <PickerTabs options={regionOptions} value={selReg} onChange={setSelReg} ariaLabel="Region" />
 
           <div className="kpi-grid">
@@ -372,7 +377,8 @@ export default function ApjWorkforcePlanner() {
 
       {activeTab === 'whatif' && (
         <>
-          <PickerTabs options={quarterOptions} value={selQ} onChange={setSelQ} ariaLabel="Quarter" />
+          <NavRow back={{ label: '← Data Input', onClick: () => setActiveTab('input') }} forward={{ label: '← Results', onClick: () => setActiveTab('results') }} />
+          <PickerTabs options={quarterOptions} value={selQ} onChange={setSelQIndex} ariaLabel="Quarter" />
           <PickerTabs options={regionOptions} value={selReg} onChange={setSelReg} ariaLabel="Region" />
 
           <div className="section-div">
