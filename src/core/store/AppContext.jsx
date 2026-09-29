@@ -3,13 +3,17 @@ import { formatIST } from '../utils/dateUtils.js'
 
 export const AppContext = createContext(null)
 
-export const NO_FILTER_TABS = ['reports', 'calendar', 'fiscalCalendar', 'glossary', 'notifications', 'settings']
+// apjPlanner is a fully self-contained tool with its own header, quarter/region
+// navigation and dummy dataset (ported from a standalone reference tool), so it skips
+// Care's shared FilterBar the same way reports/calendar/glossary already do.
+export const NO_FILTER_TABS = ['reports', 'calendar', 'fiscalCalendar', 'glossary', 'notifications', 'settings', 'apjPlanner']
 
 const BREADCRUMBS = {
   cco: 'Performance Reports › CCO Overview',
   outage: 'Workforce Reports › Outage Report',
   epiHc: 'Workforce Reports › Epi HC',
   whatIf: 'Planning › What-If Simulator',
+  apjPlanner: 'Planning › APJ Workforce Planner',
   reports: 'Tools › Reports',
   calendar: 'Tools › Calendar',
   fiscalCalendar: 'Tools › Calendar › Fiscal Calendar',
