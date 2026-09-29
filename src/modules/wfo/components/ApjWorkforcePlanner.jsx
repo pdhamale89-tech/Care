@@ -42,7 +42,7 @@ const QUICK_SCENARIOS = [
   { key: 'optimistic', label: 'Best Case (+20% Ord, +15% CRW)', mods: { orders: 20, crw: 15 }, text: 'Best Case Scenario', desc: 'Orders +20% with +15% productivity — Balanced growth' },
   { key: 'pessimistic', label: 'Worst Case (+40% Ord, +25% CR)', mods: { orders: 40, caserate: 25, cpsr: 20 }, text: 'Worst Case Scenario', desc: 'Orders +40%, CR +25%, CPSR +20% — Maximum HC pressure' },
 ]
-const DEFAULT_MODS = { orders: 0, caserate: 0, cpsr: 0, crw: 0 }
+const DEFAULT_MODS = { orders: 0, caserate: 0, cpsr: 0, crw: 0, cases: 0, tcd: 0, headcount: 0 }
 const SENS_RANGE = [-40, -20, 0, 20, 40, 60, 80, 100]
 
 function exportCsv(data, quarters, mods) {
@@ -382,7 +382,7 @@ export default function ApjWorkforcePlanner() {
           <PickerTabs options={regionOptions} value={selReg} onChange={setSelReg} ariaLabel="Region" />
 
           <div className="section-div">
-            <h2>Scenario Builder <InfoBtn tip="<strong>Purpose</strong>Apply an independent % change to Orders, Case Rate, CPSR and CRW to see the projected impact on headcount, compared against the current baseline." /></h2>
+            <h2>Scenario Builder <InfoBtn tip="<strong>Purpose</strong>Orders, Case Rate, CPSR and CRW drive Cases &rarr; TCD &rarr; Headcount in sequence. Cases Change, TCD Change and Headcount Change are manual overrides layered on top of that chain at each stage (e.g. a known one-off volume bump beyond what Orders/Case Rate alone would predict), and cascade forward to the metrics after them." /></h2>
           </div>
           <div className="card">
             <div className="wis-grid">
@@ -391,6 +391,9 @@ export default function ApjWorkforcePlanner() {
                 { field: 'caserate', label: 'Case Rate Change' },
                 { field: 'cpsr', label: 'CPSR Change' },
                 { field: 'crw', label: 'CRW (Productivity) Change' },
+                { field: 'cases', label: 'Cases Change' },
+                { field: 'tcd', label: 'TCD Change' },
+                { field: 'headcount', label: 'Headcount Change' },
               ].map((g) => (
                 <div className="wis-control" key={g.field}>
                   <div className="wis-control-head">

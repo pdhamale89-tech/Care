@@ -78,6 +78,13 @@ export function calcCountry(data, countryId, quarterKey, mods) {
   const crm = mods ? 1 + (mods.caserate || 0) / 100 : 1
   const cpm = mods ? 1 + (mods.cpsr || 0) / 100 : 1
   const cwm = mods ? 1 + (mods.crw || 0) / 100 : 1
+  // Cases/TCD/Headcount Change are manual override multipliers layered on top of the
+  // causally-derived value at each stage (e.g. "+10% Cases beyond what Orders x Case
+  // Rate predicts") — they cascade forward (a Cases override also shifts TCD and HC
+  // downstream) rather than replacing the causal chain outright.
+  const csm = mods ? 1 + (mods.cases || 0) / 100 : 1
+  const tdm = mods ? 1 + (mods.tcd || 0) / 100 : 1
+  const hcm = mods ? 1 + (mods.headcount || 0) / 100 : 1
   const g = Math.round((o.gs || 0) * om)
   const s = country.hasCS ? Math.round((o.cs || 0) * om) : 0
   const tot = g + s
@@ -85,12 +92,12 @@ export function calcCountry(data, countryId, quarterKey, mods) {
   const csR = (p.csRate || 0) * crm
   const gc = g * gsR
   const sc = s * csR
-  const tc = gc + sc
+  const tc = (gc + sc) * csm
   const cr = sd(tc, tot)
   const cpsrVal = (p.cpsr || 0) * cpm
-  const tcd = tc * cpsrVal
+  const tcd = tc * cpsrVal * tdm
   const crwVal = (p.crw || 0) * cwm
-  const hc = Math.round(sd(tcd, crwVal * 13))
+  const hc = Math.round(sd(tcd, crwVal * 13) * hcm)
   return { gsO: g, csO: s, totO: tot, gsCs: gc, csCs: sc, totCs: tc, cr, totTCD: tcd, cpsr: cpsrVal, crw: crwVal, hc }
 }
 
