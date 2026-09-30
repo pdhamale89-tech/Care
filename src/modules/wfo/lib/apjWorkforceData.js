@@ -122,6 +122,53 @@ export function calcCountry(data, country, quarterKey, mods) {
   return { gsO: g, csO: s, totO: tot, gsCs: gc, csCs: sc, totCs: tc, cr, totTCD: tcd, cpsr: cpsrVal, crw: crwVal, hc }
 }
 
+// ===== Bidirectional Data Input driver edits =====
+// The Data Input table lets a user type directly into Case Rate, Cases, CPSR, TCD, CRW
+// or Headcount (on top of the raw GS/CS Orders and GS/CS Rate % inputs). Whichever cell
+// is edited is the sole "driver" for that edit — every other stored param is either left
+// untouched or algebraically back-derived from it in a single pass below, so there is no
+// iterative/chained recalculation and therefore no possibility of a circular loop.
+// CPSR and CRW already behave correctly as plain forward inputs with zero extra code
+// (TCD and Headcount simply recompute from them via calcCountry on every render), so
+// only Case Rate/Cases/TCD/Headcount — which aren't derivable by just changing one
+// existing stored param — need dedicated reverse-derivation helpers.
+const clampNonNeg = (n) => (Number.isFinite(n) && n > 0 ? n : 0)
+
+// Case Rate % or Cases edited (both resolve to the same target Total Cases number) —
+// Orders stay exactly as typed elsewhere; the GS/CS rate split is scaled proportionally
+// so today's channel mix (GS-rate : CS-rate ratio) is preserved while the blended total
+// lands exactly on the value the user typed. `current` is that country's calcCountry
+// snapshot (from calcAllCountries) for the quarter being edited, taken *before* this edit.
+export function applyCasesDriver(country, current, params, newTotalCases) {
+  const target = clampNonNeg(newTotalCases)
+  const oldCases = current.totCs
+  if (oldCases > 0) {
+    const k = target / oldCases
+    return { ...params, gsRate: (params.gsRate || 0) * k, csRate: country.hasCS ? (params.csRate || 0) * k : 0 }
+  }
+  // No existing rate to scale (e.g. both rates were 0) — split the new total evenly
+  // across today's order volume instead, so the edit still lands on the typed value.
+  const tot = current.totO
+  if (tot <= 0) return params
+  const evenRate = target / tot
+  return { ...params, gsRate: evenRate, csRate: country.hasCS ? evenRate : 0 }
+}
+
+// TCD edited directly — Cases (and therefore Case Rate) stay exactly as they are; only
+// CPSR is back-derived so Cases × CPSR reproduces the typed TCD.
+export function applyTcdDriver(current, params, newTcd) {
+  return { ...params, cpsr: sd(clampNonNeg(newTcd), current.totCs) }
+}
+
+// Headcount edited directly — TCD (and everything upstream of it: Cases, Case Rate,
+// CPSR) stays exactly as it is; only CRW is back-derived so TCD / (CRW × 13) reproduces
+// the typed Headcount.
+export function applyHcDriver(current, params, newHc) {
+  const target = clampNonNeg(newHc)
+  if (target <= 0) return params
+  return { ...params, crw: sd(current.totTCD, target * 13) }
+}
+
 export function calcAllCountries(data, quarterKey, mods, countryList) {
   const totals = { gsO: 0, csO: 0, totO: 0, gsCs: 0, csCs: 0, totCs: 0, totTCD: 0, hc: 0 }
   const countries = {}

@@ -4,7 +4,7 @@ import { useApp } from '../../../core/hooks/useApp.js'
 import { getColors } from '../../../shared/themes/colors.js'
 import {
   activeQuartersFromFilter, buildCountryList, buildFilteredData,
-  calcAllCountries, f0, f1, f2, fp,
+  calcAllCountries, calcCountry, applyCasesDriver, applyTcdDriver, applyHcDriver, f0, f1, f2, fp,
 } from '../lib/apjWorkforceData.js'
 import InfoBtn from '../../../shared/components/InfoBtn.jsx'
 import Icon from '../../../shared/components/Icon.jsx'
@@ -170,7 +170,7 @@ export default function ApjWorkforcePlanner() {
 
   function updOrd(cid, field, raw) {
     const n = safeNumber(raw)
-    if (n === undefined) return
+    if (n === undefined || n < 0) return
     const num = Math.round(n)
     setData((prev) => ({
       ...prev,
@@ -179,10 +179,48 @@ export default function ApjWorkforcePlanner() {
   }
   function updPar(cid, field, raw) {
     const n = safeNumber(raw)
-    if (n === undefined) return
+    if (n === undefined || n < 0) return
     const val = (field === 'gsRate' || field === 'csRate') ? n / 100 : n
     setData((prev) => ({ ...prev, [cid]: { ...prev[cid], params: { ...prev[cid].params, [field]: val } } }))
   }
+
+  // Bidirectional driver edits (Case Rate/Cases/TCD/Headcount) — each recomputes that
+  // country's pre-edit snapshot fresh from currentData via calcCountry (the same pure
+  // function every other computed value in this component is derived from) and hands
+  // off to the matching pure reverse-calc helper in apjWorkforceData.js, the single
+  // source of truth for the driver/reverse-calc formulas. Only the metric being typed
+  // into is the driver for that one edit; nothing here chains into another setData
+  // call, so there is no risk of a circular recalculation.
+  function updCaseRatePct(cid, raw) {
+    const n = safeNumber(raw)
+    if (n === undefined || n < 0) return
+    const country = countries.find((c) => c.id === cid)
+    const current = calcCountry(currentData, country, qk, undefined)
+    const newTotalCases = (n / 100) * current.totO
+    setData((prev) => ({ ...prev, [cid]: { ...prev[cid], params: applyCasesDriver(country, current, prev[cid].params, newTotalCases) } }))
+  }
+  function updCases(cid, raw) {
+    const n = safeNumber(raw)
+    if (n === undefined || n < 0) return
+    const country = countries.find((c) => c.id === cid)
+    const current = calcCountry(currentData, country, qk, undefined)
+    setData((prev) => ({ ...prev, [cid]: { ...prev[cid], params: applyCasesDriver(country, current, prev[cid].params, n) } }))
+  }
+  function updTcd(cid, raw) {
+    const n = safeNumber(raw)
+    if (n === undefined || n < 0) return
+    const country = countries.find((c) => c.id === cid)
+    const current = calcCountry(currentData, country, qk, undefined)
+    setData((prev) => ({ ...prev, [cid]: { ...prev[cid], params: applyTcdDriver(current, prev[cid].params, n) } }))
+  }
+  function updHc(cid, raw) {
+    const n = safeNumber(raw)
+    if (n === undefined || n < 0) return
+    const country = countries.find((c) => c.id === cid)
+    const current = calcCountry(currentData, country, qk, undefined)
+    setData((prev) => ({ ...prev, [cid]: { ...prev[cid], params: applyHcDriver(current, prev[cid].params, n) } }))
+  }
+
   function resetToSample() {
     if (!window.confirm('Reset all Data Input values back to the sample dataset for the current filters?')) return
     setData(buildFilteredData(activeQuarters, seedInputs, countries))
@@ -285,18 +323,25 @@ export default function ApjWorkforcePlanner() {
                   <tr>
                     <th style={{ textAlign: 'left' }}>Country</th>
                     <th>GS Orders</th><th>CS Orders</th><th>Total</th>
-                    <th>GS Rate %</th><th>CS Rate %</th><th>CPSR</th><th>CRW</th><th>Headcount</th>
+                    <th>GS Rate %</th><th>CS Rate %</th>
+                    <th>Case Rate % <InfoBtn tip="<strong>Bidirectional</strong>Type a blended Case Rate directly — Total Cases is back-derived (Orders unchanged) and the GS/CS Rate % split is scaled proportionally to match." /></th>
+                    <th>Cases <InfoBtn tip="<strong>Bidirectional</strong>Type Total Cases directly — Case Rate reverse-calculates from it (Orders unchanged)." /></th>
+                    <th>CPSR</th>
+                    <th>TCD <InfoBtn tip="<strong>Bidirectional</strong>Type Total Contacts (TCD) directly — CPSR reverse-calculates from it (Cases and Case Rate unchanged)." /></th>
+                    <th>CRW</th>
+                    <th>Headcount <InfoBtn tip="<strong>Bidirectional</strong>Type Headcount directly — CRW reverse-calculates from it (TCD, Cases and Case Rate unchanged)." /></th>
                   </tr>
                 </thead>
                 <tbody>
                   {countries.length === 0 && (
-                    <tr><td colSpan={9} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No APJ countries match the current Sub Region/Country filter selection.</td></tr>
+                    <tr><td colSpan={12} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No APJ countries match the current Sub Region/Country filter selection.</td></tr>
                   )}
                   {countries.map((c) => {
                     const o = currentData[c.id].quarters[qk] || { gs: 0, cs: 0 }
                     const p = currentData[c.id].params
                     const gv = Math.round(o.gs || 0)
                     const cv = c.hasCS ? Math.round(o.cs || 0) : 0
+                    const r = allForQ.countries[c.id]
                     return (
                       <tr key={c.id}>
                         <td style={{ textAlign: 'left' }}>
@@ -305,11 +350,14 @@ export default function ApjWorkforcePlanner() {
                         <td><input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={gv} onChange={(e) => updOrd(c.id, 'gs', e.target.value)} /></td>
                         <td>{c.hasCS ? <input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={cv} onChange={(e) => updOrd(c.id, 'cs', e.target.value)} /> : <span style={{ color: 'var(--text-muted)' }}>N/A</span>}</td>
                         <td><strong>{f0(gv + cv)}</strong></td>
-                        <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} value={p.gsRate ? Number((p.gsRate * 100).toFixed(3)) : ''} onChange={(e) => updPar(c.id, 'gsRate', e.target.value)} /></td>
-                        <td>{c.hasCS ? <input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} value={p.csRate ? Number((p.csRate * 100).toFixed(3)) : ''} onChange={(e) => updPar(c.id, 'csRate', e.target.value)} /> : <span style={{ color: 'var(--text-muted)' }}>N/A</span>}</td>
-                        <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} value={p.cpsr || ''} onChange={(e) => updPar(c.id, 'cpsr', e.target.value)} /></td>
-                        <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={1} value={p.crw || ''} onChange={(e) => updPar(c.id, 'crw', e.target.value)} /></td>
-                        <td><strong>{f0(allForQ.countries[c.id].hc)}</strong></td>
+                        <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} min={0} value={p.gsRate ? Number((p.gsRate * 100).toFixed(3)) : ''} onChange={(e) => updPar(c.id, 'gsRate', e.target.value)} /></td>
+                        <td>{c.hasCS ? <input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} min={0} value={p.csRate ? Number((p.csRate * 100).toFixed(3)) : ''} onChange={(e) => updPar(c.id, 'csRate', e.target.value)} /> : <span style={{ color: 'var(--text-muted)' }}>N/A</span>}</td>
+                        <td><input className="wis-num-input" style={{ width: 60 }} type="number" step={0.01} min={0} value={r.cr ? Number((r.cr * 100).toFixed(3)) : ''} onChange={(e) => updCaseRatePct(c.id, e.target.value)} /></td>
+                        <td><input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={Math.round(r.totCs)} onChange={(e) => updCases(c.id, e.target.value)} /></td>
+                        <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} min={0} value={p.cpsr || ''} onChange={(e) => updPar(c.id, 'cpsr', e.target.value)} /></td>
+                        <td><input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={Math.round(r.totTCD)} onChange={(e) => updTcd(c.id, e.target.value)} /></td>
+                        <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={1} min={0} value={p.crw || ''} onChange={(e) => updPar(c.id, 'crw', e.target.value)} /></td>
+                        <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={1} min={0} value={r.hc} onChange={(e) => updHc(c.id, e.target.value)} /></td>
                       </tr>
                     )
                   })}
@@ -319,7 +367,12 @@ export default function ApjWorkforcePlanner() {
                       <td>{f0(countries.reduce((s, c) => s + (currentData[c.id].quarters[qk]?.gs || 0), 0))}</td>
                       <td>{f0(countries.reduce((s, c) => s + (currentData[c.id].quarters[qk]?.cs || 0), 0))}</td>
                       <td>{f0(countries.reduce((s, c) => s + (currentData[c.id].quarters[qk]?.gs || 0) + (currentData[c.id].quarters[qk]?.cs || 0), 0))}</td>
-                      <td colSpan={3}></td>
+                      <td colSpan={2}></td>
+                      <td>{fp(allForQ.totals.cr)}</td>
+                      <td>{f0(allForQ.totals.totCs)}</td>
+                      <td>{f2(allForQ.totals.cpsr)}</td>
+                      <td>{f0(allForQ.totals.totTCD)}</td>
+                      <td>—</td>
                       <td>{f0(allForQ.totals.hc)}</td>
                     </tr>
                   )}
