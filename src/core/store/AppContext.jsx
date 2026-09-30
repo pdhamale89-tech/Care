@@ -78,9 +78,9 @@ export function AppProvider({ children }) {
   }, [])
 
   const clearFilters = useCallback(() => {
-    if (currentTab === 'cco') { setCcoFilters(CCO_FILTERS_DEFAULT); setCcoView('weekly') }
-    else if (currentTab === 'whatIf') { setWhatIfFilters(CCO_FILTERS_DEFAULT); setCcoView('weekly') }
-    else if (currentTab === 'apjPlanner') setApjFilters(CCO_FILTERS_DEFAULT)
+    if (currentTab === 'cco') { setCcoFilters(CCO_FILTERS_DEFAULT); setCcoView('weekly'); setActiveRegionsState(['All']) }
+    else if (currentTab === 'whatIf') { setWhatIfFilters(CCO_FILTERS_DEFAULT); setCcoView('weekly'); setActiveRegionsState(['All']) }
+    else if (currentTab === 'apjPlanner') { setApjFilters(CCO_FILTERS_DEFAULT); setActiveRegionsState(['All']) }
     else if (currentTab === 'outage') setOutageFilters(OUTAGE_FILTERS_DEFAULT)
     else if (currentTab === 'epiHc') setEpicenterFilters(EPICENTER_FILTERS_DEFAULT)
   }, [currentTab])

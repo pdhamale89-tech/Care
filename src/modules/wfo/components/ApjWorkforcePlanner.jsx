@@ -120,7 +120,6 @@ export default function ApjWorkforcePlanner() {
   const { theme, activeRegions, apjFilters } = useApp()
   const colors = getColors(theme)
   const [activeTab, setActiveTab] = useState('input')
-  const [selQIndex, setSelQIndex] = useState(0)
   const [selReg, setSelReg] = useState('ALL')
   const [showDet, setShowDet] = useState(false)
   const [mods, setMods] = useState(DEFAULT_MODS)
@@ -158,9 +157,10 @@ export default function ApjWorkforcePlanner() {
     setDataKey(filterKey)
   }
 
-  const selQ = Math.min(selQIndex, activeQuarters.length - 1)
-  const qk = activeQuarters[selQ]
-  const quarterOptions = activeQuarters.map((q, i) => ({ value: i, label: q }))
+  // No manual quarter picker any more — Fiscal Quarter (Filters panel) is the single
+  // source of truth for which quarter Results/What-If show; picking one quarter there
+  // narrows activeQuarters to it, "All" falls back to the first fiscal quarter.
+  const qk = activeQuarters[0]
 
   const selectedFiltersLabel = [
     filterLabel(apjFilters.fiscalYear), filterLabel(apjFilters.quarter), filterLabel(apjFilters.week),
@@ -332,7 +332,6 @@ export default function ApjWorkforcePlanner() {
       {activeTab === 'results' && (
         <>
           <NavRow back={{ label: '← Data Input', onClick: () => setActiveTab('input') }} forward={{ label: 'What-If Analysis →', onClick: () => setActiveTab('whatif') }} />
-          <PickerTabs options={quarterOptions} value={selQ} onChange={setSelQIndex} ariaLabel="Quarter" />
           <PickerTabs options={regionOptions} value={safeSelReg} onChange={setSelReg} ariaLabel="Region" />
 
           <div className="kpi-grid">
@@ -423,7 +422,6 @@ export default function ApjWorkforcePlanner() {
       {activeTab === 'whatif' && (
         <>
           <NavRow back={{ label: '← Data Input', onClick: () => setActiveTab('input') }} forward={{ label: '← Results', onClick: () => setActiveTab('results') }} />
-          <PickerTabs options={quarterOptions} value={selQ} onChange={setSelQIndex} ariaLabel="Quarter" />
           <PickerTabs options={regionOptions} value={safeSelReg} onChange={setSelReg} ariaLabel="Region" />
 
           <div className={'wis-layout' + (sbCollapsed ? ' collapsed' : '')}>
