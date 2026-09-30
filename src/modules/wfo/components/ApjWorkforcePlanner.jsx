@@ -26,6 +26,11 @@ function safeNumber(raw) {
   return Number.isNaN(n) ? undefined : n
 }
 
+// "All" (or empty) means unfiltered, same convention as every other filter in the app.
+function filterLabel(arr) {
+  return (!arr || arr.length === 0 || arr.includes('All')) ? 'All' : arr.join(', ')
+}
+
 function PickerTabs({ options, value, onChange, ariaLabel }) {
   return (
     <div className="tabs" role="tablist" aria-label={ariaLabel} style={{ marginBottom: 14 }}>
@@ -142,6 +147,11 @@ export default function ApjWorkforcePlanner() {
   const qk = activeQuarters[selQ]
   const quarterOptions = activeQuarters.map((q, i) => ({ value: i, label: q }))
 
+  const selectedFiltersLabel = [
+    filterLabel(apjFilters.fiscalYear), filterLabel(apjFilters.quarter), filterLabel(apjFilters.week),
+    filterLabel(activeRegions), filterLabel(apjFilters.subRegion), filterLabel(apjFilters.classification),
+  ].join('_')
+
   function updOrd(cid, field, raw) {
     const n = safeNumber(raw)
     if (n === undefined) return
@@ -246,8 +256,8 @@ export default function ApjWorkforcePlanner() {
               </div>
             </div>
 
-            <div style={{ padding: '14px 18px 0' }}>
-              <PickerTabs options={quarterOptions} value={selQ} onChange={setSelQIndex} ariaLabel="Quarter" />
+            <div style={{ padding: '14px 18px 0', fontSize: '.8125rem', color: 'var(--text-secondary)' }}>
+              <strong style={{ color: 'var(--text-primary)' }}>Selected Filters: </strong>{selectedFiltersLabel}
             </div>
 
             <div className="tw" style={{ padding: '0 18px' }}>
