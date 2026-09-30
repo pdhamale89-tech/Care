@@ -471,6 +471,8 @@ export default function ApjWorkforcePlanner() {
               const diff = m.sv - m.bv
               const changed = Math.abs(diff) > 1e-9
               const tone = diff >= 0 ? 'tone-g' : 'tone-r'
+              const deltaCls = diff >= 0 ? 'up' : 'down'
+              const pctChange = m.bv === 0 ? 0 : Math.abs((diff / m.bv) * 100)
               let bvF, svF
               if (m.fmt === 'pct') { bvF = m.bv.toFixed(1) + '%'; svF = m.sv.toFixed(1) + '%' }
               else if (m.fmt === 'dec') { bvF = f2(m.bv); svF = f2(m.sv) }
@@ -482,6 +484,8 @@ export default function ApjWorkforcePlanner() {
                     {bvF}
                     {changed && <>{' '}<span className="kpi-value-arrow">→</span>{' '}<span className={'kpi-value-new ' + tone}>{svF}</span></>}
                   </div>
+                  <div className="kpi-sub">Baseline: {bvF}</div>
+                  <div className={'kpi-sub kpi-delta ' + deltaCls}>{diff >= 0 ? '▲' : '▼'} {pctChange.toFixed(1)}% change</div>
                 </div>
               )
             })}
