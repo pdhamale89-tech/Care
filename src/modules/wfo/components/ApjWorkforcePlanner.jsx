@@ -8,7 +8,7 @@ import {
 } from '../lib/apjWorkforceData.js'
 import InfoBtn from '../../../shared/components/InfoBtn.jsx'
 import Icon from '../../../shared/components/Icon.jsx'
-import { barDataLabels, lineDataLabels, lineEndDataLabels } from '../lib/datalabels.js'
+import { barDataLabels, lineDataLabels } from '../lib/datalabels.js'
 
 // Ported from a standalone reference tool ("APJ Workforce Planner") supplied as a
 // finished HTML file, restyled to match Care's own DDS look and generalized beyond its
@@ -53,10 +53,9 @@ const QUICK_SCENARIOS = [
   { key: 'pessimistic', label: 'Worst Case (+40% Ord, +25% CR)', mods: { orders: 40, caserate: 25, cpsr: 20 }, text: 'Worst Case Scenario', desc: 'Orders +40%, CR +25%, CPSR +20% — Maximum HC pressure' },
 ]
 const DEFAULT_MODS = { orders: 0, caserate: 0, cpsr: 0, crw: 0, cases: 0, tcd: 0, headcount: 0 }
-const SENS_RANGE = [-40, -20, 0, 20, 40, 60, 80, 100]
 
 // Per-control quick-preset steps for the Scenario Builder cards — Orders uses a slightly
-// different top-end preset (+20%) than the other six controls (+25%), matching the
+// different top-end preset (+20%) than the other five controls (+25%), matching the
 // reference design.
 const SCENARIO_CONTROLS = [
   { field: 'orders', label: 'Orders Change', presets: [-20, -10, 0, 10, 20, 50] },
@@ -65,7 +64,6 @@ const SCENARIO_CONTROLS = [
   { field: 'crw', label: 'CRW (Productivity) Change', presets: [-20, -10, 0, 10, 25, 50] },
   { field: 'cases', label: 'Cases Change', presets: [-20, -10, 0, 10, 25, 50] },
   { field: 'tcd', label: 'TCD Change', presets: [-20, -10, 0, 10, 25, 50] },
-  { field: 'headcount', label: 'Headcount Change', presets: [-20, -10, 0, 10, 25, 50] },
 ]
 
 function exportCsv(data, quarters, mods, countries, scopeCountryId) {
@@ -297,18 +295,6 @@ export default function ApjWorkforcePlanner() {
   function removeAnalysis(id) {
     setSavedAnalyses((prev) => prev.filter((a) => a.id !== id))
   }
-
-  const sensitivity = useMemo(() => {
-    const rows = [
-      { key: 'orders', label: 'Volume' }, { key: 'caserate', label: 'Case Rate' },
-      { key: 'cpsr', label: 'CPSR' }, { key: 'crw', label: 'CRW' },
-    ]
-    const pick = (m) => {
-      const r = calcAllCountries(currentData, qk, m, countries, safeSelReg)
-      return safeSelReg === 'ALL' ? r.totals : r.countries[safeSelReg]
-    }
-    return rows.map((r) => ({ label: r.label, series: SENS_RANGE.map((v) => pick({ [r.key]: v }).hc) }))
-  }, [currentData, qk, countries, safeSelReg])
 
   const wiTrend = useMemo(() => {
     const baseQ = [], scenQ = []
@@ -689,43 +675,6 @@ export default function ApjWorkforcePlanner() {
                           { label: 'Baseline', data: safeSelReg === 'ALL' ? countries.map((c) => wiBase.countries[c.id].hc) : [wiBase.countries[safeSelReg].hc], backgroundColor: theme === 'dark' ? 'rgba(164,184,205,.35)' : 'rgba(115,115,115,.25)', borderRadius: 4, datalabels: barDataLabels('', colors.textSecondary) },
                           { label: 'Scenario', data: safeSelReg === 'ALL' ? countries.map((c) => wiScenario.countries[c.id].hc) : [wiScenario.countries[safeSelReg].hc], backgroundColor: colors.accentBlue, borderRadius: 4, datalabels: barDataLabels('', colors.accentBlue) },
                         ],
-                      }}
-                      options={lineOptLegend}
-                    />
-                  </div>
-                </div>
-                <div className="card">
-                  <div className="card-header"><div className="card-title">Impact Delta (HC)</div></div>
-                  <div className="chart-container">
-                    <Bar
-                      data={{
-                        labels: safeSelReg === 'ALL' ? countries.map((c) => c.cc) : [countries.find((x) => x.id === safeSelReg).cc],
-                        datasets: [{
-                          label: 'HC Change',
-                          data: safeSelReg === 'ALL' ? countries.map((c) => wiScenario.countries[c.id].hc - wiBase.countries[c.id].hc) : [wiScenario.countries[safeSelReg].hc - wiBase.countries[safeSelReg].hc],
-                          backgroundColor: (safeSelReg === 'ALL' ? countries.map((c) => wiScenario.countries[c.id].hc - wiBase.countries[c.id].hc) : [wiScenario.countries[safeSelReg].hc - wiBase.countries[safeSelReg].hc]).map((v) => (v > 0 ? colors.accentRed : v < 0 ? colors.accentGreen : colors.textSecondary)),
-                          borderRadius: 4,
-                          datalabels: barDataLabels('', colors.textPrimary),
-                        }],
-                      }}
-                      options={barOpt}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="s-grid">
-                <div className="card">
-                  <div className="card-header"><div className="card-title">Sensitivity Analysis (HC)</div></div>
-                  <div className="chart-container">
-                    <Line
-                      data={{
-                        labels: SENS_RANGE.map((v) => (v > 0 ? '+' : '') + v + '%'),
-                        datasets: sensitivity.map((s, i) => ({
-                          label: s.label, data: s.series, borderWidth: 2, tension: .3, pointRadius: 2,
-                          borderColor: [colors.accentBlue, colors.accentGreen, colors.accentPurple, colors.accentOrange][i],
-                          backgroundColor: [colors.accentBlue, colors.accentGreen, colors.accentPurple, colors.accentOrange][i],
-                          datalabels: lineEndDataLabels('', [colors.accentBlue, colors.accentGreen, colors.accentPurple, colors.accentOrange][i]),
-                        })),
                       }}
                       options={lineOptLegend}
                     />
