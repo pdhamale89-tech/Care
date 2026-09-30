@@ -206,8 +206,14 @@ body {
   padding: 1px 4px; font-variant-numeric: tabular-nums;
 }
 .wis-num-input:focus { outline: none; border-color: var(--dds-blue-60); box-shadow: 0 0 0 2px rgba(6,114,203,.15); }
-.wis-num-input::-webkit-inner-spin-button, .wis-num-input::-webkit-outer-spin-button { margin-left: 2px; }
 .wis-control input[type="range"] { width: 100%; accent-color: var(--dds-blue-60); cursor: pointer; }
+
+/* Hide the native up/down spinner on every number input app-wide — values are
+   typed directly, and the reserved spinner gutter was clipping longer numbers
+   (e.g. "50.9" reading as "50."). */
+input[type="number"] { -moz-appearance: textfield; }
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .clear-all-btn { height: var(--dds-button-h-sm); font-size: .75rem; font-weight: 700; color: var(--dds-red-70); background: transparent; border: 1px solid var(--dds-red-60); border-radius: var(--dds-radius-btn); padding: 1px var(--dds-spacing-md); cursor: pointer; white-space: nowrap; font-family: inherit; }
 .clear-all-btn:hover { background: var(--dds-red-10); }
 

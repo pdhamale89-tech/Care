@@ -8,6 +8,7 @@ import {
 } from '../lib/apjWorkforceData.js'
 import InfoBtn from '../../../shared/components/InfoBtn.jsx'
 import Icon from '../../../shared/components/Icon.jsx'
+import { barDataLabels, lineDataLabels, lineEndDataLabels } from '../lib/datalabels.js'
 
 // Ported from a standalone reference tool ("APJ Workforce Planner") supplied as a
 // finished HTML file, restyled to match Care's own DDS look and generalized beyond its
@@ -392,13 +393,13 @@ export default function ApjWorkforcePlanner() {
             <div className="card">
               <div className="card-header"><div className="card-title">Orders Trend</div></div>
               <div className="chart-container">
-                <Bar data={{ labels: trendSeries.labels, datasets: [{ data: trendSeries.tO, backgroundColor: colors.accentBlue, borderRadius: 4 }] }} options={barOpt} />
+                <Bar data={{ labels: trendSeries.labels, datasets: [{ data: trendSeries.tO, backgroundColor: colors.accentBlue, borderRadius: 4, datalabels: barDataLabels('', colors.accentBlue) }] }} options={barOpt} />
               </div>
             </div>
             <div className="card">
               <div className="card-header"><div className="card-title">Cases Trend</div></div>
               <div className="chart-container">
-                <Line data={{ labels: trendSeries.labels, datasets: [{ data: trendSeries.tC, borderColor: colors.accentGreen, backgroundColor: colors.accentGreen, fill: false, tension: .3, borderWidth: 2, pointRadius: 3 }] }} options={barOpt} />
+                <Line data={{ labels: trendSeries.labels, datasets: [{ data: trendSeries.tC, borderColor: colors.accentGreen, backgroundColor: colors.accentGreen, fill: false, tension: .3, borderWidth: 2, pointRadius: 3, datalabels: lineDataLabels('', colors.accentGreen) }] }} options={barOpt} />
               </div>
             </div>
           </div>
@@ -406,13 +407,13 @@ export default function ApjWorkforcePlanner() {
             <div className="card">
               <div className="card-header"><div className="card-title">Contacts Trend</div></div>
               <div className="chart-container">
-                <Line data={{ labels: trendSeries.labels, datasets: [{ data: trendSeries.tT, borderColor: colors.accentPurple, backgroundColor: colors.accentPurple, fill: false, tension: .3, borderWidth: 2, pointRadius: 3 }] }} options={barOpt} />
+                <Line data={{ labels: trendSeries.labels, datasets: [{ data: trendSeries.tT, borderColor: colors.accentPurple, backgroundColor: colors.accentPurple, fill: false, tension: .3, borderWidth: 2, pointRadius: 3, datalabels: lineDataLabels('', colors.accentPurple) }] }} options={barOpt} />
               </div>
             </div>
             <div className="card">
               <div className="card-header"><div className="card-title">Headcount Trend</div></div>
               <div className="chart-container">
-                <Bar data={{ labels: trendSeries.labels, datasets: [{ data: trendSeries.tH, backgroundColor: colors.accentOrange, borderRadius: 4 }] }} options={barOpt} />
+                <Bar data={{ labels: trendSeries.labels, datasets: [{ data: trendSeries.tH, backgroundColor: colors.accentOrange, borderRadius: 4, datalabels: barDataLabels('', colors.accentOrange) }] }} options={barOpt} />
               </div>
             </div>
           </div>
@@ -566,8 +567,8 @@ export default function ApjWorkforcePlanner() {
                       data={{
                         labels: safeSelReg === 'ALL' ? countries.map((c) => c.cc) : [countries.find((x) => x.id === safeSelReg).cc],
                         datasets: [
-                          { label: 'Baseline', data: safeSelReg === 'ALL' ? countries.map((c) => wiBase.countries[c.id].hc) : [wiBase.countries[safeSelReg].hc], backgroundColor: theme === 'dark' ? 'rgba(164,184,205,.35)' : 'rgba(115,115,115,.25)', borderRadius: 4 },
-                          { label: 'Scenario', data: safeSelReg === 'ALL' ? countries.map((c) => wiScenario.countries[c.id].hc) : [wiScenario.countries[safeSelReg].hc], backgroundColor: colors.accentBlue, borderRadius: 4 },
+                          { label: 'Baseline', data: safeSelReg === 'ALL' ? countries.map((c) => wiBase.countries[c.id].hc) : [wiBase.countries[safeSelReg].hc], backgroundColor: theme === 'dark' ? 'rgba(164,184,205,.35)' : 'rgba(115,115,115,.25)', borderRadius: 4, datalabels: barDataLabels('', colors.textSecondary) },
+                          { label: 'Scenario', data: safeSelReg === 'ALL' ? countries.map((c) => wiScenario.countries[c.id].hc) : [wiScenario.countries[safeSelReg].hc], backgroundColor: colors.accentBlue, borderRadius: 4, datalabels: barDataLabels('', colors.accentBlue) },
                         ],
                       }}
                       options={lineOptLegend}
@@ -585,6 +586,7 @@ export default function ApjWorkforcePlanner() {
                           data: safeSelReg === 'ALL' ? countries.map((c) => wiScenario.countries[c.id].hc - wiBase.countries[c.id].hc) : [wiScenario.countries[safeSelReg].hc - wiBase.countries[safeSelReg].hc],
                           backgroundColor: (safeSelReg === 'ALL' ? countries.map((c) => wiScenario.countries[c.id].hc - wiBase.countries[c.id].hc) : [wiScenario.countries[safeSelReg].hc - wiBase.countries[safeSelReg].hc]).map((v) => (v > 0 ? colors.accentRed : v < 0 ? colors.accentGreen : colors.textSecondary)),
                           borderRadius: 4,
+                          datalabels: barDataLabels('', colors.textPrimary),
                         }],
                       }}
                       options={barOpt}
@@ -603,6 +605,7 @@ export default function ApjWorkforcePlanner() {
                           label: s.label, data: s.series, borderWidth: 2, tension: .3, pointRadius: 2,
                           borderColor: [colors.accentBlue, colors.accentGreen, colors.accentPurple, colors.accentOrange][i],
                           backgroundColor: [colors.accentBlue, colors.accentGreen, colors.accentPurple, colors.accentOrange][i],
+                          datalabels: lineEndDataLabels('', [colors.accentBlue, colors.accentGreen, colors.accentPurple, colors.accentOrange][i]),
                         })),
                       }}
                       options={lineOptLegend}
@@ -616,8 +619,8 @@ export default function ApjWorkforcePlanner() {
                       data={{
                         labels: wiTrend.labels,
                         datasets: [
-                          { label: 'Baseline HC', data: wiTrend.baseQ, borderColor: colors.textSecondary, backgroundColor: colors.textSecondary, borderDash: [5, 3], borderWidth: 2, tension: .3, pointRadius: 2 },
-                          { label: 'Scenario HC', data: wiTrend.scenQ, borderColor: colors.accentOrange, backgroundColor: colors.accentOrange, borderWidth: 2, tension: .3, pointRadius: 3 },
+                          { label: 'Baseline HC', data: wiTrend.baseQ, borderColor: colors.textSecondary, backgroundColor: colors.textSecondary, borderDash: [5, 3], borderWidth: 2, tension: .3, pointRadius: 2, datalabels: lineDataLabels('', colors.textSecondary) },
+                          { label: 'Scenario HC', data: wiTrend.scenQ, borderColor: colors.accentOrange, backgroundColor: colors.accentOrange, borderWidth: 2, tension: .3, pointRadius: 3, datalabels: lineDataLabels('', colors.accentOrange) },
                         ],
                       }}
                       options={lineOptLegend}

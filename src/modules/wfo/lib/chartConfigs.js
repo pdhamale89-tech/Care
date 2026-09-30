@@ -1,4 +1,4 @@
-import { barDataLabels, stackedBarDataLabels, waterfallDataLabels } from './datalabels.js'
+import { barDataLabels, lineEndDataLabels, stackedBarDataLabels, waterfallDataLabels } from './datalabels.js'
 import { getColors } from '../../../shared/themes/colors.js'
 
 const LEGEND_BOTTOM = { legend: { position: 'bottom' } }
@@ -172,11 +172,13 @@ export function trendLineConfig(weeks, series, colors, opts = {}) {
       type: 'line', label: 'CAPACITY', data: series.capacity,
       borderColor: colors.accentBlue, backgroundColor: colors.accentBlue,
       tension: 0.3, pointRadius: 3, borderWidth: 2,
+      datalabels: lineEndDataLabels(unit, colors.accentBlue),
     },
     {
       type: 'line', label: actualLabel, data: series.actual,
       borderColor: colors.accentOrange, backgroundColor: colors.accentOrange,
       tension: 0.3, pointRadius: 3, borderWidth: 2,
+      datalabels: lineEndDataLabels(unit, colors.accentOrange),
     },
   ]
   if (series.target) {
@@ -184,6 +186,7 @@ export function trendLineConfig(weeks, series, colors, opts = {}) {
       type: 'line', label: 'TARGET', data: series.target,
       borderColor: colors.textPrimary, backgroundColor: colors.textPrimary,
       borderDash: [6, 4], tension: 0.3, pointRadius: 0, borderWidth: 2,
+      datalabels: lineEndDataLabels(unit, colors.textPrimary),
     })
   }
   return {
