@@ -26,7 +26,7 @@
   /* ---- Spacing scale ---- */
   --dds-spacing-xs: .25rem;  --dds-spacing-sm: .5rem;   --dds-spacing-md: .75rem; --dds-spacing-lg: 1rem;
   --dds-spacing-xl: 1.5rem;  --dds-spacing-2xl: 2rem;   --dds-spacing-3xl: 2.5rem; --dds-spacing-4xl: 3rem; --dds-spacing-5xl: 4rem;
-  --dds-radius-sm: .25rem;   --dds-radius-md: .5rem;
+  --dds-radius-sm: .25rem;   --dds-radius-md: .5rem;   --dds-radius-btn: 1rem;
 
   /* ---- Elevation (shadow color = Blue 900, bottom-shadow direction) ---- */
   --dds-elevation-1: 0 1px 2px rgba(0,42,88,.08), 0 1px 1px rgba(0,42,88,.06);
@@ -190,7 +190,7 @@ body {
 .filter-panel-caret { font-size: 9px; color: var(--text-muted); transition: transform .2s; }
 .filter-panel-caret.collapsed { transform: rotate(-90deg); }
 .period-bar { display: flex; gap: 2px; margin-left: auto; }
-.p-btn { height: var(--dds-button-h-sm); padding: 1px var(--dds-spacing-md); border-radius: var(--dds-radius-sm); font-size: .75rem; font-weight: 500; border: 1px solid var(--border-strong); background: transparent; color: var(--text-secondary); cursor: pointer; font-family: inherit; }
+.p-btn { height: var(--dds-button-h-sm); padding: 1px var(--dds-spacing-md); border-radius: var(--dds-radius-btn); font-size: .75rem; font-weight: 700; border: 1px solid var(--border-strong); background: transparent; color: var(--text-secondary); cursor: pointer; font-family: inherit; }
 .p-btn.active { background: var(--dds-blue-60); color: #fff; border-color: var(--dds-blue-60); }
 .filter-clear-row { display: flex; justify-content: flex-end; margin-top: var(--dds-spacing-sm); }
 
@@ -208,7 +208,7 @@ body {
 .wis-num-input:focus { outline: none; border-color: var(--dds-blue-60); box-shadow: 0 0 0 2px rgba(6,114,203,.15); }
 .wis-num-input::-webkit-inner-spin-button, .wis-num-input::-webkit-outer-spin-button { margin-left: 2px; }
 .wis-control input[type="range"] { width: 100%; accent-color: var(--dds-blue-60); cursor: pointer; }
-.clear-all-btn { height: var(--dds-button-h-sm); font-size: .75rem; font-weight: 500; color: var(--dds-red-70); background: transparent; border: 1px solid var(--dds-red-60); border-radius: var(--dds-radius-sm); padding: 1px var(--dds-spacing-md); cursor: pointer; white-space: nowrap; font-family: inherit; }
+.clear-all-btn { height: var(--dds-button-h-sm); font-size: .75rem; font-weight: 700; color: var(--dds-red-70); background: transparent; border: 1px solid var(--dds-red-60); border-radius: var(--dds-radius-btn); padding: 1px var(--dds-spacing-md); cursor: pointer; white-space: nowrap; font-family: inherit; }
 .clear-all-btn:hover { background: var(--dds-red-10); }
 
 /* ===== Workforce Planner — collapsible Scenario Builder rail ===== */
@@ -229,14 +229,14 @@ body {
 .wis-sb-badge .wis-num-input:focus { box-shadow: none; }
 .wis-sb-range { display: flex; justify-content: space-between; font-size: .6875rem; color: var(--text-muted); margin-top: 4px; }
 .wis-sb-presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 12px; }
-.wis-sb-preset { height: 27px; border-radius: var(--dds-radius-sm); border: 1px solid var(--border-strong); background: var(--bg-card); color: var(--text-primary); font-size: .75rem; font-weight: 500; cursor: pointer; font-family: inherit; }
+.wis-sb-preset { height: 27px; border-radius: var(--dds-radius-btn); border: 1px solid var(--border-strong); background: var(--bg-card); color: var(--text-primary); font-size: .75rem; font-weight: 700; cursor: pointer; font-family: inherit; }
 .wis-sb-preset:hover { background: var(--bg-sidebar-hover); }
 .wis-sb-preset.active { background: var(--dds-blue-60); color: #fff; border-color: var(--dds-blue-60); }
-.wis-sb-reset { width: 100%; height: var(--dds-button-h-md); font-size: .875rem; font-weight: 500; color: var(--dds-red-70); background: transparent; border: 1px solid var(--dds-red-60); border-radius: var(--dds-radius-md); cursor: pointer; font-family: inherit; }
+.wis-sb-reset { width: 100%; height: var(--dds-button-h-md); font-size: .875rem; font-weight: 700; color: var(--dds-red-70); background: transparent; border: 1px solid var(--dds-red-60); border-radius: var(--dds-radius-btn); cursor: pointer; font-family: inherit; }
 .wis-sb-reset:hover { background: var(--dds-red-10); }
 .wis-sb-quick { background: var(--bg-page); border: 1px solid var(--border); border-radius: var(--dds-radius-md); padding: var(--dds-spacing-md); display: flex; flex-direction: column; gap: 8px; }
 .wis-sb-quick-title { font-size: .6875rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 2px; }
-.wis-sb-quick-btn { width: 100%; text-align: center; padding: 8px 10px; font-size: .8125rem; font-weight: 500; color: var(--text-primary); background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: var(--dds-radius-sm); cursor: pointer; font-family: inherit; }
+.wis-sb-quick-btn { width: 100%; text-align: center; padding: 8px 10px; font-size: .8125rem; font-weight: 700; color: var(--text-primary); background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: var(--dds-radius-btn); cursor: pointer; font-family: inherit; }
 .wis-sb-quick-btn:hover { background: var(--bg-sidebar-hover); border-color: var(--dds-blue-60); color: var(--dds-blue-60); }
 .wis-main { min-width: 0; }
 @media (max-width: 900px) {
@@ -412,11 +412,11 @@ tr.group-row td { background: var(--table-header); font-weight: 700; color: var(
 
 /* ===== Pill toggle (Actual/Forecast/Variance) — DDS button-sm treatment ===== */
 .pill-toggle { display: flex; gap: 6px; }
-.pill-toggle button { height: var(--dds-button-h-sm); padding: 1px var(--dds-spacing-md); border-radius: 999px; border: 1px solid var(--dds-blue-60); background: transparent; color: var(--dds-blue-60); font-weight: 500; font-size: .75rem; cursor: pointer; font-family: inherit; }
+.pill-toggle button { height: var(--dds-button-h-sm); padding: 1px var(--dds-spacing-md); border-radius: 999px; border: 1px solid var(--dds-blue-60); background: transparent; color: var(--dds-blue-60); font-weight: 700; font-size: .75rem; cursor: pointer; font-family: inherit; }
 .pill-toggle button.active { background: var(--dds-blue-60); color: #fff; }
 
 /* ===== Buttons (DDS v3 — Large 48 / Medium 40 (default) / Small 24 / Mini (tables only)) ===== */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; border-radius: var(--dds-radius-sm); border: 1px solid transparent; height: var(--dds-button-h-md); padding: 1px var(--dds-spacing-lg); font-size: 1rem; line-height: 1.5rem; font-weight: 500; cursor: pointer; white-space: nowrap; font-family: inherit; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; border-radius: var(--dds-radius-btn); border: 1px solid transparent; height: var(--dds-button-h-md); padding: 1px var(--dds-spacing-lg); font-size: 1rem; line-height: 1.5rem; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: inherit; }
 .btn:disabled { opacity: .4; cursor: not-allowed; }
 .btn-lg { height: var(--dds-button-h-lg); padding: 1px var(--dds-spacing-xl); font-size: 1rem; }
 .btn-sm { height: var(--dds-button-h-sm); padding: 1px var(--dds-spacing-md); font-size: .875rem; gap: .35rem; }
@@ -510,7 +510,7 @@ tr.group-row td { background: var(--table-header); font-weight: 700; color: var(
 
 /* ===== Fiscal Calendar (Tools > Calendar > Fiscal Calendar) ===== */
 .plan-sel { display: flex; gap: 3px; }
-.plan-btn { height: var(--dds-button-h-sm); padding: 1px var(--dds-spacing-md); border-radius: var(--dds-radius-sm); font-size: .75rem; font-weight: 500; border: 1px solid var(--border-strong); background: transparent; color: var(--text-secondary); cursor: pointer; }
+.plan-btn { height: var(--dds-button-h-sm); padding: 1px var(--dds-spacing-md); border-radius: var(--dds-radius-btn); font-size: .75rem; font-weight: 700; border: 1px solid var(--border-strong); background: transparent; color: var(--text-secondary); cursor: pointer; }
 .plan-btn.active { background: var(--dds-blue-60); color: #fff; border-color: var(--dds-blue-60); }
 .plan-btn:disabled { opacity: .45; cursor: not-allowed; }
 
@@ -605,7 +605,7 @@ tr.group-row td { background: var(--table-header); font-weight: 700; color: var(
 .heatmap-back-btn { border: none; background: none; color: var(--dds-blue-60); font-size: .75rem; font-weight: 500; cursor: pointer; padding: 0; margin-right: 4px; }
 .heatmap-back-btn:hover { text-decoration: underline; }
 .heatmap-drill-cell { padding-left: 6px !important; }
-.heatmap-drill-btn { height: var(--dds-button-h-sm); border: 1px solid var(--dds-blue-60); background: transparent; color: var(--dds-blue-60); font-size: .6875rem; font-weight: 500; padding: 1px var(--dds-spacing-sm); border-radius: var(--dds-radius-sm); cursor: pointer; white-space: nowrap; transition: all .15s; }
+.heatmap-drill-btn { height: var(--dds-button-h-sm); border: 1px solid var(--dds-blue-60); background: transparent; color: var(--dds-blue-60); font-size: .6875rem; font-weight: 700; padding: 1px var(--dds-spacing-sm); border-radius: var(--dds-radius-btn); cursor: pointer; white-space: nowrap; transition: all .15s; }
 .heatmap-drill-btn:hover { background: var(--dds-blue-60); color: #fff; }
 
 /* ===== Global info tooltip (InfoBtn / InfoTip) ===== */
