@@ -210,6 +210,39 @@ body {
 .wis-control input[type="range"] { width: 100%; accent-color: var(--dds-blue-60); cursor: pointer; }
 .clear-all-btn { height: var(--dds-button-h-sm); font-size: .75rem; font-weight: 500; color: var(--dds-red-70); background: transparent; border: 1px solid var(--dds-red-60); border-radius: var(--dds-radius-sm); padding: 1px var(--dds-spacing-md); cursor: pointer; white-space: nowrap; font-family: inherit; }
 .clear-all-btn:hover { background: var(--dds-red-10); }
+
+/* ===== Workforce Planner — collapsible Scenario Builder rail ===== */
+.wis-layout { display: grid; grid-template-columns: 300px 1fr; gap: var(--dds-spacing-lg); align-items: start; }
+.wis-layout.collapsed { grid-template-columns: auto 1fr; }
+.wis-sidebar { position: sticky; top: var(--dds-spacing-md); min-width: 0; }
+.wis-sidebar-head { display: flex; align-items: center; justify-content: space-between; gap: var(--dds-spacing-sm); margin-bottom: var(--dds-spacing-md); }
+.wis-layout.collapsed .wis-sidebar-head { justify-content: center; }
+.wis-sidebar-title { display: flex; align-items: center; gap: 5px; font-size: 1.0625rem; font-weight: 700; color: var(--accent-purple); }
+.wis-sidebar-toggle { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; flex-shrink: 0; border-radius: var(--dds-radius-sm); border: 1px solid var(--border-strong); background: var(--bg-card); color: var(--text-secondary); cursor: pointer; }
+.wis-sidebar-toggle:hover { background: var(--bg-sidebar-hover); color: var(--text-primary); }
+.wis-sidebar-body { display: flex; flex-direction: column; gap: var(--dds-spacing-md); }
+.wis-sb-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--dds-radius-md); padding: var(--dds-spacing-md); }
+.wis-sb-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--dds-spacing-sm); margin-bottom: 12px; }
+.wis-sb-card-head .lbl { font-size: .8125rem; font-weight: 600; color: var(--text-primary); }
+.wis-sb-badge { display: inline-flex; background: var(--bg-page); border: 1px solid var(--border-strong); border-radius: var(--dds-radius-sm); padding: 2px 10px; }
+.wis-sb-badge .wis-num-input { background: transparent; border: 0; padding: 0; width: 32px; font-weight: 600; }
+.wis-sb-badge .wis-num-input:focus { box-shadow: none; }
+.wis-sb-range { display: flex; justify-content: space-between; font-size: .6875rem; color: var(--text-muted); margin-top: 4px; }
+.wis-sb-presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 12px; }
+.wis-sb-preset { height: 27px; border-radius: var(--dds-radius-sm); border: 1px solid var(--border-strong); background: var(--bg-card); color: var(--text-primary); font-size: .75rem; font-weight: 500; cursor: pointer; font-family: inherit; }
+.wis-sb-preset:hover { background: var(--bg-sidebar-hover); }
+.wis-sb-preset.active { background: var(--dds-blue-60); color: #fff; border-color: var(--dds-blue-60); }
+.wis-sb-reset { width: 100%; height: var(--dds-button-h-md); font-size: .875rem; font-weight: 500; color: var(--dds-red-70); background: transparent; border: 1px solid var(--dds-red-60); border-radius: var(--dds-radius-md); cursor: pointer; font-family: inherit; }
+.wis-sb-reset:hover { background: var(--dds-red-10); }
+.wis-sb-quick { background: var(--bg-page); border: 1px solid var(--border); border-radius: var(--dds-radius-md); padding: var(--dds-spacing-md); display: flex; flex-direction: column; gap: 8px; }
+.wis-sb-quick-title { font-size: .6875rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 2px; }
+.wis-sb-quick-btn { width: 100%; text-align: center; padding: 8px 10px; font-size: .8125rem; font-weight: 500; color: var(--text-primary); background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: var(--dds-radius-sm); cursor: pointer; font-family: inherit; }
+.wis-sb-quick-btn:hover { background: var(--bg-sidebar-hover); border-color: var(--dds-blue-60); color: var(--dds-blue-60); }
+.wis-main { min-width: 0; }
+@media (max-width: 900px) {
+  .wis-layout, .wis-layout.collapsed { grid-template-columns: 1fr; }
+  .wis-sidebar { position: static; }
+}
 .filter-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--dds-spacing-sm) var(--dds-spacing-md); }
 .filter-group { display: flex; flex-direction: column; gap: .3rem; }
 .filter-group > label { font-size: .75rem; color: var(--text-secondary); font-weight: 500; }

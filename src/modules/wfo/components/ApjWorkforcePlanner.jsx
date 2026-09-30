@@ -7,6 +7,7 @@ import {
   calcAllCountries, f0, f1, f2, fp,
 } from '../lib/apjWorkforceData.js'
 import InfoBtn from '../../../shared/components/InfoBtn.jsx'
+import Icon from '../../../shared/components/Icon.jsx'
 
 // Ported from a standalone reference tool ("APJ Workforce Planner") supplied as a
 // finished HTML file, restyled to match Care's own DDS look and generalized beyond its
@@ -52,6 +53,19 @@ const QUICK_SCENARIOS = [
 ]
 const DEFAULT_MODS = { orders: 0, caserate: 0, cpsr: 0, crw: 0, cases: 0, tcd: 0, headcount: 0 }
 const SENS_RANGE = [-40, -20, 0, 20, 40, 60, 80, 100]
+
+// Per-control quick-preset steps for the Scenario Builder cards — Orders uses a slightly
+// different top-end preset (+20%) than the other six controls (+25%), matching the
+// reference design.
+const SCENARIO_CONTROLS = [
+  { field: 'orders', label: 'Orders Change', presets: [-20, -10, 0, 10, 20, 50] },
+  { field: 'caserate', label: 'Case Rate Change', presets: [-20, -10, 0, 10, 25, 50] },
+  { field: 'cpsr', label: 'CPSR Change', presets: [-20, -10, 0, 10, 25, 50] },
+  { field: 'crw', label: 'CRW (Productivity) Change', presets: [-20, -10, 0, 10, 25, 50] },
+  { field: 'cases', label: 'Cases Change', presets: [-20, -10, 0, 10, 25, 50] },
+  { field: 'tcd', label: 'TCD Change', presets: [-20, -10, 0, 10, 25, 50] },
+  { field: 'headcount', label: 'Headcount Change', presets: [-20, -10, 0, 10, 25, 50] },
+]
 
 function exportCsv(data, quarters, mods, countries) {
   let csv = 'Workforce Capacity Plan\n\n'
@@ -111,6 +125,7 @@ export default function ApjWorkforcePlanner() {
   const [showDet, setShowDet] = useState(false)
   const [mods, setMods] = useState(DEFAULT_MODS)
   const [scenario, setScenario] = useState(null)
+  const [sbCollapsed, setSbCollapsed] = useState(false)
 
   // Fiscal Quarter filter narrows which quarters are shown (same "All = unfiltered"
   // convention as CCO Overview/What-If). Region + Sub Region/Country genuinely narrow
@@ -245,7 +260,7 @@ export default function ApjWorkforcePlanner() {
       {activeTab === 'input' && (
         <>
           <div className="section-div">
-            <h2>Orders + Parameters <InfoBtn tip="<strong>Purpose</strong>Editable GS/CS order volumes and target rates (Case Rate, CPSR, CRW) per country and quarter, seeded from the Filters panel above. Drives every downstream calculation in Results and What-If." /></h2>
+            <h2>Orders & Targets <InfoBtn tip="<strong>Purpose</strong>Editable GS/CS order volumes and target rates (Case Rate, CPSR, CRW) per country and quarter, seeded from the Filters panel above. Drives every downstream calculation in Results and What-If." /></h2>
           </div>
           <div className="card">
             <div className="card-header" style={{ justifyContent: 'flex-end' }}>
@@ -411,185 +426,206 @@ export default function ApjWorkforcePlanner() {
           <PickerTabs options={quarterOptions} value={selQ} onChange={setSelQIndex} ariaLabel="Quarter" />
           <PickerTabs options={regionOptions} value={safeSelReg} onChange={setSelReg} ariaLabel="Region" />
 
-          <div className="section-div">
-            <h2>Scenario Builder <InfoBtn tip="<strong>Purpose</strong>Orders, Case Rate, CPSR and CRW drive Cases &rarr; TCD &rarr; Headcount in sequence. Cases Change, TCD Change and Headcount Change are manual overrides layered on top of that chain at each stage (e.g. a known one-off volume bump beyond what Orders/Case Rate alone would predict), and cascade forward to the metrics after them." /></h2>
-          </div>
-          <div className="card">
-            <div className="wis-grid">
-              {[
-                { field: 'orders', label: 'Orders Change' },
-                { field: 'caserate', label: 'Case Rate Change' },
-                { field: 'cpsr', label: 'CPSR Change' },
-                { field: 'crw', label: 'CRW (Productivity) Change' },
-                { field: 'cases', label: 'Cases Change' },
-                { field: 'tcd', label: 'TCD Change' },
-                { field: 'headcount', label: 'Headcount Change' },
-              ].map((g) => (
-                <div className="wis-control" key={g.field}>
-                  <div className="wis-control-head">
-                    <span>{g.label}</span>
-                    <span className="wis-num-wrap">
-                      <input
-                        type="number" className="wis-num-input" min={-50} max={100} step={1}
-                        value={mods[g.field]}
-                        onChange={(e) => { const n = safeNumber(e.target.value); if (n !== undefined) setWI(g.field, Math.min(100, Math.max(-50, Math.round(n)))) }}
-                        onBlur={(e) => { e.target.value = String(mods[g.field]) }}
-                      />%
-                    </span>
+          <div className={'wis-layout' + (sbCollapsed ? ' collapsed' : '')}>
+            <aside className="wis-sidebar">
+              <div className="wis-sidebar-head">
+                {!sbCollapsed && (
+                  <div className="wis-sidebar-title">
+                    <span>Scenario Builder</span>
+                    <InfoBtn tip="<strong>Purpose</strong>Orders, Case Rate, CPSR and CRW drive Cases &rarr; TCD &rarr; Headcount in sequence. Cases Change, TCD Change and Headcount Change are manual overrides layered on top of that chain at each stage (e.g. a known one-off volume bump beyond what Orders/Case Rate alone would predict), and cascade forward to the metrics after them." />
                   </div>
-                  <input type="range" min={-50} max={100} step={1} value={mods[g.field]} onChange={(e) => setWI(g.field, Number(e.target.value))} />
-                </div>
-              ))}
-            </div>
-            <div className="filter-clear-row">
-              <button type="button" className="clear-all-btn" onClick={resetWI}>✕ Reset All to Baseline</button>
-            </div>
-          </div>
-
-          <div className="section-div">
-            <h2>Quick Scenarios</h2>
-          </div>
-          <div className="card">
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {QUICK_SCENARIOS.map((s) => (
-                <button type="button" key={s.key} className="btn btn-sm btn-neutral" onClick={() => applyScenario(s.key)}>{s.label}</button>
-              ))}
-            </div>
-            {scenario && (
-              <div className="ai-story" style={{ marginTop: 14 }}>
-                <div><div className="ai-story-title">{scenario.text}</div><div className="ai-story-text">{scenario.desc}</div></div>
+                )}
+                <button
+                  type="button" className="wis-sidebar-toggle"
+                  onClick={() => setSbCollapsed((c) => !c)}
+                  aria-label={sbCollapsed ? 'Expand Scenario Builder' : 'Collapse Scenario Builder'}
+                  title={sbCollapsed ? 'Expand Scenario Builder' : 'Collapse Scenario Builder'}
+                >
+                  <Icon name="chevronLeft" size={16} style={{ transform: sbCollapsed ? 'rotate(180deg)' : 'none' }} />
+                </button>
               </div>
-            )}
-          </div>
 
-          <div className="section-div">
-            <h2>Projected Impact</h2>
-          </div>
-          <div className="kpi-grid">
-            {impactMetrics.map((m) => {
-              const diff = m.sv - m.bv
-              const changed = Math.abs(diff) > 1e-9
-              const tone = diff >= 0 ? 'tone-g' : 'tone-r'
-              const deltaCls = diff >= 0 ? 'up' : 'down'
-              const pctChange = m.bv === 0 ? 0 : Math.abs((diff / m.bv) * 100)
-              let bvF, svF
-              if (m.fmt === 'pct') { bvF = m.bv.toFixed(1) + '%'; svF = m.sv.toFixed(1) + '%' }
-              else if (m.fmt === 'dec') { bvF = f2(m.bv); svF = f2(m.sv) }
-              else { bvF = f0(m.bv); svF = f0(m.sv) }
-              return (
-                <div className="kpi-card" key={m.label}>
-                  <div className="kpi-label">{m.label}</div>
-                  <div className="kpi-value">
-                    {bvF}
-                    {changed && <>{' '}<span className="kpi-value-arrow">→</span>{' '}<span className={'kpi-value-new ' + tone}>{svF}</span></>}
+              {!sbCollapsed && (
+                <div className="wis-sidebar-body">
+                  {SCENARIO_CONTROLS.map((g) => (
+                    <div className="wis-sb-card" key={g.field}>
+                      <div className="wis-sb-card-head">
+                        <span className="lbl">{g.label}</span>
+                        <span className="wis-sb-badge">
+                          <span className="wis-num-wrap">
+                            <input
+                              type="number" className="wis-num-input" min={-50} max={100} step={1}
+                              value={mods[g.field]}
+                              onChange={(e) => { const n = safeNumber(e.target.value); if (n !== undefined) setWI(g.field, Math.min(100, Math.max(-50, Math.round(n)))) }}
+                              onBlur={(e) => { e.target.value = String(mods[g.field]) }}
+                            />%
+                          </span>
+                        </span>
+                      </div>
+                      <input type="range" min={-50} max={100} step={1} value={mods[g.field]} onChange={(e) => setWI(g.field, Number(e.target.value))} />
+                      <div className="wis-sb-range"><span>-50%</span><span>0%</span><span>+100%</span></div>
+                      <div className="wis-sb-presets">
+                        {g.presets.map((p) => (
+                          <button
+                            type="button" key={p}
+                            className={'wis-sb-preset' + (mods[g.field] === p ? ' active' : '')}
+                            onClick={() => setWI(g.field, p)}
+                          >
+                            {p === 0 ? 'Base' : (p > 0 ? '+' : '') + p + '%'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  <button type="button" className="wis-sb-reset" onClick={resetWI}>Reset All to Baseline</button>
+
+                  <div className="wis-sb-quick">
+                    <div className="wis-sb-quick-title">Quick Scenarios</div>
+                    {QUICK_SCENARIOS.map((s) => (
+                      <button type="button" key={s.key} className="wis-sb-quick-btn" onClick={() => applyScenario(s.key)}>{s.label}</button>
+                    ))}
+                    {scenario && (
+                      <div className="ai-story" style={{ marginTop: 10 }}>
+                        <div><div className="ai-story-title">{scenario.text}</div><div className="ai-story-text">{scenario.desc}</div></div>
+                      </div>
+                    )}
                   </div>
-                  <div className="kpi-sub">Baseline: {bvF}</div>
-                  <div className={'kpi-sub kpi-delta ' + deltaCls}>{diff >= 0 ? '▲' : '▼'} {pctChange.toFixed(1)}% change</div>
                 </div>
-              )
-            })}
-          </div>
+              )}
+            </aside>
 
-          <div className="card">
-            <div className="card-header"><div className="card-title">Baseline vs Scenario Comparison</div></div>
-            <div className="tw">
-              <table>
-                <thead>
-                  <tr><th style={{ textAlign: 'left' }}>Country</th><th>Base Ord</th><th>Scen Ord</th><th>&Delta; Ord</th><th>Base Cases</th><th>Scen Cases</th><th>&Delta; Cases</th><th>Base HC</th><th>Scen HC</th><th>&Delta; HC</th></tr>
-                </thead>
-                <tbody>
-                  {countries.length === 0 && (
-                    <tr><td colSpan={10} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No APJ countries match the current Sub Region/Country filter selection.</td></tr>
-                  )}
-                  {(safeSelReg === 'ALL' ? countries : [countries.find((x) => x.id === safeSelReg)]).map((c) => {
-                    const br = wiBase.countries[c.id]
-                    const sr = wiScenario.countries[c.id]
-                    return (
-                      <tr key={c.id}>
-                        <td style={{ textAlign: 'left' }}><span className="pill-tag" style={{ marginRight: 8 }}>{c.cc}</span>{c.name}</td>
-                        <td>{f0(br.totO)}</td><td>{f0(sr.totO)}</td><td><DeltaCell base={br.totO} scenario={sr.totO} /></td>
-                        <td>{f0(br.totCs)}</td><td>{f0(sr.totCs)}</td><td><DeltaCell base={br.totCs} scenario={sr.totCs} /></td>
-                        <td>{f0(br.hc)}</td><td><strong>{f0(sr.hc)}</strong></td><td><DeltaCell base={br.hc} scenario={sr.hc} /></td>
-                      </tr>
-                    )
-                  })}
-                  {safeSelReg === 'ALL' && countries.length > 0 && (
-                    <tr className="tot-row">
-                      <td style={{ textAlign: 'left' }}>GRAND TOTAL</td>
-                      <td>{f0(wiBase.totals.totO)}</td><td>{f0(wiScenario.totals.totO)}</td><td><DeltaCell base={wiBase.totals.totO} scenario={wiScenario.totals.totO} /></td>
-                      <td>{f0(wiBase.totals.totCs)}</td><td>{f0(wiScenario.totals.totCs)}</td><td><DeltaCell base={wiBase.totals.totCs} scenario={wiScenario.totals.totCs} /></td>
-                      <td>{f0(wiBase.totals.hc)}</td><td><strong>{f0(wiScenario.totals.hc)}</strong></td><td><DeltaCell base={wiBase.totals.hc} scenario={wiScenario.totals.hc} /></td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+            <div className="wis-main">
+              <div className="section-div" style={{ marginTop: 0 }}>
+                <h2>Projected Impact</h2>
+              </div>
+              <div className="kpi-grid">
+                {impactMetrics.map((m) => {
+                  const diff = m.sv - m.bv
+                  const changed = Math.abs(diff) > 1e-9
+                  const tone = diff >= 0 ? 'tone-g' : 'tone-r'
+                  const deltaCls = diff >= 0 ? 'up' : 'down'
+                  const pctChange = m.bv === 0 ? 0 : Math.abs((diff / m.bv) * 100)
+                  let bvF, svF
+                  if (m.fmt === 'pct') { bvF = m.bv.toFixed(1) + '%'; svF = m.sv.toFixed(1) + '%' }
+                  else if (m.fmt === 'dec') { bvF = f2(m.bv); svF = f2(m.sv) }
+                  else { bvF = f0(m.bv); svF = f0(m.sv) }
+                  return (
+                    <div className="kpi-card" key={m.label}>
+                      <div className="kpi-label">{m.label}</div>
+                      <div className="kpi-value">
+                        {bvF}
+                        {changed && <>{' '}<span className="kpi-value-arrow">→</span>{' '}<span className={'kpi-value-new ' + tone}>{svF}</span></>}
+                      </div>
+                      <div className="kpi-sub">Baseline: {bvF}</div>
+                      <div className={'kpi-sub kpi-delta ' + deltaCls}>{diff >= 0 ? '▲' : '▼'} {pctChange.toFixed(1)}% change</div>
+                    </div>
+                  )
+                })}
+              </div>
 
-          <div className="s-grid">
-            <div className="card">
-              <div className="card-header"><div className="card-title">HC Comparison</div></div>
-              <div className="chart-container">
-                <Bar
-                  data={{
-                    labels: safeSelReg === 'ALL' ? countries.map((c) => c.cc) : [countries.find((x) => x.id === safeSelReg).cc],
-                    datasets: [
-                      { label: 'Baseline', data: safeSelReg === 'ALL' ? countries.map((c) => wiBase.countries[c.id].hc) : [wiBase.countries[safeSelReg].hc], backgroundColor: theme === 'dark' ? 'rgba(164,184,205,.35)' : 'rgba(115,115,115,.25)', borderRadius: 4 },
-                      { label: 'Scenario', data: safeSelReg === 'ALL' ? countries.map((c) => wiScenario.countries[c.id].hc) : [wiScenario.countries[safeSelReg].hc], backgroundColor: colors.accentBlue, borderRadius: 4 },
-                    ],
-                  }}
-                  options={lineOptLegend}
-                />
+              <div className="card">
+                <div className="card-header"><div className="card-title">Baseline vs Scenario Comparison</div></div>
+                <div className="tw">
+                  <table>
+                    <thead>
+                      <tr><th style={{ textAlign: 'left' }}>Country</th><th>Base Ord</th><th>Scen Ord</th><th>&Delta; Ord</th><th>Base Cases</th><th>Scen Cases</th><th>&Delta; Cases</th><th>Base HC</th><th>Scen HC</th><th>&Delta; HC</th></tr>
+                    </thead>
+                    <tbody>
+                      {countries.length === 0 && (
+                        <tr><td colSpan={10} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No APJ countries match the current Sub Region/Country filter selection.</td></tr>
+                      )}
+                      {(safeSelReg === 'ALL' ? countries : [countries.find((x) => x.id === safeSelReg)]).map((c) => {
+                        const br = wiBase.countries[c.id]
+                        const sr = wiScenario.countries[c.id]
+                        return (
+                          <tr key={c.id}>
+                            <td style={{ textAlign: 'left' }}><span className="pill-tag" style={{ marginRight: 8 }}>{c.cc}</span>{c.name}</td>
+                            <td>{f0(br.totO)}</td><td>{f0(sr.totO)}</td><td><DeltaCell base={br.totO} scenario={sr.totO} /></td>
+                            <td>{f0(br.totCs)}</td><td>{f0(sr.totCs)}</td><td><DeltaCell base={br.totCs} scenario={sr.totCs} /></td>
+                            <td>{f0(br.hc)}</td><td><strong>{f0(sr.hc)}</strong></td><td><DeltaCell base={br.hc} scenario={sr.hc} /></td>
+                          </tr>
+                        )
+                      })}
+                      {safeSelReg === 'ALL' && countries.length > 0 && (
+                        <tr className="tot-row">
+                          <td style={{ textAlign: 'left' }}>GRAND TOTAL</td>
+                          <td>{f0(wiBase.totals.totO)}</td><td>{f0(wiScenario.totals.totO)}</td><td><DeltaCell base={wiBase.totals.totO} scenario={wiScenario.totals.totO} /></td>
+                          <td>{f0(wiBase.totals.totCs)}</td><td>{f0(wiScenario.totals.totCs)}</td><td><DeltaCell base={wiBase.totals.totCs} scenario={wiScenario.totals.totCs} /></td>
+                          <td>{f0(wiBase.totals.hc)}</td><td><strong>{f0(wiScenario.totals.hc)}</strong></td><td><DeltaCell base={wiBase.totals.hc} scenario={wiScenario.totals.hc} /></td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-            <div className="card">
-              <div className="card-header"><div className="card-title">Impact Delta (HC)</div></div>
-              <div className="chart-container">
-                <Bar
-                  data={{
-                    labels: safeSelReg === 'ALL' ? countries.map((c) => c.cc) : [countries.find((x) => x.id === safeSelReg).cc],
-                    datasets: [{
-                      label: 'HC Change',
-                      data: safeSelReg === 'ALL' ? countries.map((c) => wiScenario.countries[c.id].hc - wiBase.countries[c.id].hc) : [wiScenario.countries[safeSelReg].hc - wiBase.countries[safeSelReg].hc],
-                      backgroundColor: (safeSelReg === 'ALL' ? countries.map((c) => wiScenario.countries[c.id].hc - wiBase.countries[c.id].hc) : [wiScenario.countries[safeSelReg].hc - wiBase.countries[safeSelReg].hc]).map((v) => (v > 0 ? colors.accentRed : v < 0 ? colors.accentGreen : colors.textSecondary)),
-                      borderRadius: 4,
-                    }],
-                  }}
-                  options={barOpt}
-                />
+
+              <div className="s-grid">
+                <div className="card">
+                  <div className="card-header"><div className="card-title">HC Comparison</div></div>
+                  <div className="chart-container">
+                    <Bar
+                      data={{
+                        labels: safeSelReg === 'ALL' ? countries.map((c) => c.cc) : [countries.find((x) => x.id === safeSelReg).cc],
+                        datasets: [
+                          { label: 'Baseline', data: safeSelReg === 'ALL' ? countries.map((c) => wiBase.countries[c.id].hc) : [wiBase.countries[safeSelReg].hc], backgroundColor: theme === 'dark' ? 'rgba(164,184,205,.35)' : 'rgba(115,115,115,.25)', borderRadius: 4 },
+                          { label: 'Scenario', data: safeSelReg === 'ALL' ? countries.map((c) => wiScenario.countries[c.id].hc) : [wiScenario.countries[safeSelReg].hc], backgroundColor: colors.accentBlue, borderRadius: 4 },
+                        ],
+                      }}
+                      options={lineOptLegend}
+                    />
+                  </div>
+                </div>
+                <div className="card">
+                  <div className="card-header"><div className="card-title">Impact Delta (HC)</div></div>
+                  <div className="chart-container">
+                    <Bar
+                      data={{
+                        labels: safeSelReg === 'ALL' ? countries.map((c) => c.cc) : [countries.find((x) => x.id === safeSelReg).cc],
+                        datasets: [{
+                          label: 'HC Change',
+                          data: safeSelReg === 'ALL' ? countries.map((c) => wiScenario.countries[c.id].hc - wiBase.countries[c.id].hc) : [wiScenario.countries[safeSelReg].hc - wiBase.countries[safeSelReg].hc],
+                          backgroundColor: (safeSelReg === 'ALL' ? countries.map((c) => wiScenario.countries[c.id].hc - wiBase.countries[c.id].hc) : [wiScenario.countries[safeSelReg].hc - wiBase.countries[safeSelReg].hc]).map((v) => (v > 0 ? colors.accentRed : v < 0 ? colors.accentGreen : colors.textSecondary)),
+                          borderRadius: 4,
+                        }],
+                      }}
+                      options={barOpt}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          <div className="s-grid">
-            <div className="card">
-              <div className="card-header"><div className="card-title">Sensitivity Analysis (HC)</div></div>
-              <div className="chart-container">
-                <Line
-                  data={{
-                    labels: SENS_RANGE.map((v) => (v > 0 ? '+' : '') + v + '%'),
-                    datasets: sensitivity.map((s, i) => ({
-                      label: s.label, data: s.series, borderWidth: 2, tension: .3, pointRadius: 2,
-                      borderColor: [colors.accentBlue, colors.accentGreen, colors.accentPurple, colors.accentOrange][i],
-                      backgroundColor: [colors.accentBlue, colors.accentGreen, colors.accentPurple, colors.accentOrange][i],
-                    })),
-                  }}
-                  options={lineOptLegend}
-                />
-              </div>
-            </div>
-            <div className="card">
-              <div className="card-header"><div className="card-title">Quarterly HC Trend</div></div>
-              <div className="chart-container">
-                <Line
-                  data={{
-                    labels: wiTrend.labels,
-                    datasets: [
-                      { label: 'Baseline HC', data: wiTrend.baseQ, borderColor: colors.textSecondary, backgroundColor: colors.textSecondary, borderDash: [5, 3], borderWidth: 2, tension: .3, pointRadius: 2 },
-                      { label: 'Scenario HC', data: wiTrend.scenQ, borderColor: colors.accentOrange, backgroundColor: colors.accentOrange, borderWidth: 2, tension: .3, pointRadius: 3 },
-                    ],
-                  }}
-                  options={lineOptLegend}
-                />
+              <div className="s-grid">
+                <div className="card">
+                  <div className="card-header"><div className="card-title">Sensitivity Analysis (HC)</div></div>
+                  <div className="chart-container">
+                    <Line
+                      data={{
+                        labels: SENS_RANGE.map((v) => (v > 0 ? '+' : '') + v + '%'),
+                        datasets: sensitivity.map((s, i) => ({
+                          label: s.label, data: s.series, borderWidth: 2, tension: .3, pointRadius: 2,
+                          borderColor: [colors.accentBlue, colors.accentGreen, colors.accentPurple, colors.accentOrange][i],
+                          backgroundColor: [colors.accentBlue, colors.accentGreen, colors.accentPurple, colors.accentOrange][i],
+                        })),
+                      }}
+                      options={lineOptLegend}
+                    />
+                  </div>
+                </div>
+                <div className="card">
+                  <div className="card-header"><div className="card-title">Quarterly HC Trend</div></div>
+                  <div className="chart-container">
+                    <Line
+                      data={{
+                        labels: wiTrend.labels,
+                        datasets: [
+                          { label: 'Baseline HC', data: wiTrend.baseQ, borderColor: colors.textSecondary, backgroundColor: colors.textSecondary, borderDash: [5, 3], borderWidth: 2, tension: .3, pointRadius: 2 },
+                          { label: 'Scenario HC', data: wiTrend.scenQ, borderColor: colors.accentOrange, backgroundColor: colors.accentOrange, borderWidth: 2, tension: .3, pointRadius: 3 },
+                        ],
+                      }}
+                      options={lineOptLegend}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
