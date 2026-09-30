@@ -248,8 +248,7 @@ export default function ApjWorkforcePlanner() {
             <h2>Orders + Parameters <InfoBtn tip="<strong>Purpose</strong>Editable GS/CS order volumes and target rates (Case Rate, CPSR, CRW) per country and quarter, seeded from the Filters panel above. Drives every downstream calculation in Results and What-If." /></h2>
           </div>
           <div className="card">
-            <div className="card-header">
-              <div className="card-title">Sample Data — {qk}</div>
+            <div className="card-header" style={{ justifyContent: 'flex-end' }}>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button type="button" className="btn btn-sm btn-neutral" onClick={() => exportCsv(currentData, activeQuarters, mods, countries)}>Export CSV</button>
                 <button type="button" className="clear-all-btn" onClick={resetToSample}>✕ Reset to Sample Data</button>
