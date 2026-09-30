@@ -169,11 +169,17 @@ export function applyHcDriver(current, params, newHc) {
   return { ...params, crw: sd(current.totTCD, target * 13) }
 }
 
-export function calcAllCountries(data, quarterKey, mods, countryList) {
+// `scopeCountryId` limits which country the What-If scenario (`mods`) actually applies
+// to — 'ALL' (or omitted) applies it to every country in `countryList` as before; a
+// specific country id applies it to that country only, and every other country is
+// computed at its plain baseline (mods === undefined), so a scenario built for one
+// country never shifts any other country's numbers, in this call's totals or otherwise.
+export function calcAllCountries(data, quarterKey, mods, countryList, scopeCountryId) {
   const totals = { gsO: 0, csO: 0, totO: 0, gsCs: 0, csCs: 0, totCs: 0, totTCD: 0, hc: 0 }
   const countries = {}
   countryList.forEach((c) => {
-    const r = calcCountry(data, c, quarterKey, mods)
+    const inScope = !scopeCountryId || scopeCountryId === 'ALL' || scopeCountryId === c.id
+    const r = calcCountry(data, c, quarterKey, inScope ? mods : undefined)
     countries[c.id] = r
     totals.gsO += r.gsO; totals.csO += r.csO; totals.totO += r.totO
     totals.gsCs += r.gsCs; totals.csCs += r.csCs; totals.totCs += r.totCs

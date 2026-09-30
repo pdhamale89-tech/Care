@@ -240,6 +240,8 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; marg
 .wis-sb-preset.active { background: var(--dds-blue-60); color: #fff; border-color: var(--dds-blue-60); }
 .wis-sb-reset { width: 100%; height: var(--dds-button-h-md); font-size: .875rem; font-weight: 700; color: var(--dds-red-70); background: transparent; border: 1px solid var(--dds-red-60); border-radius: var(--dds-radius-btn); cursor: pointer; font-family: inherit; }
 .wis-sb-reset:hover { background: var(--dds-red-10); }
+.wis-sb-save { width: 100%; height: var(--dds-button-h-md); font-size: .875rem; font-weight: 700; color: #fff; background: var(--dds-blue-60); border: 1px solid var(--dds-blue-60); border-radius: var(--dds-radius-btn); cursor: pointer; font-family: inherit; }
+.wis-sb-save:hover { background: var(--dds-blue-70); }
 .wis-sb-quick { background: var(--bg-page); border: 1px solid var(--border); border-radius: var(--dds-radius-md); padding: var(--dds-spacing-md); display: flex; flex-direction: column; gap: 8px; }
 .wis-sb-quick-title { font-size: .6875rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 2px; }
 .wis-sb-quick-btn { width: 100%; text-align: center; padding: 8px 10px; font-size: .8125rem; font-weight: 700; color: var(--text-primary); background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: var(--dds-radius-btn); cursor: pointer; font-family: inherit; }

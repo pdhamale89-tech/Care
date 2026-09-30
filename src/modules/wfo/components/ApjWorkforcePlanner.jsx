@@ -68,7 +68,7 @@ const SCENARIO_CONTROLS = [
   { field: 'headcount', label: 'Headcount Change', presets: [-20, -10, 0, 10, 25, 50] },
 ]
 
-function exportCsv(data, quarters, mods, countries) {
+function exportCsv(data, quarters, mods, countries, scopeCountryId) {
   let csv = 'Workforce Capacity Plan\n\n'
   quarters.forEach((qKey) => {
     const all = calcAllCountries(data, qKey, undefined, countries)
@@ -81,9 +81,10 @@ function exportCsv(data, quarters, mods, countries) {
     csv += `TOTAL,${t.gsO},${t.csO},${t.totO},${t.totCs.toFixed(2)},${(t.cr * 100).toFixed(2)}%,${t.totTCD.toFixed(2)},${t.cpsr.toFixed(2)},,${t.hc}\n`
   })
   if (mods.orders || mods.caserate || mods.cpsr || mods.crw) {
-    csv += `\n\nWHAT-IF SCENARIO\nOrders: ${mods.orders > 0 ? '+' : ''}${mods.orders}%  Case Rate: ${mods.caserate > 0 ? '+' : ''}${mods.caserate}%  CPSR: ${mods.cpsr > 0 ? '+' : ''}${mods.cpsr}%  CRW: ${mods.crw > 0 ? '+' : ''}${mods.crw}%\n`
+    const scopeLabel = scopeCountryId && scopeCountryId !== 'ALL' ? countries.find((c) => c.id === scopeCountryId)?.name : 'All Countries'
+    csv += `\n\nWHAT-IF SCENARIO (applied to: ${scopeLabel})\nOrders: ${mods.orders > 0 ? '+' : ''}${mods.orders}%  Case Rate: ${mods.caserate > 0 ? '+' : ''}${mods.caserate}%  CPSR: ${mods.cpsr > 0 ? '+' : ''}${mods.cpsr}%  CRW: ${mods.crw > 0 ? '+' : ''}${mods.crw}%\n`
     quarters.forEach((qKey) => {
-      const all = calcAllCountries(data, qKey, mods, countries)
+      const all = calcAllCountries(data, qKey, mods, countries, scopeCountryId)
       const base = calcAllCountries(data, qKey, undefined, countries)
       csv += `\n${qKey} (SCENARIO)\nCountry,Scen Orders,Scen Cases,Scen HC,Base HC,Delta\n`
       countries.forEach((c) => {
@@ -126,6 +127,13 @@ export default function ApjWorkforcePlanner() {
   const [mods, setMods] = useState(DEFAULT_MODS)
   const [scenario, setScenario] = useState(null)
   const [sbCollapsed, setSbCollapsed] = useState(false)
+  const [savedAnalyses, setSavedAnalyses] = useState([])
+  // Which country (or 'ALL') the current Scenario Builder inputs apply to — captured at
+  // the moment the user actually edits a slider/preset/quick-scenario (not just whenever
+  // they browse the Region/Country picker), so switching the picker to look at a
+  // different country never silently re-broadcasts an existing scenario to it, and
+  // switching to "All Countries" never re-broadcasts it to every country either.
+  const [scenarioScope, setScenarioScope] = useState('ALL')
 
   // Fiscal Quarter filter narrows which quarters are shown (same "All = unfiltered"
   // convention as CCO Overview/What-If). Region + Sub Region/Country genuinely narrow
@@ -228,15 +236,18 @@ export default function ApjWorkforcePlanner() {
 
   function setWI(field, val) {
     setMods((prev) => ({ ...prev, [field]: val }))
+    setScenarioScope(safeSelReg)
   }
   function resetWI() {
     setMods(DEFAULT_MODS)
     setScenario(null)
+    setScenarioScope('ALL')
   }
   function applyScenario(key) {
     const s = QUICK_SCENARIOS.find((x) => x.key === key)
     setMods({ ...DEFAULT_MODS, ...s.mods })
     setScenario({ text: s.text, desc: s.desc })
+    setScenarioScope(safeSelReg)
   }
 
   const allForQ = useMemo(() => calcAllCountries(currentData, qk, undefined, countries), [currentData, qk, countries])
@@ -254,7 +265,13 @@ export default function ApjWorkforcePlanner() {
   }, [currentData, activeQuarters, countries, safeSelReg])
 
   const wiBase = useMemo(() => calcAllCountries(currentData, qk, undefined, countries), [currentData, qk, countries])
-  const wiScenario = useMemo(() => calcAllCountries(currentData, qk, mods, countries), [currentData, qk, mods, countries])
+  // The scenario built in Scenario Builder applies only to scenarioScope — the country
+  // (or 'ALL') that was selected at the moment the sliders were last touched — not
+  // whatever the Region/Country picker happens to show right now. So every other
+  // country is computed at its plain baseline, and merely browsing the picker to look
+  // at a different country (or "All Countries") never re-broadcasts an existing
+  // scenario onto countries it wasn't built for.
+  const wiScenario = useMemo(() => calcAllCountries(currentData, qk, mods, countries, scenarioScope), [currentData, qk, mods, countries, scenarioScope])
   const wiBaseSel = safeSelReg === 'ALL' ? wiBase.totals : wiBase.countries[safeSelReg]
   const wiScenSel = safeSelReg === 'ALL' ? wiScenario.totals : wiScenario.countries[safeSelReg]
 
@@ -267,13 +284,27 @@ export default function ApjWorkforcePlanner() {
     { label: 'HC Required', bv: wiBaseSel.hc, sv: wiScenSel.hc },
   ]
 
+  // Saves a snapshot of the current scenario — scope (country/All Countries), quarter,
+  // the Scenario Builder inputs, and the resulting baseline→scenario impact numbers — so
+  // it can be compared later without needing to recreate the same slider inputs.
+  function saveAnalysis() {
+    const scopeName = safeSelReg === 'ALL' ? 'All Countries' : (countries.find((c) => c.id === safeSelReg)?.name || safeSelReg)
+    setSavedAnalyses((prev) => [
+      { id: Date.now(), savedAt: new Date().toLocaleString(), scope: scopeName, quarter: qk, mods: { ...mods }, metrics: impactMetrics },
+      ...prev,
+    ])
+  }
+  function removeAnalysis(id) {
+    setSavedAnalyses((prev) => prev.filter((a) => a.id !== id))
+  }
+
   const sensitivity = useMemo(() => {
     const rows = [
       { key: 'orders', label: 'Volume' }, { key: 'caserate', label: 'Case Rate' },
       { key: 'cpsr', label: 'CPSR' }, { key: 'crw', label: 'CRW' },
     ]
     const pick = (m) => {
-      const r = calcAllCountries(currentData, qk, m, countries)
+      const r = calcAllCountries(currentData, qk, m, countries, safeSelReg)
       return safeSelReg === 'ALL' ? r.totals : r.countries[safeSelReg]
     }
     return rows.map((r) => ({ label: r.label, series: SENS_RANGE.map((v) => pick({ [r.key]: v }).hc) }))
@@ -283,13 +314,13 @@ export default function ApjWorkforcePlanner() {
     const baseQ = [], scenQ = []
     activeQuarters.forEach((q) => {
       const bAll = calcAllCountries(currentData, q, undefined, countries)
-      const sAll = calcAllCountries(currentData, q, mods, countries)
+      const sAll = calcAllCountries(currentData, q, mods, countries, scenarioScope)
       const b = safeSelReg === 'ALL' ? bAll.totals : bAll.countries[safeSelReg]
       const s = safeSelReg === 'ALL' ? sAll.totals : sAll.countries[safeSelReg]
       baseQ.push(b.hc); scenQ.push(s.hc)
     })
     return { labels: activeQuarters, baseQ, scenQ }
-  }, [currentData, activeQuarters, countries, safeSelReg, mods])
+  }, [currentData, activeQuarters, countries, safeSelReg, mods, scenarioScope])
 
   const barOpt = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grace: '10%' } } }
   const lineOptLegend = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grace: '10%' } } }
@@ -308,7 +339,7 @@ export default function ApjWorkforcePlanner() {
                 <button type="button" className="btn btn-sm btn-primary" onClick={() => setActiveTab('whatif')}>What-If Analysis →</button>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" className="btn btn-sm btn-neutral" onClick={() => exportCsv(currentData, activeQuarters, mods, countries)}>Export CSV</button>
+                <button type="button" className="btn btn-sm btn-neutral" onClick={() => exportCsv(currentData, activeQuarters, mods, countries, scenarioScope)}>Export CSV</button>
                 <button type="button" className="clear-all-btn" onClick={resetToSample}>✕ Reset to Sample Data</button>
               </div>
             </div>
@@ -484,7 +515,7 @@ export default function ApjWorkforcePlanner() {
                 {!sbCollapsed && (
                   <div className="wis-sidebar-title">
                     <span>Scenario Builder</span>
-                    <InfoBtn tip="<strong>Purpose</strong>Orders, Case Rate, CPSR and CRW drive Cases &rarr; TCD &rarr; Headcount in sequence. Cases Change, TCD Change and Headcount Change are manual overrides layered on top of that chain at each stage (e.g. a known one-off volume bump beyond what Orders/Case Rate alone would predict), and cascade forward to the metrics after them." />
+                    <InfoBtn tip="<strong>Purpose</strong>Orders, Case Rate, CPSR and CRW drive Cases &rarr; TCD &rarr; Headcount in sequence. Cases Change, TCD Change and Headcount Change are manual overrides layered on top of that chain at each stage (e.g. a known one-off volume bump beyond what Orders/Case Rate alone would predict), and cascade forward to the metrics after them.<br/><br/><strong>Scope</strong>These inputs apply only to the country (or All Countries) selected above at the moment you adjust them — every other country stays at its baseline, even if you browse to view it or switch to All Countries afterward." />
                   </div>
                 )}
                 <button
@@ -530,6 +561,7 @@ export default function ApjWorkforcePlanner() {
                     </div>
                   ))}
 
+                  <button type="button" className="wis-sb-save" onClick={saveAnalysis}>Save Analysis</button>
                   <button type="button" className="wis-sb-reset" onClick={resetWI}>Reset All to Baseline</button>
 
                   <div className="wis-sb-quick">
@@ -575,6 +607,40 @@ export default function ApjWorkforcePlanner() {
                   )
                 })}
               </div>
+
+              {savedAnalyses.length > 0 && (
+                <div className="card">
+                  <div className="card-header"><div className="card-title">Saved Analyses</div></div>
+                  <div className="tw">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th style={{ textAlign: 'left' }}>Saved At</th><th style={{ textAlign: 'left' }}>Scope</th><th>Quarter</th>
+                          <th>Orders</th><th>Cases</th><th>HC Required</th><th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {savedAnalyses.map((a) => {
+                          const orders = a.metrics.find((m) => m.label === 'Total Orders')
+                          const cases = a.metrics.find((m) => m.label === 'Total Cases')
+                          const hc = a.metrics.find((m) => m.label === 'HC Required')
+                          return (
+                            <tr key={a.id}>
+                              <td style={{ textAlign: 'left' }}>{a.savedAt}</td>
+                              <td style={{ textAlign: 'left' }}>{a.scope}</td>
+                              <td>{a.quarter}</td>
+                              <td>{f0(orders.bv)} → <strong>{f0(orders.sv)}</strong></td>
+                              <td>{f0(cases.bv)} → <strong>{f0(cases.sv)}</strong></td>
+                              <td>{f0(hc.bv)} → <strong>{f0(hc.sv)}</strong></td>
+                              <td><button type="button" className="clear-all-btn" onClick={() => removeAnalysis(a.id)}>✕ Remove</button></td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
 
               <div className="card">
                 <div className="card-header"><div className="card-title">Baseline vs Scenario Comparison</div></div>
