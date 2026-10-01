@@ -231,7 +231,7 @@ export default function ApjWorkforcePlanner() {
   }
 
   function resetToSample() {
-    if (!window.confirm('Reset all Data Input values back to the sample dataset for the current filters?')) return
+    if (!window.confirm('Reset all Data Input values back to the baseline data for the current filters?')) return
     setData(buildFilteredData(activeQuarters, seedInputs, countries))
   }
 
@@ -399,7 +399,7 @@ export default function ApjWorkforcePlanner() {
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button type="button" className="btn btn-sm btn-neutral" onClick={() => exportCsv(currentData, activeQuarters, mods, countries, scenarioScope)}>Export CSV</button>
-                <button type="button" className="clear-all-btn" onClick={resetToSample}>✕ Reset to Sample Data</button>
+                <button type="button" className="clear-all-btn" onClick={resetToSample}>✕ Reset to Baseline Data</button>
               </div>
             </div>
 
