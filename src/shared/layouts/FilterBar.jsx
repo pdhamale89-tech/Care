@@ -18,7 +18,7 @@ function weeksForQuarters(quarters) {
 export default function FilterBar() {
   const {
     currentTab, showFilters, activeRegions, setActiveRegions,
-    ccoFilters, setCcoFilter, whatIfFilters, setWhatIfFilter, apjFilters, setApjFilter,
+    ccoFilters, setCcoFilter, apjFilters, setApjFilter,
     ccoView, setCcoView, outageFilters, setOutageFilter,
     epicenterFilters, setEpicenterFilter,
     clearFilters,
@@ -28,19 +28,18 @@ export default function FilterBar() {
   if (!showFilters) return null
 
   const countries = countriesForRegions(activeRegions)
-  const isWhatIf = currentTab === 'whatIf'
   const isApj = currentTab === 'apjPlanner'
-  const isCco = currentTab === 'cco' || isWhatIf || isApj
-  // Weekly/Quarterly is a CCO Overview/What-If-only concept — APJ Workforce Planner
-  // has its own Fiscal Quarter-driven period selector instead.
-  const showViewToggle = currentTab === 'cco' || isWhatIf
+  const isCco = currentTab === 'cco' || isApj
+  // Weekly/Quarterly is a CCO Overview-only concept — APJ Workforce Planner has its
+  // own Fiscal Quarter-driven period selector instead.
+  const showViewToggle = currentTab === 'cco'
   const isOutage = currentTab === 'outage'
   const isEpicenter = currentTab === 'epiHc'
-  // CCO Overview, What-If Simulator and APJ Workforce Planner show the same filter set
-  // (Fiscal Year/Quarter/Week, Region, Sub Region, Classification) but each keeps its
-  // own independent selections.
-  const activeFilters = isApj ? apjFilters : isWhatIf ? whatIfFilters : ccoFilters
-  const setActiveFilter = isApj ? setApjFilter : isWhatIf ? setWhatIfFilter : setCcoFilter
+  // CCO Overview and APJ Workforce Planner show the same filter set (Fiscal
+  // Year/Quarter/Week, Region, Sub Region, Classification) but each keeps its own
+  // independent selections.
+  const activeFilters = isApj ? apjFilters : ccoFilters
+  const setActiveFilter = isApj ? setApjFilter : setCcoFilter
 
   const regionFilter = (
     <div className="filter-group">

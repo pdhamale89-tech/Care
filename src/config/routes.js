@@ -3,7 +3,6 @@ import OutageReport from '../modules/wfo/components/OutageReport.jsx'
 import EpiHc from '../modules/wfo/components/EpiHc.jsx'
 import Reports from '../modules/wfo/components/Reports.jsx'
 import FiscalCalendar from '../modules/wfo/components/FiscalCalendar.jsx'
-import WhatIfSimulator from '../modules/wfo/components/WhatIfSimulator.jsx'
 import Glossary from '../modules/wfo/components/Glossary.jsx'
 import ApjWorkforcePlanner from '../modules/wfo/components/ApjWorkforcePlanner.jsx'
 
@@ -13,7 +12,6 @@ export const ROUTES = {
   cco: CcoDashboard,
   outage: OutageReport,
   epiHc: EpiHc,
-  whatIf: WhatIfSimulator,
   apjPlanner: ApjWorkforcePlanner,
   reports: Reports,
   fiscalCalendar: FiscalCalendar,

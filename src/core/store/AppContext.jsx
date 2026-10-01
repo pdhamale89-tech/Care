@@ -9,7 +9,6 @@ const BREADCRUMBS = {
   cco: 'Performance Reports › CCO Overview',
   outage: 'Workforce Reports › Outage Report',
   epiHc: 'Workforce Reports › Epi HC',
-  whatIf: 'Planning › What-If Simulator',
   apjPlanner: 'Planning › Workforce Planner',
   reports: 'Tools › Reports',
   calendar: 'Tools › Calendar',
@@ -31,7 +30,6 @@ export function AppProvider({ children }) {
   const [activeRegions, setActiveRegionsState] = useState(['All'])
 
   const [ccoFilters, setCcoFilters] = useState(CCO_FILTERS_DEFAULT)
-  const [whatIfFilters, setWhatIfFilters] = useState(CCO_FILTERS_DEFAULT)
   const [apjFilters, setApjFilters] = useState(CCO_FILTERS_DEFAULT)
   const [ccoView, setCcoView] = useState('weekly')
   const [outageFilters, setOutageFilters] = useState(OUTAGE_FILTERS_DEFAULT)
@@ -56,16 +54,12 @@ export function AppProvider({ children }) {
   const setActiveRegions = useCallback((regions) => {
     setActiveRegionsState(regions)
     setCcoFilters((prev) => ({ ...prev, subRegion: ['All'] }))
-    setWhatIfFilters((prev) => ({ ...prev, subRegion: ['All'] }))
     setApjFilters((prev) => ({ ...prev, subRegion: ['All'] }))
     setOutageFilters((prev) => ({ ...prev, country: ['All'] }))
   }, [])
 
   const setCcoFilter = useCallback((key, value) => {
     setCcoFilters((prev) => ({ ...prev, [key]: value, ...(key === 'quarter' ? { week: ['All'] } : {}) }))
-  }, [])
-  const setWhatIfFilter = useCallback((key, value) => {
-    setWhatIfFilters((prev) => ({ ...prev, [key]: value, ...(key === 'quarter' ? { week: ['All'] } : {}) }))
   }, [])
   const setApjFilter = useCallback((key, value) => {
     setApjFilters((prev) => ({ ...prev, [key]: value, ...(key === 'quarter' ? { week: ['All'] } : {}) }))
@@ -79,7 +73,6 @@ export function AppProvider({ children }) {
 
   const clearFilters = useCallback(() => {
     if (currentTab === 'cco') { setCcoFilters(CCO_FILTERS_DEFAULT); setCcoView('weekly'); setActiveRegionsState(['All']) }
-    else if (currentTab === 'whatIf') { setWhatIfFilters(CCO_FILTERS_DEFAULT); setCcoView('weekly'); setActiveRegionsState(['All']) }
     else if (currentTab === 'apjPlanner') { setApjFilters(CCO_FILTERS_DEFAULT); setActiveRegionsState(['All']) }
     else if (currentTab === 'outage') setOutageFilters(OUTAGE_FILTERS_DEFAULT)
     else if (currentTab === 'epiHc') setEpicenterFilters(EPICENTER_FILTERS_DEFAULT)
@@ -95,7 +88,7 @@ export function AppProvider({ children }) {
     sidenavOpen, toggleSidenav,
     currentTab, navTo, breadcrumb, showFilters,
     activeRegions, setActiveRegions,
-    ccoFilters, setCcoFilter, whatIfFilters, setWhatIfFilter, apjFilters, setApjFilter, ccoView, setCcoView,
+    ccoFilters, setCcoFilter, apjFilters, setApjFilter, ccoView, setCcoView,
     outageFilters, setOutageFilter,
     epicenterFilters, setEpicenterFilter,
     clearFilters,
@@ -103,7 +96,7 @@ export function AppProvider({ children }) {
   }), [
     theme, toggleTheme, lastUpdated, sidenavOpen, toggleSidenav, currentTab, navTo, breadcrumb, showFilters,
     activeRegions, setActiveRegions,
-    ccoFilters, setCcoFilter, whatIfFilters, setWhatIfFilter, apjFilters, setApjFilter, ccoView, outageFilters, setOutageFilter,
+    ccoFilters, setCcoFilter, apjFilters, setApjFilter, ccoView, outageFilters, setOutageFilter,
     epicenterFilters, setEpicenterFilter,
     clearFilters, toast, showToast,
   ])

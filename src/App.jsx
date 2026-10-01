@@ -14,12 +14,11 @@ import { getColors } from './shared/themes/colors.js'
 
 // Title/description shown above the filter bar on each main tab (DDS page-header
 // pattern) — descriptions reuse the same copy already shown on the Home hero cards
-// for cco/outage/epiHc/whatIf, so nothing here is new/invented business copy.
+// for cco/outage/epiHc, so nothing here is new/invented business copy.
 const PAGE_META = {
   cco: { title: 'CCO Overview', description: 'Weekly and quarterly SLA, volume, and backlog performance.' },
   outage: { title: 'Outage Report', description: 'Agent schedule adherence and unplanned-outage breakdowns by manager.' },
   epiHc: { title: 'Epi HC', description: 'Workforce analytics — growth, tenure, sourcing mix, span of control, and risk.' },
-  whatIf: { title: 'What-If Simulator', description: 'Staffing, hiring plan, sourcing mix, and backlog scenarios in one place.' },
   reports: { title: 'Reports', description: 'Linked reporting shortcuts for voice queue, agent and Genesys skill data.' },
   fiscalCalendar: { title: 'Fiscal Calendar', description: 'Fiscal year weeks, quarters and holiday schedule for planning.' },
   glossary: { title: 'Glossary', description: 'Metric definitions and formulas used across the dashboard.' },
