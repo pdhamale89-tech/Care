@@ -537,6 +537,21 @@ export default function ApjWorkforcePlanner() {
 
               {!sbCollapsed && (
                 <div className="wis-sidebar-body">
+                  <button type="button" className="wis-sb-save" onClick={saveAnalysis}>Save Analysis</button>
+                  <button type="button" className="wis-sb-reset" onClick={resetWI}>Reset All to Baseline</button>
+
+                  <div className="wis-sb-quick">
+                    <div className="wis-sb-quick-title">Quick Scenarios</div>
+                    {QUICK_SCENARIOS.map((s) => (
+                      <button type="button" key={s.key} className="wis-sb-quick-btn" onClick={() => applyScenario(s.key)}>{s.label}</button>
+                    ))}
+                    {scenario && (
+                      <div className="ai-story" style={{ marginTop: 10 }}>
+                        <div><div className="ai-story-title">{scenario.text}</div><div className="ai-story-text">{scenario.desc}</div></div>
+                      </div>
+                    )}
+                  </div>
+
                   {SCENARIO_CONTROLS.map((g) => (
                     <div className="wis-sb-card" key={g.field}>
                       <div className="wis-sb-card-head">
@@ -567,21 +582,6 @@ export default function ApjWorkforcePlanner() {
                       </div>
                     </div>
                   ))}
-
-                  <button type="button" className="wis-sb-save" onClick={saveAnalysis}>Save Analysis</button>
-                  <button type="button" className="wis-sb-reset" onClick={resetWI}>Reset All to Baseline</button>
-
-                  <div className="wis-sb-quick">
-                    <div className="wis-sb-quick-title">Quick Scenarios</div>
-                    {QUICK_SCENARIOS.map((s) => (
-                      <button type="button" key={s.key} className="wis-sb-quick-btn" onClick={() => applyScenario(s.key)}>{s.label}</button>
-                    ))}
-                    {scenario && (
-                      <div className="ai-story" style={{ marginTop: 10 }}>
-                        <div><div className="ai-story-title">{scenario.text}</div><div className="ai-story-text">{scenario.desc}</div></div>
-                      </div>
-                    )}
-                  </div>
                 </div>
               )}
             </aside>
