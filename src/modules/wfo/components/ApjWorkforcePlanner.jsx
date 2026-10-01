@@ -404,7 +404,7 @@ export default function ApjWorkforcePlanner() {
             </div>
 
             <div style={{ padding: '14px 18px 0', fontSize: '.8125rem', color: 'var(--text-secondary)' }}>
-              <strong style={{ color: 'var(--text-primary)' }}>Selected Filters: </strong>{selectedFiltersLabel}
+              <strong style={{ color: 'var(--text-primary)' }}>Data Filter By: </strong>{selectedFiltersLabel}
             </div>
 
             <div style={{ padding: '14px 18px 0' }}>
