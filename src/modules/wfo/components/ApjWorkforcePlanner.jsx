@@ -299,6 +299,26 @@ export default function ApjWorkforcePlanner() {
     setSavedAnalyses((prev) => prev.filter((a) => a.id !== id))
   }
 
+  // Exports exactly what's currently shown in the Baseline vs Scenario Comparison
+  // table (same scope — one country or every country plus GRAND TOTAL).
+  function exportComparisonCsv() {
+    let csv = 'Country,Base Orders,Scenario Orders,Delta Orders,Base Cases,Scenario Cases,Delta Cases,Base HC,Scenario HC,Delta HC\n'
+    const rows = safeSelReg === 'ALL' ? countries : [countries.find((x) => x.id === safeSelReg)]
+    rows.forEach((c) => {
+      const br = wiBase.countries[c.id]
+      const sr = wiScenario.countries[c.id]
+      csv += `${c.name},${br.totO},${sr.totO},${sr.totO - br.totO},${br.totCs.toFixed(2)},${sr.totCs.toFixed(2)},${(sr.totCs - br.totCs).toFixed(2)},${br.hc},${sr.hc},${sr.hc - br.hc}\n`
+    })
+    if (safeSelReg === 'ALL' && countries.length > 0) {
+      const b = wiBase.totals, s = wiScenario.totals
+      csv += `GRAND TOTAL,${b.totO},${s.totO},${s.totO - b.totO},${b.totCs.toFixed(2)},${s.totCs.toFixed(2)},${(s.totCs - b.totCs).toFixed(2)},${b.hc},${s.hc},${s.hc - b.hc}\n`
+    }
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
+    a.download = 'Baseline_vs_Scenario_Comparison.csv'
+    a.click()
+  }
+
   const wiTrend = useMemo(() => {
     const baseQ = [], scenQ = []
     activeQuarters.forEach((q) => {
@@ -649,8 +669,13 @@ export default function ApjWorkforcePlanner() {
                 </div>
               )}
 
-              <div className="card">
-                <div className="card-header"><div className="card-title">Baseline vs Scenario Comparison</div></div>
+              <div className="card" style={{ marginBottom: 'var(--dds-spacing-lg)' }}>
+                <div className="card-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div className="card-title">Baseline vs Scenario Comparison</div>
+                    <button type="button" className="btn btn-sm btn-neutral" onClick={exportComparisonCsv}>Export CSV</button>
+                  </div>
+                </div>
                 <div className="tw">
                   <table>
                     <thead>
