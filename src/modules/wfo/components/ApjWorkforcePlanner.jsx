@@ -120,6 +120,9 @@ export default function ApjWorkforcePlanner() {
   const { theme, activeRegions, apjFilters } = useApp()
   const colors = getColors(theme)
   const [activeTab, setActiveTab] = useState('input')
+  // Orders & Targets data view — Forecast is today's editable table; Actual shows the
+  // same table for now (columns will diverge from Forecast later).
+  const [dataView, setDataView] = useState('forecast')
   const [selReg, setSelReg] = useState('ALL')
   const [showDet, setShowDet] = useState(false)
   const [mods, setMods] = useState(DEFAULT_MODS)
@@ -311,6 +314,76 @@ export default function ApjWorkforcePlanner() {
   const barOpt = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grace: '10%' } } }
   const lineOptLegend = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grace: '10%' } } }
 
+  // Shared by both the Forecast and Actual views of Orders & Targets — identical for
+  // now (Actual's columns will diverge from Forecast's later), kept in one place so the
+  // table markup isn't duplicated between the two.
+  function renderOrdersTable() {
+    return (
+      <div className="tw" style={{ padding: '0 18px' }}>
+        <table>
+          <thead>
+            <tr>
+              <th style={{ textAlign: 'left' }}>Country</th>
+              <th>GS Orders</th><th>CS Orders</th><th>Total</th>
+              <th>GS Rate %</th><th>CS Rate %</th>
+              <th>Case Rate % <InfoBtn tip="<strong>Bidirectional</strong>Type a blended Case Rate directly — Total Cases is back-derived (Orders unchanged) and the GS/CS Rate % split is scaled proportionally to match." /></th>
+              <th>Cases <InfoBtn tip="<strong>Bidirectional</strong>Type Total Cases directly — Case Rate reverse-calculates from it (Orders unchanged)." /></th>
+              <th>CPSR</th>
+              <th>TCD <InfoBtn tip="<strong>Bidirectional</strong>Type Total Contacts (TCD) directly — CPSR reverse-calculates from it (Cases and Case Rate unchanged)." /></th>
+              <th>CRW</th>
+              <th>Headcount <InfoBtn tip="<strong>Bidirectional</strong>Type Headcount directly — CRW reverse-calculates from it (TCD, Cases and Case Rate unchanged)." /></th>
+            </tr>
+          </thead>
+          <tbody>
+            {countries.length === 0 && (
+              <tr><td colSpan={12} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No APJ countries match the current Sub Region/Country filter selection.</td></tr>
+            )}
+            {countries.map((c) => {
+              const o = currentData[c.id].quarters[qk] || { gs: 0, cs: 0 }
+              const p = currentData[c.id].params
+              const gv = Math.round(o.gs || 0)
+              const cv = c.hasCS ? Math.round(o.cs || 0) : 0
+              const r = allForQ.countries[c.id]
+              return (
+                <tr key={c.id}>
+                  <td style={{ textAlign: 'left' }}>
+                    <span className="pill-tag" style={{ marginRight: 8 }}>{c.cc}</span>{c.name}{!c.hasCS && <span style={{ color: 'var(--text-muted)', fontSize: '.75rem' }}> (GS only)</span>}
+                  </td>
+                  <td><input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={gv} onChange={(e) => updOrd(c.id, 'gs', e.target.value)} /></td>
+                  <td>{c.hasCS ? <input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={cv} onChange={(e) => updOrd(c.id, 'cs', e.target.value)} /> : <span style={{ color: 'var(--text-muted)' }}>N/A</span>}</td>
+                  <td><strong>{f0(gv + cv)}</strong></td>
+                  <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} min={0} value={p.gsRate ? Number((p.gsRate * 100).toFixed(3)) : ''} onChange={(e) => updPar(c.id, 'gsRate', e.target.value)} /></td>
+                  <td>{c.hasCS ? <input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} min={0} value={p.csRate ? Number((p.csRate * 100).toFixed(3)) : ''} onChange={(e) => updPar(c.id, 'csRate', e.target.value)} /> : <span style={{ color: 'var(--text-muted)' }}>N/A</span>}</td>
+                  <td><input className="wis-num-input" style={{ width: 60 }} type="number" step={0.01} min={0} value={r.cr ? Number((r.cr * 100).toFixed(3)) : ''} onChange={(e) => updCaseRatePct(c.id, e.target.value)} /></td>
+                  <td><input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={Math.round(r.totCs)} onChange={(e) => updCases(c.id, e.target.value)} /></td>
+                  <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} min={0} value={p.cpsr || ''} onChange={(e) => updPar(c.id, 'cpsr', e.target.value)} /></td>
+                  <td><input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={Math.round(r.totTCD)} onChange={(e) => updTcd(c.id, e.target.value)} /></td>
+                  <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={1} min={0} value={p.crw || ''} onChange={(e) => updPar(c.id, 'crw', e.target.value)} /></td>
+                  <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={1} min={0} value={r.hc} onChange={(e) => updHc(c.id, e.target.value)} /></td>
+                </tr>
+              )
+            })}
+            {countries.length > 0 && (
+              <tr className="tot-row">
+                <td style={{ textAlign: 'left' }}>GRAND TOTAL</td>
+                <td>{f0(countries.reduce((s, c) => s + (currentData[c.id].quarters[qk]?.gs || 0), 0))}</td>
+                <td>{f0(countries.reduce((s, c) => s + (currentData[c.id].quarters[qk]?.cs || 0), 0))}</td>
+                <td>{f0(countries.reduce((s, c) => s + (currentData[c.id].quarters[qk]?.gs || 0) + (currentData[c.id].quarters[qk]?.cs || 0), 0))}</td>
+                <td colSpan={2}></td>
+                <td>{fp(allForQ.totals.cr)}</td>
+                <td>{f0(allForQ.totals.totCs)}</td>
+                <td>{f2(allForQ.totals.cpsr)}</td>
+                <td>{f0(allForQ.totals.totTCD)}</td>
+                <td>—</td>
+                <td>{f0(allForQ.totals.hc)}</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
   return (
     <div className="tab-panel active">
       {activeTab === 'input' && (
@@ -334,68 +407,16 @@ export default function ApjWorkforcePlanner() {
               <strong style={{ color: 'var(--text-primary)' }}>Selected Filters: </strong>{selectedFiltersLabel}
             </div>
 
-            <div className="tw" style={{ padding: '0 18px' }}>
-              <table>
-                <thead>
-                  <tr>
-                    <th style={{ textAlign: 'left' }}>Country</th>
-                    <th>GS Orders</th><th>CS Orders</th><th>Total</th>
-                    <th>GS Rate %</th><th>CS Rate %</th>
-                    <th>Case Rate % <InfoBtn tip="<strong>Bidirectional</strong>Type a blended Case Rate directly — Total Cases is back-derived (Orders unchanged) and the GS/CS Rate % split is scaled proportionally to match." /></th>
-                    <th>Cases <InfoBtn tip="<strong>Bidirectional</strong>Type Total Cases directly — Case Rate reverse-calculates from it (Orders unchanged)." /></th>
-                    <th>CPSR</th>
-                    <th>TCD <InfoBtn tip="<strong>Bidirectional</strong>Type Total Contacts (TCD) directly — CPSR reverse-calculates from it (Cases and Case Rate unchanged)." /></th>
-                    <th>CRW</th>
-                    <th>Headcount <InfoBtn tip="<strong>Bidirectional</strong>Type Headcount directly — CRW reverse-calculates from it (TCD, Cases and Case Rate unchanged)." /></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {countries.length === 0 && (
-                    <tr><td colSpan={12} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No APJ countries match the current Sub Region/Country filter selection.</td></tr>
-                  )}
-                  {countries.map((c) => {
-                    const o = currentData[c.id].quarters[qk] || { gs: 0, cs: 0 }
-                    const p = currentData[c.id].params
-                    const gv = Math.round(o.gs || 0)
-                    const cv = c.hasCS ? Math.round(o.cs || 0) : 0
-                    const r = allForQ.countries[c.id]
-                    return (
-                      <tr key={c.id}>
-                        <td style={{ textAlign: 'left' }}>
-                          <span className="pill-tag" style={{ marginRight: 8 }}>{c.cc}</span>{c.name}{!c.hasCS && <span style={{ color: 'var(--text-muted)', fontSize: '.75rem' }}> (GS only)</span>}
-                        </td>
-                        <td><input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={gv} onChange={(e) => updOrd(c.id, 'gs', e.target.value)} /></td>
-                        <td>{c.hasCS ? <input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={cv} onChange={(e) => updOrd(c.id, 'cs', e.target.value)} /> : <span style={{ color: 'var(--text-muted)' }}>N/A</span>}</td>
-                        <td><strong>{f0(gv + cv)}</strong></td>
-                        <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} min={0} value={p.gsRate ? Number((p.gsRate * 100).toFixed(3)) : ''} onChange={(e) => updPar(c.id, 'gsRate', e.target.value)} /></td>
-                        <td>{c.hasCS ? <input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} min={0} value={p.csRate ? Number((p.csRate * 100).toFixed(3)) : ''} onChange={(e) => updPar(c.id, 'csRate', e.target.value)} /> : <span style={{ color: 'var(--text-muted)' }}>N/A</span>}</td>
-                        <td><input className="wis-num-input" style={{ width: 60 }} type="number" step={0.01} min={0} value={r.cr ? Number((r.cr * 100).toFixed(3)) : ''} onChange={(e) => updCaseRatePct(c.id, e.target.value)} /></td>
-                        <td><input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={Math.round(r.totCs)} onChange={(e) => updCases(c.id, e.target.value)} /></td>
-                        <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} min={0} value={p.cpsr || ''} onChange={(e) => updPar(c.id, 'cpsr', e.target.value)} /></td>
-                        <td><input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={Math.round(r.totTCD)} onChange={(e) => updTcd(c.id, e.target.value)} /></td>
-                        <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={1} min={0} value={p.crw || ''} onChange={(e) => updPar(c.id, 'crw', e.target.value)} /></td>
-                        <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={1} min={0} value={r.hc} onChange={(e) => updHc(c.id, e.target.value)} /></td>
-                      </tr>
-                    )
-                  })}
-                  {countries.length > 0 && (
-                    <tr className="tot-row">
-                      <td style={{ textAlign: 'left' }}>GRAND TOTAL</td>
-                      <td>{f0(countries.reduce((s, c) => s + (currentData[c.id].quarters[qk]?.gs || 0), 0))}</td>
-                      <td>{f0(countries.reduce((s, c) => s + (currentData[c.id].quarters[qk]?.cs || 0), 0))}</td>
-                      <td>{f0(countries.reduce((s, c) => s + (currentData[c.id].quarters[qk]?.gs || 0) + (currentData[c.id].quarters[qk]?.cs || 0), 0))}</td>
-                      <td colSpan={2}></td>
-                      <td>{fp(allForQ.totals.cr)}</td>
-                      <td>{f0(allForQ.totals.totCs)}</td>
-                      <td>{f2(allForQ.totals.cpsr)}</td>
-                      <td>{f0(allForQ.totals.totTCD)}</td>
-                      <td>—</td>
-                      <td>{f0(allForQ.totals.hc)}</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+            <div style={{ padding: '14px 18px 0' }}>
+              <PickerTabs
+                options={[{ value: 'actual', label: 'Actual' }, { value: 'forecast', label: 'Forecast' }]}
+                value={dataView} onChange={setDataView} ariaLabel="Data View"
+              />
             </div>
+
+            {/* Actual and Forecast render the same table for now — dataView is wired
+                up so the two can show different columns once Actual's data is defined. */}
+            {renderOrdersTable()}
           </div>
         </>
       )}
