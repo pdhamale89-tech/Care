@@ -696,6 +696,29 @@ export default function ApjWorkforcePlanner() {
                   </div>
                 </div>
               </div>
+
+              <div className="s-grid full">
+                <div className="card">
+                  <div className="card-header"><div className="card-title">Change % by Metric</div></div>
+                  <div className="chart-container">
+                    <Bar
+                      data={{
+                        labels: SCENARIO_CONTROLS.map((g) => g.label.replace(' (Productivity)', '').replace(' Change', '')),
+                        datasets: [{
+                          data: SCENARIO_CONTROLS.map((g) => mods[g.field]),
+                          backgroundColor: SCENARIO_CONTROLS.map((g) => (mods[g.field] > 0 ? colors.accentGreen : mods[g.field] < 0 ? colors.accentRed : colors.textSecondary)),
+                          borderRadius: 4,
+                          datalabels: barDataLabels('%', colors.textPrimary),
+                        }],
+                      }}
+                      options={{
+                        responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                        scales: { x: { grid: { display: false } }, y: { ticks: { callback: (v) => v + '%' }, grace: '20%' } },
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </>
