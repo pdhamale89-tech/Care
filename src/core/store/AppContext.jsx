@@ -9,7 +9,7 @@ const BREADCRUMBS = {
   cco: 'Performance Reports › CCO Overview',
   outage: 'Workforce Reports › Outage Report',
   epiHc: 'Workforce Reports › Epi HC',
-  apjPlanner: 'Planning › Workforce Planner',
+  apjPlanner: 'Planning › What-If Simulator',
   reports: 'Tools › Reports',
   calendar: 'Tools › Calendar',
   fiscalCalendar: 'Tools › Calendar › Fiscal Calendar',

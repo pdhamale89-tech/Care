@@ -18,7 +18,7 @@ const NAV_SECTIONS = [
   {
     label: 'Planning',
     items: [
-      { id: 'apjPlanner', label: 'Workforce Planner', icon: 'grid' },
+      { id: 'apjPlanner', label: 'What-If Simulator', icon: 'grid' },
     ],
   },
   {
