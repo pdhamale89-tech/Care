@@ -122,6 +122,7 @@ export default function OutageReport() {
             </div>
             <DownloadBtn
               filename="outage-agent-wise"
+              source="Outage Report — Agent Status"
               rows={[
                 ['Agent', 'Manager', 'Country', 'Scheduled', 'Status', 'Reason', 'Duration', 'Planned %', 'Unplanned %', 'Total %'],
                 ...filtered.map((a) => [a.name, a.manager, a.country, a.isScheduled ? 'Y' : 'N', a.status, a.reason, a.duration, a.plannedPct, a.unplannedPct, a.totalPct]),
@@ -172,6 +173,7 @@ export default function OutageReport() {
               </div>
               <DownloadBtn
                 filename="outage-manager-wise"
+                source="Outage Report — Manager Status"
                 rows={[
                   ['Manager', 'Total', 'Sched', 'Avail', 'Unplanned', 'Off', 'Planned %', 'Unplanned %', 'Total %'],
                   ...managerRows.map((r) => [r.manager, r.total, r.scheduled, r.available, r.unplanned, r.off, r.planned.toFixed(1), r.unplannedPct.toFixed(1), r.total_pct.toFixed(1)]),

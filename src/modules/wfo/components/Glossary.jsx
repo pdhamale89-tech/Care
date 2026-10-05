@@ -25,6 +25,7 @@ export default function Glossary() {
           <DownloadBtn
             filename="metric-glossary"
             title="Download glossary"
+            source="Glossary — Metric Glossary"
             rows={[
               ['Metric', 'Description', 'Formula'],
               ...rows.map((g) => [g.metric, g.description, g.formula]),

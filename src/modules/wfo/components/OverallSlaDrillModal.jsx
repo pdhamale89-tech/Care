@@ -104,7 +104,7 @@ export default function OverallSlaDrillModal({ open, onClose, seed }) {
             <button key={r} type="button" className={'plan-btn' + (regionFilter === r ? ' active' : '')} onClick={() => setRegionFilter(r)}>{r}</button>
           ))}
         </div>
-        <DownloadBtn filename="overall-sla-matrix" title="Download Overall SLA variance matrix" rows={buildCsvRows()} />
+        <DownloadBtn filename="overall-sla-matrix" title="Download Overall SLA variance matrix" source="CCO Overview — Overall SLA Variance Matrix" rows={buildCsvRows()} />
       </div>
       <div className="tw scroll">
         <table className="mtx-tbl">

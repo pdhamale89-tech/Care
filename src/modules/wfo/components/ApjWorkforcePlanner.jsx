@@ -117,7 +117,7 @@ function NavRow({ back, forward }) {
 }
 
 export default function ApjWorkforcePlanner() {
-  const { theme, activeRegions, apjFilters } = useApp()
+  const { theme, activeRegions, apjFilters, logExport } = useApp()
   const colors = getColors(theme)
   const [activeTab, setActiveTab] = useState('input')
   // Orders & Targets data view — Forecast is today's editable table; Actual shows the
@@ -418,7 +418,7 @@ export default function ApjWorkforcePlanner() {
                 <button type="button" className="btn btn-sm btn-primary" onClick={() => setActiveTab('whatif')}>What-If Analysis →</button>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" className="btn btn-sm btn-neutral" onClick={() => exportCsv(currentData, activeQuarters, mods, countries, scenarioScope)}>Export CSV</button>
+                <button type="button" className="btn btn-sm btn-neutral" onClick={() => { exportCsv(currentData, activeQuarters, mods, countries, scenarioScope); logExport('What-If Simulator — Orders & Targets') }}>Export CSV</button>
                 <button type="button" className="clear-all-btn" onClick={resetToSample}>✕ Reset to Baseline Data</button>
               </div>
             </div>
@@ -673,7 +673,7 @@ export default function ApjWorkforcePlanner() {
                 <div className="card-header">
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div className="card-title">Baseline vs Scenario Comparison</div>
-                    <button type="button" className="btn btn-sm btn-neutral" onClick={exportComparisonCsv}>Export CSV</button>
+                    <button type="button" className="btn btn-sm btn-neutral" onClick={() => { exportComparisonCsv(); logExport('What-If Simulator — Baseline vs Scenario Comparison') }}>Export CSV</button>
                   </div>
                 </div>
                 <div className="tw">

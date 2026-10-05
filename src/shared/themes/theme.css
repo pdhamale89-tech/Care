@@ -415,6 +415,8 @@ tr.group-row td { background: var(--table-header); font-weight: 700; color: var(
 .dot-g { background: var(--dds-green-60); }
 .dot-o { background: var(--dds-yellow-60); }
 .dot-r { background: var(--dds-red-60); }
+.dot-live { animation: dotPulse 1.8s ease-in-out infinite; }
+@keyframes dotPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(94,163,0,.45); } 50% { box-shadow: 0 0 0 5px rgba(94,163,0,0); } }
 .sched-yes { color: var(--dds-green-70); font-weight: 500; }
 .sched-no { color: var(--text-muted); font-weight: 500; }
 

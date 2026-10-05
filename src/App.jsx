@@ -23,6 +23,7 @@ const PAGE_META = {
   fiscalCalendar: { title: 'Fiscal Calendar', description: 'Fiscal year weeks, quarters and holiday schedule for planning.' },
   glossary: { title: 'Glossary', description: 'Metric definitions and formulas used across the dashboard.' },
   apjPlanner: { title: 'What-If Simulator', description: 'Country-level order, case, and headcount planning with what-if scenarios, for any region.' },
+  userUsage: { title: 'User Usage', description: 'Session activity, feature adoption, and data-export audit trail across the dashboard.' },
 }
 
 function TabRouter() {

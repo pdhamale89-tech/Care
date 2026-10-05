@@ -1,9 +1,10 @@
 import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import { formatIST } from '../utils/dateUtils.js'
+import { startDeviceSession, closeDeviceSession, logExportEvent, getExportLog } from '../utils/sessionTracker.js'
 
 export const AppContext = createContext(null)
 
-export const NO_FILTER_TABS = ['reports', 'calendar', 'fiscalCalendar', 'glossary', 'notifications', 'settings']
+export const NO_FILTER_TABS = ['reports', 'calendar', 'fiscalCalendar', 'glossary', 'notifications', 'settings', 'userUsage']
 
 const BREADCRUMBS = {
   cco: 'Performance Reports › CCO Overview',
@@ -16,6 +17,7 @@ const BREADCRUMBS = {
   glossary: 'Tools › Glossary',
   notifications: 'System › Notifications',
   settings: 'System › Settings',
+  userUsage: 'System › User Usage',
 }
 
 const CCO_FILTERS_DEFAULT = { subRegion: ['All'], quarter: ['All'], week: ['All'], classification: ['All'], fiscalYear: ['All'] }
@@ -37,9 +39,29 @@ export function AppProvider({ children }) {
 
   const [toast, setToast] = useState({ show: false, msg: '', cls: '' })
 
+  // Real (not simulated) usage tracking for this device — see sessionTracker.js for why
+  // this is the only usage data the app can genuinely capture without a backend.
+  const [session] = useState(() => startDeviceSession())
+  const [exportLog, setExportLog] = useState(() => getExportLog())
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    const close = () => closeDeviceSession(session.id)
+    const onVisibility = () => { if (document.visibilityState === 'hidden') close() }
+    window.addEventListener('beforeunload', close)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.removeEventListener('beforeunload', close)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [session.id])
+
+  const logExport = useCallback((source) => {
+    setExportLog(logExportEvent(source))
+  }, [])
 
   const toggleTheme = useCallback(() => setTheme((t) => (t === 'light' ? 'dark' : 'light')), [])
   const toggleSidenav = useCallback(() => setSidenavOpen((o) => !o), [])
@@ -93,12 +115,14 @@ export function AppProvider({ children }) {
     epicenterFilters, setEpicenterFilter,
     clearFilters,
     toast, showToast,
+    session, exportLog, logExport,
   }), [
     theme, toggleTheme, lastUpdated, sidenavOpen, toggleSidenav, currentTab, navTo, breadcrumb, showFilters,
     activeRegions, setActiveRegions,
     ccoFilters, setCcoFilter, apjFilters, setApjFilter, ccoView, outageFilters, setOutageFilter,
     epicenterFilters, setEpicenterFilter,
     clearFilters, toast, showToast,
+    session, exportLog, logExport,
   ])
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
