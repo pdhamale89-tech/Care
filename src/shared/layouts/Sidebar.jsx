@@ -39,7 +39,6 @@ const NAV_SECTIONS = [
 ]
 
 const SYSTEM_ITEMS = [
-  { id: 'notifications', label: 'Notifications', icon: 'bell' },
   { id: 'userUsage', label: 'User Usage', icon: 'clock' },
   { id: 'settings', label: 'Settings', icon: 'gear' },
 ]
