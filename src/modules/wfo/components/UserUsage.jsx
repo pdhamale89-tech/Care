@@ -47,23 +47,19 @@ export default function UserUsage() {
   }, [exportLog])
 
   // Recent Sessions filters
-  const [sessUserSel, setSessUserSel] = useState(['All'])
+  const [sessUserQuery, setSessUserQuery] = useState('')
   const [sessPageSel, setSessPageSel] = useState(['All'])
-  const sessionUsers = useMemo(() => [...new Set(MOCK_SESSIONS.map((s) => s.user))].sort(), [])
   const sessionPages = useMemo(() => [...new Set(MOCK_SESSIONS.map((s) => s.tab))].sort(), [])
   const filteredSessions = useMemo(
-    () => MOCK_SESSIONS.filter((s) => matchesMulti(sessUserSel, s.user) && matchesMulti(sessPageSel, s.tab)),
-    [sessUserSel, sessPageSel],
+    () => MOCK_SESSIONS.filter((s) => s.user.toLowerCase().includes(sessUserQuery.trim().toLowerCase()) && matchesMulti(sessPageSel, s.tab)),
+    [sessUserQuery, sessPageSel],
   )
 
-  // Data Export Audit Log filters
-  const [expUserSel, setExpUserSel] = useState(['All'])
-  const [expSourceSel, setExpSourceSel] = useState(['All'])
-  const exportUsers = useMemo(() => [...new Set(combinedExportLog.map((e) => e.user))].sort(), [combinedExportLog])
-  const exportSources = useMemo(() => [...new Set(combinedExportLog.map((e) => e.source))].sort(), [combinedExportLog])
+  // Data Export Audit Log filter — User search only
+  const [expUserQuery, setExpUserQuery] = useState('')
   const filteredExportLog = useMemo(
-    () => combinedExportLog.filter((e) => matchesMulti(expUserSel, e.user) && matchesMulti(expSourceSel, e.source)),
-    [combinedExportLog, expUserSel, expSourceSel],
+    () => combinedExportLog.filter((e) => e.user.toLowerCase().includes(expUserQuery.trim().toLowerCase())),
+    [combinedExportLog, expUserQuery],
   )
 
   const barOpt = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grace: '10%' } } }
@@ -181,8 +177,8 @@ export default function UserUsage() {
       <div className="card" style={{ marginBottom: 'var(--dds-spacing-lg)' }}>
         <div className="filter-grid" style={{ marginBottom: 10 }}>
           <div className="filter-group">
-            <label>User</label>
-            <MultiSelectDropdown options={sessionUsers} selected={sessUserSel} onChange={setSessUserSel} />
+            <label>Search User</label>
+            <input type="text" placeholder="Type a user name..." value={sessUserQuery} onChange={(e) => setSessUserQuery(e.target.value)} />
           </div>
           <div className="filter-group">
             <label>Page</label>
@@ -191,8 +187,8 @@ export default function UserUsage() {
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <span style={{ fontSize: '.75rem', color: 'var(--text-secondary)' }}>Showing {Math.min(filteredSessions.length, 20)} of {filteredSessions.length}</span>
-          {(sessUserSel[0] !== 'All' || sessPageSel[0] !== 'All') && (
-            <button type="button" className="clear-all-btn" onClick={() => { setSessUserSel(['All']); setSessPageSel(['All']) }}>✕ Clear</button>
+          {(sessUserQuery !== '' || sessPageSel[0] !== 'All') && (
+            <button type="button" className="clear-all-btn" onClick={() => { setSessUserQuery(''); setSessPageSel(['All']) }}>✕ Clear</button>
           )}
         </div>
         <div className="tw">
@@ -228,18 +224,14 @@ export default function UserUsage() {
       <div className="card">
         <div className="filter-grid" style={{ marginBottom: 10 }}>
           <div className="filter-group">
-            <label>User</label>
-            <MultiSelectDropdown options={exportUsers} selected={expUserSel} onChange={setExpUserSel} />
-          </div>
-          <div className="filter-group">
-            <label>Exported From</label>
-            <MultiSelectDropdown options={exportSources} selected={expSourceSel} onChange={setExpSourceSel} />
+            <label>Search User</label>
+            <input type="text" placeholder="Type a user name..." value={expUserQuery} onChange={(e) => setExpUserQuery(e.target.value)} />
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <span style={{ fontSize: '.75rem', color: 'var(--text-secondary)' }}>Showing {Math.min(filteredExportLog.length, 40)} of {filteredExportLog.length}</span>
-          {(expUserSel[0] !== 'All' || expSourceSel[0] !== 'All') && (
-            <button type="button" className="clear-all-btn" onClick={() => { setExpUserSel(['All']); setExpSourceSel(['All']) }}>✕ Clear</button>
+          {expUserQuery !== '' && (
+            <button type="button" className="clear-all-btn" onClick={() => setExpUserQuery('')}>✕ Clear</button>
           )}
         </div>
         <div className="tw">
