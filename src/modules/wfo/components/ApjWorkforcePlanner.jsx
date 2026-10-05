@@ -29,11 +29,6 @@ function safeNumber(raw) {
   return Number.isNaN(n) ? undefined : n
 }
 
-// "All" (or empty) means unfiltered, same convention as every other filter in the app.
-function filterLabel(arr) {
-  return (!arr || arr.length === 0 || arr.includes('All')) ? 'All' : arr.join(', ')
-}
-
 function PickerTabs({ options, value, onChange, ariaLabel }) {
   return (
     <div className="tabs" role="tablist" aria-label={ariaLabel} style={{ marginBottom: 14 }}>
@@ -173,14 +168,13 @@ export default function ApjWorkforcePlanner() {
   // narrows activeQuarters to it, "All" falls back to the first fiscal quarter.
   const qk = activeQuarters[0]
 
-  const selectedFiltersLabel = [
-    filterLabel(apjFilters.fiscalYear), filterLabel(apjFilters.quarter), filterLabel(apjFilters.week),
-    filterLabel(activeRegions), filterLabel(apjFilters.subRegion), filterLabel(apjFilters.classification),
-  ].join('_')
   const exportFiltersUsed = summarizeActiveFilters([
     ['Fiscal Year', apjFilters.fiscalYear], ['Quarter', apjFilters.quarter], ['Week', apjFilters.week],
     ['Region', activeRegions], ['Sub Region', apjFilters.subRegion], ['Classification', apjFilters.classification],
   ])
+  // Same summary as exportFiltersUsed, just compact ("All") for the on-screen label
+  // instead of the audit-log phrasing ("No filters applied").
+  const dataFilterByLabel = exportFiltersUsed === 'No filters applied' ? 'All' : exportFiltersUsed
 
   function updOrd(cid, field, raw) {
     const n = safeNumber(raw)
@@ -417,17 +411,16 @@ export default function ApjWorkforcePlanner() {
             <h2>Orders & Targets <InfoBtn tip="<strong>Purpose</strong>Editable GS/CS order volumes and target rates (Case Rate, CPSR, CRW) per country and quarter, seeded from the Filters panel above. Drives every downstream calculation in Results and What-If." /></h2>
           </div>
           <div className="card">
-            <div className="card-header" style={{ justifyContent: 'flex-end' }}>
+            <div className="card-header">
+              <div style={{ fontSize: '.8125rem', color: 'var(--text-secondary)' }}>
+                <strong style={{ color: 'var(--text-primary)' }}>Data Filter By: </strong>{dataFilterByLabel}
+              </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button type="button" className="btn btn-sm btn-neutral" onClick={() => setActiveTab('results')}>View Results →</button>
                 <button type="button" className="btn btn-sm btn-primary" onClick={() => setActiveTab('whatif')}>What-If Analysis →</button>
                 <button type="button" className="btn btn-sm btn-neutral" onClick={() => { exportCsv(currentData, activeQuarters, mods, countries, scenarioScope); logExport('What-If Simulator — Orders & Targets', exportFiltersUsed) }}>Export CSV</button>
                 <button type="button" className="clear-all-btn" onClick={resetToSample}>✕ Reset to Baseline Data</button>
               </div>
-            </div>
-
-            <div style={{ padding: '14px 18px 0', fontSize: '.8125rem', color: 'var(--text-secondary)' }}>
-              <strong style={{ color: 'var(--text-primary)' }}>Data Filter By: </strong>{selectedFiltersLabel}
             </div>
 
             <div style={{ padding: '14px 18px 0' }}>
