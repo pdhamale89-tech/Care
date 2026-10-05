@@ -59,8 +59,8 @@ export function AppProvider({ children }) {
     }
   }, [session.id])
 
-  const logExport = useCallback((source) => {
-    setExportLog(logExportEvent(source))
+  const logExport = useCallback((source, filtersUsed) => {
+    setExportLog(logExportEvent(source, filtersUsed))
   }, [])
 
   const toggleTheme = useCallback(() => setTheme((t) => (t === 'light' ? 'dark' : 'light')), [])

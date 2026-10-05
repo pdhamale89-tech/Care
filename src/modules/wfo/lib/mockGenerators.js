@@ -16,6 +16,17 @@ export function matchesMulti(selected, value) {
   return !selected || selected.length === 0 || selected.includes('All') || selected.includes(value)
 }
 
+// Builds a human-readable "which filters were active" summary — used for the Data
+// Export Audit Log's Filters Applied column. `fields` is [label, selectedArray] pairs;
+// any field left at 'All' (unfiltered) is omitted, same convention as every filter in
+// the app.
+export function summarizeActiveFilters(fields) {
+  const parts = fields
+    .filter(([, sel]) => sel && sel.length && !sel.includes('All'))
+    .map(([label, sel]) => `${label}: ${sel.join(', ')}`)
+  return parts.length ? parts.join(' • ') : 'No filters applied'
+}
+
 export function countriesForRegions(regions) {
   const list = (regions || []).filter((r) => r !== 'All')
   const source = list.length ? list : REGIONS

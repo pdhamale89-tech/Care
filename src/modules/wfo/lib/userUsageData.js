@@ -51,6 +51,25 @@ function ipFor(name, idx) {
   return `10.${20 + (s % 40)}.${(s >> 3) % 256}.${(s >> 7) % 256}`
 }
 
+// Plausible "filters active at export time" strings for the mock export log, shaped
+// per source the same way summarizeActiveFilters formats the real ones.
+const FISCAL_QUARTERS = ['FQ1', 'FQ2', 'FQ3', 'FQ4']
+const SAMPLE_REGIONS = ['APJC', 'EMEA', 'NA', 'LATAM']
+const SAMPLE_COUNTRIES = ['USA', 'Germany', 'Japan', 'Brazil', 'India']
+const SAMPLE_STATUSES = ['Available', 'Unplanned Outage']
+
+function filtersUsedFor(source, seed) {
+  if (seed % 5 === 0) return 'No filters applied'
+  if (source.startsWith('CCO Overview')) return `Region: ${SAMPLE_REGIONS[seed % SAMPLE_REGIONS.length]}`
+  if (source.startsWith('Outage Report')) {
+    return `Country: ${SAMPLE_COUNTRIES[seed % SAMPLE_COUNTRIES.length]} • Status: ${SAMPLE_STATUSES[seed % SAMPLE_STATUSES.length]}`
+  }
+  if (source.startsWith('What-If Simulator')) {
+    return `Fiscal Year: FY27 • Quarter: ${FISCAL_QUARTERS[seed % FISCAL_QUARTERS.length]} • Region: ${SAMPLE_REGIONS[(seed >> 2) % SAMPLE_REGIONS.length]}`
+  }
+  return 'No filters applied'
+}
+
 const DAY_MS = 24 * 60 * 60 * 1000
 
 // Deterministic across renders within a page load — re-derives from Date.now() only
@@ -67,9 +86,12 @@ export const MOCK_SESSIONS = (() => {
       const daysAgo = seed % 14
       const hour = 7 + (seed % 11) // business hours 07:00-18:00
       const minute = (seed * 7) % 60
-      const opened = NOW - daysAgo * DAY_MS - (NOW % DAY_MS) + hour * 3600000 + minute * 60000
+      // Clamped to never land in the future relative to real "now" — the day-boundary
+      // math above is UTC-based, so a "today" row with a late hour could otherwise
+      // compute a timestamp later than the real current time.
+      const opened = Math.min(NOW - daysAgo * DAY_MS - (NOW % DAY_MS) + hour * 3600000 + minute * 60000, NOW - 60000)
       const durationMin = 3 + ((seed >> 2) % 55) // 3-57 min
-      const closed = opened + durationMin * 60000
+      const closed = Math.min(opened + durationMin * 60000, NOW)
       const tab = TABS[seed % TABS.length]
       rows.push({
         id: `${ui}-${i}`, user: u.name, role: u.role, ip: ipFor(u.name, i),
@@ -89,10 +111,11 @@ export const MOCK_EXPORT_LOG = (() => {
     const daysAgo = seed % 14
     const hour = 7 + (seed % 11)
     const minute = (seed * 11) % 60
-    const at = NOW - daysAgo * DAY_MS - (NOW % DAY_MS) + hour * 3600000 + minute * 60000
+    const at = Math.min(NOW - daysAgo * DAY_MS - (NOW % DAY_MS) + hour * 3600000 + minute * 60000, NOW - 60000)
+    const source = EXPORT_SOURCES[seed % EXPORT_SOURCES.length]
     rows.push({
       id: `exp-${i}`, user: u.name, ip: ipFor(u.name, 99 + i),
-      source: EXPORT_SOURCES[seed % EXPORT_SOURCES.length], fileType: 'CSV', at,
+      source, fileType: 'CSV', filtersUsed: filtersUsedFor(source, seed), at,
     })
   }
   return rows.sort((a, b) => b.at - a.at)

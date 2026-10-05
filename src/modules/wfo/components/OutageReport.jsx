@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Bar } from 'react-chartjs-2'
 import { useApp } from '../../../core/hooks/useApp.js'
-import { generateAgentRoster, matchesMulti, REGIONS } from '../lib/mockGenerators.js'
+import { generateAgentRoster, matchesMulti, REGIONS, summarizeActiveFilters } from '../lib/mockGenerators.js'
 import { getColors } from '../../../shared/themes/colors.js'
 import { stackedBarConfig } from '../lib/chartConfigs.js'
 import DownloadBtn from '../../../shared/components/DownloadBtn.jsx'
@@ -39,6 +39,12 @@ export default function OutageReport() {
       return true
     })
   }, [roster, outageFilters])
+
+  const exportFiltersUsed = summarizeActiveFilters([
+    ['Region', activeRegions], ['Country', outageFilters.country], ['Quarter', outageFilters.quarter],
+    ['Week', outageFilters.week], ['Manager', outageFilters.manager], ['Status', outageFilters.status],
+    ['Search', outageFilters.search ? [outageFilters.search] : []],
+  ])
 
   const total = filtered.length
   const scheduled = filtered.filter((a) => a.isScheduled).length
@@ -123,6 +129,7 @@ export default function OutageReport() {
             <DownloadBtn
               filename="outage-agent-wise"
               source="Outage Report — Agent Status"
+              filtersUsed={exportFiltersUsed}
               rows={[
                 ['Agent', 'Manager', 'Country', 'Scheduled', 'Status', 'Reason', 'Duration', 'Planned %', 'Unplanned %', 'Total %'],
                 ...filtered.map((a) => [a.name, a.manager, a.country, a.isScheduled ? 'Y' : 'N', a.status, a.reason, a.duration, a.plannedPct, a.unplannedPct, a.totalPct]),
@@ -174,6 +181,7 @@ export default function OutageReport() {
               <DownloadBtn
                 filename="outage-manager-wise"
                 source="Outage Report — Manager Status"
+                filtersUsed={exportFiltersUsed}
                 rows={[
                   ['Manager', 'Total', 'Sched', 'Avail', 'Unplanned', 'Off', 'Planned %', 'Unplanned %', 'Total %'],
                   ...managerRows.map((r) => [r.manager, r.total, r.scheduled, r.available, r.unplanned, r.off, r.planned.toFixed(1), r.unplannedPct.toFixed(1), r.total_pct.toFixed(1)]),

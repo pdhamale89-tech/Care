@@ -9,6 +9,7 @@ import {
 import InfoBtn from '../../../shared/components/InfoBtn.jsx'
 import Icon from '../../../shared/components/Icon.jsx'
 import { barDataLabels, lineDataLabels } from '../lib/datalabels.js'
+import { summarizeActiveFilters } from '../lib/mockGenerators.js'
 
 // Ported from a standalone reference tool ("APJ Workforce Planner") supplied as a
 // finished HTML file, restyled to match Care's own DDS look and generalized beyond its
@@ -176,6 +177,10 @@ export default function ApjWorkforcePlanner() {
     filterLabel(apjFilters.fiscalYear), filterLabel(apjFilters.quarter), filterLabel(apjFilters.week),
     filterLabel(activeRegions), filterLabel(apjFilters.subRegion), filterLabel(apjFilters.classification),
   ].join('_')
+  const exportFiltersUsed = summarizeActiveFilters([
+    ['Fiscal Year', apjFilters.fiscalYear], ['Quarter', apjFilters.quarter], ['Week', apjFilters.week],
+    ['Region', activeRegions], ['Sub Region', apjFilters.subRegion], ['Classification', apjFilters.classification],
+  ])
 
   function updOrd(cid, field, raw) {
     const n = safeNumber(raw)
@@ -418,7 +423,7 @@ export default function ApjWorkforcePlanner() {
                 <button type="button" className="btn btn-sm btn-primary" onClick={() => setActiveTab('whatif')}>What-If Analysis →</button>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" className="btn btn-sm btn-neutral" onClick={() => { exportCsv(currentData, activeQuarters, mods, countries, scenarioScope); logExport('What-If Simulator — Orders & Targets') }}>Export CSV</button>
+                <button type="button" className="btn btn-sm btn-neutral" onClick={() => { exportCsv(currentData, activeQuarters, mods, countries, scenarioScope); logExport('What-If Simulator — Orders & Targets', exportFiltersUsed) }}>Export CSV</button>
                 <button type="button" className="clear-all-btn" onClick={resetToSample}>✕ Reset to Baseline Data</button>
               </div>
             </div>
@@ -673,7 +678,7 @@ export default function ApjWorkforcePlanner() {
                 <div className="card-header">
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div className="card-title">Baseline vs Scenario Comparison</div>
-                    <button type="button" className="btn btn-sm btn-neutral" onClick={() => { exportComparisonCsv(); logExport('What-If Simulator — Baseline vs Scenario Comparison') }}>Export CSV</button>
+                    <button type="button" className="btn btn-sm btn-neutral" onClick={() => { exportComparisonCsv(); logExport('What-If Simulator — Baseline vs Scenario Comparison', exportFiltersUsed) }}>Export CSV</button>
                   </div>
                 </div>
                 <div className="tw">

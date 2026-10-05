@@ -42,7 +42,7 @@ export default function UserUsage() {
   // Your real export clicks merged with the simulated org-wide log, most recent first —
   // this is the unified "who exported what, from where, and when" trail.
   const combinedExportLog = useMemo(() => {
-    const mine = exportLog.map((e) => ({ id: e.id, user: 'You (this device)', ip: '—', source: e.source, fileType: 'CSV', at: e.at, live: true }))
+    const mine = exportLog.map((e) => ({ id: e.id, user: 'You (this device)', ip: '—', source: e.source, filtersUsed: e.filtersUsed || 'No filters applied', at: e.at, live: true }))
     return [...mine, ...MOCK_EXPORT_LOG].sort((a, b) => b.at - a.at)
   }, [exportLog])
 
@@ -55,11 +55,14 @@ export default function UserUsage() {
     [sessUserQuery, sessPageSel],
   )
 
-  // Data Export Audit Log filter — User search only
+  // Data Export Audit Log filters — User search plus a quick-pick User dropdown (both
+  // narrow by user; use whichever is more convenient)
   const [expUserQuery, setExpUserQuery] = useState('')
+  const [expUserSel, setExpUserSel] = useState(['All'])
+  const exportUsers = useMemo(() => [...new Set(combinedExportLog.map((e) => e.user))].sort(), [combinedExportLog])
   const filteredExportLog = useMemo(
-    () => combinedExportLog.filter((e) => e.user.toLowerCase().includes(expUserQuery.trim().toLowerCase())),
-    [combinedExportLog, expUserQuery],
+    () => combinedExportLog.filter((e) => e.user.toLowerCase().includes(expUserQuery.trim().toLowerCase()) && matchesMulti(expUserSel, e.user)),
+    [combinedExportLog, expUserQuery, expUserSel],
   )
 
   const barOpt = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grace: '10%' } } }
@@ -227,17 +230,21 @@ export default function UserUsage() {
             <label>Search User</label>
             <input type="text" placeholder="Type a user name..." value={expUserQuery} onChange={(e) => setExpUserQuery(e.target.value)} />
           </div>
+          <div className="filter-group">
+            <label>User</label>
+            <MultiSelectDropdown options={exportUsers} selected={expUserSel} onChange={setExpUserSel} />
+          </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <span style={{ fontSize: '.75rem', color: 'var(--text-secondary)' }}>Showing {Math.min(filteredExportLog.length, 40)} of {filteredExportLog.length}</span>
-          {expUserQuery !== '' && (
-            <button type="button" className="clear-all-btn" onClick={() => setExpUserQuery('')}>✕ Clear</button>
+          {(expUserQuery !== '' || expUserSel[0] !== 'All') && (
+            <button type="button" className="clear-all-btn" onClick={() => { setExpUserQuery(''); setExpUserSel(['All']) }}>✕ Clear</button>
           )}
         </div>
         <div className="tw">
           <table>
             <thead>
-              <tr><th style={{ textAlign: 'left' }}>User</th><th style={{ textAlign: 'left' }}>Exported From</th><th>File Type</th><th style={{ textAlign: 'left' }}>Date &amp; Time</th></tr>
+              <tr><th style={{ textAlign: 'left' }}>User</th><th style={{ textAlign: 'left' }}>Exported From</th><th style={{ textAlign: 'left' }}>Filters Applied</th><th style={{ textAlign: 'left' }}>Date &amp; Time</th></tr>
             </thead>
             <tbody>
               {filteredExportLog.length === 0 && (
@@ -249,7 +256,7 @@ export default function UserUsage() {
                     {e.live ? <span className="status-pill available">{e.user}</span> : e.user}
                   </td>
                   <td style={{ textAlign: 'left' }}>{e.source}</td>
-                  <td>{e.fileType}</td>
+                  <td style={{ textAlign: 'left', color: 'var(--text-secondary)' }}>{e.filtersUsed}</td>
                   <td style={{ textAlign: 'left' }}>{fmtDateTime(e.at)}</td>
                 </tr>
               ))}

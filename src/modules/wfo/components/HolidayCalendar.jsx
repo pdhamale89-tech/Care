@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { HOLIDAY_CALENDAR } from '../lib/holidayCalendarData.js'
-import { matchesMulti } from '../lib/mockGenerators.js'
+import { matchesMulti, summarizeActiveFilters } from '../lib/mockGenerators.js'
 import DownloadBtn from '../../../shared/components/DownloadBtn.jsx'
 import InfoBtn from '../../../shared/components/InfoBtn.jsx'
 import MultiSelectDropdown from '../../../shared/components/MultiSelectDropdown.jsx'
@@ -61,6 +61,7 @@ export default function HolidayCalendar() {
           filename="holiday-calendar"
           title="Download holiday calendar"
           source="Fiscal Calendar — Holiday Calendar"
+          filtersUsed={summarizeActiveFilters([['Region', region], ['Sub Region', subRegion], ['Country', country], ['Fiscal Year', fiscalYear]])}
           rows={[
             ['Date', 'Day', 'Week', 'Quarter', 'Fiscal Year', 'Holiday', 'Country', 'Sub Region', 'Region'],
             ...rows.map((h) => [h.date, h.day, h.week, h.quarter, h.fiscalYear, h.name, h.country, h.subRegion, h.region]),

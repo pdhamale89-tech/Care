@@ -2,6 +2,7 @@ import { Fragment, useMemo, useState } from 'react'
 import Modal from '../../../shared/components/Modal.jsx'
 import DownloadBtn from '../../../shared/components/DownloadBtn.jsx'
 import { SUBREGIONS_BY_REGION } from '../lib/geoRegions.js'
+import { summarizeActiveFilters } from '../lib/mockGenerators.js'
 
 const CHANNELS = ['Voice', 'Email', 'Chat']
 const SEGMENTS = ['Consumer', 'Global Sales']
@@ -104,7 +105,11 @@ export default function OverallSlaDrillModal({ open, onClose, seed }) {
             <button key={r} type="button" className={'plan-btn' + (regionFilter === r ? ' active' : '')} onClick={() => setRegionFilter(r)}>{r}</button>
           ))}
         </div>
-        <DownloadBtn filename="overall-sla-matrix" title="Download Overall SLA variance matrix" source="CCO Overview — Overall SLA Variance Matrix" rows={buildCsvRows()} />
+        <DownloadBtn
+          filename="overall-sla-matrix" title="Download Overall SLA variance matrix" source="CCO Overview — Overall SLA Variance Matrix"
+          filtersUsed={summarizeActiveFilters([['Region', regionFilter === 'All' ? ['All'] : [regionFilter]]])}
+          rows={buildCsvRows()}
+        />
       </div>
       <div className="tw scroll">
         <table className="mtx-tbl">

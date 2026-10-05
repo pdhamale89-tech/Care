@@ -54,9 +54,9 @@ export function getDeviceSessions() {
   return readJson(SESSIONS_KEY, [])
 }
 
-export function logExportEvent(source) {
+export function logExportEvent(source, filtersUsed) {
   const log = readJson(EXPORTS_KEY, [])
-  log.push({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, source, at: Date.now() })
+  log.push({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, source, filtersUsed: filtersUsed || 'No filters applied', at: Date.now() })
   const trimmed = log.slice(-MAX_EXPORTS)
   writeJson(EXPORTS_KEY, trimmed)
   return trimmed
