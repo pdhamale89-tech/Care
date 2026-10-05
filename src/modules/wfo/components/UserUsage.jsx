@@ -3,12 +3,14 @@ import { Bar, Line } from 'react-chartjs-2'
 import { useApp } from '../../../core/hooks/useApp.js'
 import { getColors } from '../../../shared/themes/colors.js'
 import { getDeviceSessions } from '../../../core/utils/sessionTracker.js'
+import { matchesMulti } from '../lib/mockGenerators.js'
 import {
   MOCK_SESSIONS, MOCK_EXPORT_LOG, buildDailyActiveUsers, buildMostViewedTabs,
   buildTopUsersByTime, usageKpis, fmtDuration, fmtDateTime,
 } from '../lib/userUsageData.js'
 import { barDataLabels, hBarDataLabels } from '../lib/datalabels.js'
 import InfoBtn from '../../../shared/components/InfoBtn.jsx'
+import MultiSelectDropdown from '../../../shared/components/MultiSelectDropdown.jsx'
 
 function liveClock(ms) {
   const totalSec = Math.floor(ms / 1000)
@@ -41,8 +43,28 @@ export default function UserUsage() {
   // this is the unified "who exported what, from where, and when" trail.
   const combinedExportLog = useMemo(() => {
     const mine = exportLog.map((e) => ({ id: e.id, user: 'You (this device)', ip: '—', source: e.source, fileType: 'CSV', at: e.at, live: true }))
-    return [...mine, ...MOCK_EXPORT_LOG].sort((a, b) => b.at - a.at).slice(0, 40)
+    return [...mine, ...MOCK_EXPORT_LOG].sort((a, b) => b.at - a.at)
   }, [exportLog])
+
+  // Recent Sessions filters
+  const [sessUserSel, setSessUserSel] = useState(['All'])
+  const [sessPageSel, setSessPageSel] = useState(['All'])
+  const sessionUsers = useMemo(() => [...new Set(MOCK_SESSIONS.map((s) => s.user))].sort(), [])
+  const sessionPages = useMemo(() => [...new Set(MOCK_SESSIONS.map((s) => s.tab))].sort(), [])
+  const filteredSessions = useMemo(
+    () => MOCK_SESSIONS.filter((s) => matchesMulti(sessUserSel, s.user) && matchesMulti(sessPageSel, s.tab)),
+    [sessUserSel, sessPageSel],
+  )
+
+  // Data Export Audit Log filters
+  const [expUserSel, setExpUserSel] = useState(['All'])
+  const [expSourceSel, setExpSourceSel] = useState(['All'])
+  const exportUsers = useMemo(() => [...new Set(combinedExportLog.map((e) => e.user))].sort(), [combinedExportLog])
+  const exportSources = useMemo(() => [...new Set(combinedExportLog.map((e) => e.source))].sort(), [combinedExportLog])
+  const filteredExportLog = useMemo(
+    () => combinedExportLog.filter((e) => matchesMulti(expUserSel, e.user) && matchesMulti(expSourceSel, e.source)),
+    [combinedExportLog, expUserSel, expSourceSel],
+  )
 
   const barOpt = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grace: '10%' } } }
 
@@ -157,6 +179,22 @@ export default function UserUsage() {
         <h2>Recent Sessions</h2>
       </div>
       <div className="card" style={{ marginBottom: 'var(--dds-spacing-lg)' }}>
+        <div className="filter-grid" style={{ marginBottom: 10 }}>
+          <div className="filter-group">
+            <label>User</label>
+            <MultiSelectDropdown options={sessionUsers} selected={sessUserSel} onChange={setSessUserSel} />
+          </div>
+          <div className="filter-group">
+            <label>Page</label>
+            <MultiSelectDropdown options={sessionPages} selected={sessPageSel} onChange={setSessPageSel} />
+          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <span style={{ fontSize: '.75rem', color: 'var(--text-secondary)' }}>Showing {Math.min(filteredSessions.length, 20)} of {filteredSessions.length}</span>
+          {(sessUserSel[0] !== 'All' || sessPageSel[0] !== 'All') && (
+            <button type="button" className="clear-all-btn" onClick={() => { setSessUserSel(['All']); setSessPageSel(['All']) }}>✕ Clear</button>
+          )}
+        </div>
         <div className="tw">
           <table>
             <thead>
@@ -166,7 +204,10 @@ export default function UserUsage() {
               </tr>
             </thead>
             <tbody>
-              {MOCK_SESSIONS.slice(0, 20).map((s) => (
+              {filteredSessions.length === 0 && (
+                <tr><td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No sessions match the selected filters.</td></tr>
+              )}
+              {filteredSessions.slice(0, 20).map((s) => (
                 <tr key={s.id}>
                   <td style={{ textAlign: 'left' }}>{s.user}</td>
                   <td style={{ textAlign: 'left', color: 'var(--text-secondary)' }}>{s.ip}</td>
@@ -185,16 +226,32 @@ export default function UserUsage() {
         <h2>Data Export Audit Log <InfoBtn tip="<strong>Mixed</strong>Rows marked 'You (this device)' are real — logged the moment you click any Export/Download button in this app. Every other row is simulated placeholder data." /></h2>
       </div>
       <div className="card">
+        <div className="filter-grid" style={{ marginBottom: 10 }}>
+          <div className="filter-group">
+            <label>User</label>
+            <MultiSelectDropdown options={exportUsers} selected={expUserSel} onChange={setExpUserSel} />
+          </div>
+          <div className="filter-group">
+            <label>Exported From</label>
+            <MultiSelectDropdown options={exportSources} selected={expSourceSel} onChange={setExpSourceSel} />
+          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <span style={{ fontSize: '.75rem', color: 'var(--text-secondary)' }}>Showing {Math.min(filteredExportLog.length, 40)} of {filteredExportLog.length}</span>
+          {(expUserSel[0] !== 'All' || expSourceSel[0] !== 'All') && (
+            <button type="button" className="clear-all-btn" onClick={() => { setExpUserSel(['All']); setExpSourceSel(['All']) }}>✕ Clear</button>
+          )}
+        </div>
         <div className="tw">
           <table>
             <thead>
               <tr><th style={{ textAlign: 'left' }}>User</th><th style={{ textAlign: 'left' }}>Exported From</th><th>File Type</th><th style={{ textAlign: 'left' }}>Date &amp; Time</th></tr>
             </thead>
             <tbody>
-              {combinedExportLog.length === 0 && (
-                <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No exports yet.</td></tr>
+              {filteredExportLog.length === 0 && (
+                <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No exports match the selected filters.</td></tr>
               )}
-              {combinedExportLog.map((e) => (
+              {filteredExportLog.slice(0, 40).map((e) => (
                 <tr key={e.id}>
                   <td style={{ textAlign: 'left' }}>
                     {e.live ? <span className="status-pill available">{e.user}</span> : e.user}
