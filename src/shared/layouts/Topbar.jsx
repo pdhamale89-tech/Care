@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import { useApp } from '../../core/hooks/useApp.js'
 import Icon from '../components/Icon.jsx'
+import NotificationPanel from '../components/NotificationPanel.jsx'
 
 export default function Topbar() {
-  const { breadcrumb, theme, toggleTheme, lastUpdated, sidenavOpen, toggleSidenav, navTo } = useApp()
+  const { breadcrumb, theme, toggleTheme, lastUpdated, sidenavOpen, toggleSidenav, unreadCount } = useApp()
+  const [panelOpen, setPanelOpen] = useState(false)
   return (
     <header className="masthead">
       <button type="button" className="icon-btn" onClick={toggleSidenav} aria-label="Toggle navigation" aria-expanded={sidenavOpen}>
@@ -19,9 +22,13 @@ export default function Topbar() {
         <Icon name="search" size={16} />
         <input id="globalSearch" type="search" placeholder="Search agents, queues, reports…" />
       </label>
-      <button type="button" className="icon-btn" onClick={() => navTo('notifications')} aria-label="Notifications">
-        <Icon name="bell" size={19} />
-      </button>
+      <div className="notif-bell-wrap">
+        <button type="button" className="icon-btn" onClick={() => setPanelOpen((o) => !o)} aria-label="Notifications" aria-expanded={panelOpen}>
+          <Icon name="bell" size={19} />
+        </button>
+        {unreadCount > 0 && <span className="notif-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
+        {panelOpen && <NotificationPanel onClose={() => setPanelOpen(false)} />}
+      </div>
       <span className="last-updated">Last Updated: {lastUpdated}</span>
       <button type="button" className="icon-btn" onClick={toggleTheme} aria-label="Toggle color theme">
         <Icon name={theme === 'dark' ? 'moon' : 'sun'} size={18} />

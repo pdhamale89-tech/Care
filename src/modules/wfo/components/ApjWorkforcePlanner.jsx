@@ -10,6 +10,7 @@ import InfoBtn from '../../../shared/components/InfoBtn.jsx'
 import Icon from '../../../shared/components/Icon.jsx'
 import { barDataLabels, lineDataLabels } from '../lib/datalabels.js'
 import { summarizeActiveFilters } from '../lib/mockGenerators.js'
+import { formatIST } from '../../../core/utils/dateUtils.js'
 
 // Ported from a standalone reference tool ("APJ Workforce Planner") supplied as a
 // finished HTML file, restyled to match Care's own DDS look and generalized beyond its
@@ -62,8 +63,11 @@ const SCENARIO_CONTROLS = [
   { field: 'tcd', label: 'TCD Change', presets: [-20, -10, 0, 10, 25, 50] },
 ]
 
-function exportCsv(data, quarters, mods, countries, scopeCountryId) {
-  let csv = 'Workforce Capacity Plan\n\n'
+function exportCsv(data, quarters, mods, countries, scopeCountryId, meta) {
+  let csv = 'Workforce Capacity Plan\n'
+  if (meta?.timestamp) csv += `Exported: ${meta.timestamp}\n`
+  if (meta?.filters) csv += `Filters: ${meta.filters}\n`
+  csv += '\n'
   quarters.forEach((qKey) => {
     const all = calcAllCountries(data, qKey, undefined, countries)
     const t = all.totals
@@ -113,7 +117,7 @@ function NavRow({ back, forward }) {
 }
 
 export default function ApjWorkforcePlanner() {
-  const { theme, activeRegions, apjFilters, logExport } = useApp()
+  const { theme, activeRegions, apjFilters, logExport, settings } = useApp()
   const colors = getColors(theme)
   const [activeTab, setActiveTab] = useState('input')
   // Orders & Targets data view — Forecast is today's editable table; Actual shows the
@@ -301,7 +305,11 @@ export default function ApjWorkforcePlanner() {
   // Exports exactly what's currently shown in the Baseline vs Scenario Comparison
   // table (same scope — one country or every country plus GRAND TOTAL).
   function exportComparisonCsv() {
-    let csv = 'Country,Base Orders,Scenario Orders,Delta Orders,Base Cases,Scenario Cases,Delta Cases,Base HC,Scenario HC,Delta HC\n'
+    let csv = ''
+    if (settings.exportIncludeTimestamp) csv += `Exported: ${formatIST(new Date())}\n`
+    if (settings.exportIncludeFilters) csv += `Filters: ${exportFiltersUsed}\n`
+    if (csv) csv += '\n'
+    csv += 'Country,Base Orders,Scenario Orders,Delta Orders,Base Cases,Scenario Cases,Delta Cases,Base HC,Scenario HC,Delta HC\n'
     const rows = safeSelReg === 'ALL' ? countries : [countries.find((x) => x.id === safeSelReg)]
     rows.forEach((c) => {
       const br = wiBase.countries[c.id]
@@ -418,7 +426,16 @@ export default function ApjWorkforcePlanner() {
               <div style={{ display: 'flex', gap: 8 }}>
                 <button type="button" className="btn btn-sm btn-neutral" onClick={() => setActiveTab('results')}>View Results →</button>
                 <button type="button" className="btn btn-sm btn-primary" onClick={() => setActiveTab('whatif')}>What-If Analysis →</button>
-                <button type="button" className="btn btn-sm btn-neutral" onClick={() => { exportCsv(currentData, activeQuarters, mods, countries, scenarioScope); logExport('What-If Simulator — Orders & Targets', exportFiltersUsed) }}>Export CSV</button>
+                <button
+                  type="button" className="btn btn-sm btn-neutral"
+                  onClick={() => {
+                    exportCsv(currentData, activeQuarters, mods, countries, scenarioScope, {
+                      timestamp: settings.exportIncludeTimestamp ? formatIST(new Date()) : null,
+                      filters: settings.exportIncludeFilters ? exportFiltersUsed : null,
+                    })
+                    logExport('What-If Simulator — Orders & Targets', exportFiltersUsed)
+                  }}
+                >Export CSV</button>
                 <button type="button" className="clear-all-btn" onClick={resetToSample}>✕ Reset to Baseline Data</button>
               </div>
             </div>

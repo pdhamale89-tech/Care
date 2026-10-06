@@ -6,6 +6,8 @@ import FiscalCalendar from '../modules/wfo/components/FiscalCalendar.jsx'
 import Glossary from '../modules/wfo/components/Glossary.jsx'
 import ApjWorkforcePlanner from '../modules/wfo/components/ApjWorkforcePlanner.jsx'
 import UserUsage from '../modules/wfo/components/UserUsage.jsx'
+import Settings from '../modules/wfo/components/Settings.jsx'
+import Notifications from '../modules/wfo/components/Notifications.jsx'
 
 // Single source of truth for tab id -> page component. Unlisted tabs either fall
 // back to CCO Overview (unknown id) or render ComingSoonTab via COMING_SOON_TITLES below.
@@ -18,11 +20,11 @@ export const ROUTES = {
   fiscalCalendar: FiscalCalendar,
   glossary: Glossary,
   userUsage: UserUsage,
+  settings: Settings,
+  notifications: Notifications,
 }
 
 // Tabs with no real page yet — TabRouter renders a placeholder with this title.
 export const COMING_SOON_TITLES = {
   calendar: 'Calendar',
-  notifications: 'Notifications',
-  settings: 'Settings',
 }

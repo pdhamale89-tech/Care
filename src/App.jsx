@@ -24,6 +24,8 @@ const PAGE_META = {
   glossary: { title: 'Glossary', description: 'Metric definitions and formulas used across the dashboard.' },
   apjPlanner: { title: 'What-If Simulator', description: 'Country-level order, case, and headcount planning with what-if scenarios, for any region.' },
   userUsage: { title: 'User Usage', description: 'Session activity, feature adoption, and data-export audit trail across the dashboard.' },
+  settings: { title: 'Settings', description: 'Dashboard, display, data refresh, alert, and export preferences.' },
+  notifications: { title: 'Notifications', description: 'Critical, warning, information, and success alerts, plus your personalized KPI alerts.' },
 }
 
 function TabRouter() {

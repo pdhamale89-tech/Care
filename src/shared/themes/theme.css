@@ -624,3 +624,115 @@ tr.group-row td { background: var(--table-header); font-weight: 700; color: var(
 #globalInfoTip { display: none; position: fixed; z-index: 99999; width: 280px; padding: var(--dds-spacing-sm) var(--dds-spacing-md); background: var(--tooltip-bg); color: #EBF1F6; border-radius: var(--dds-radius-sm); font-size: .75rem; line-height: 1.6; box-shadow: var(--dds-elevation-4); pointer-events: none; }
 #globalInfoTip.show { display: block; }
 #globalInfoTip strong { color: var(--dds-yellow-30); display: block; margin-bottom: 2px; font-size: .6875rem; text-transform: uppercase; }
+
+/* ===== Compact density (opt-in via Settings > Display Preferences) — tightens the
+   same spacing tokens every card/grid/section already uses, so nothing needs its own
+   compact variant. Comfortable (default) leaves every token exactly as-is, so the
+   dashboard is pixel-identical to before unless a user explicitly opts in. ===== */
+[data-density="compact"] {
+  --dds-spacing-md: .55rem;
+  --dds-spacing-lg: .75rem;
+  --dds-spacing-xl: 1.1rem;
+}
+[data-density="compact"] .card { padding: var(--dds-spacing-md); }
+[data-density="compact"] .kpi-card { padding: var(--dds-spacing-md); }
+
+/* ===== Toggle switch (Settings / Alert Preferences) ===== */
+.toggle-switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+.toggle-switch.disabled { cursor: not-allowed; opacity: .5; }
+.toggle-switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.toggle-track { width: 36px; height: 20px; border-radius: 999px; background: var(--toggle-bg); position: relative; transition: background .15s; flex-shrink: 0; }
+.toggle-switch input:checked + .toggle-track { background: var(--dds-blue-60); }
+.toggle-thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.3); transition: transform .15s; }
+.toggle-switch input:checked + .toggle-track .toggle-thumb { transform: translateX(16px); }
+.toggle-switch input:focus-visible + .toggle-track { outline: 2px solid var(--dds-blue-60); outline-offset: 2px; }
+.toggle-label { font-size: .8125rem; color: var(--text-primary); }
+
+/* ===== Settings page ===== */
+.settings-wrap { max-width: 920px; }
+.settings-row { display: flex; align-items: center; justify-content: space-between; gap: var(--dds-spacing-md); padding: 10px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.settings-row:last-child { border-bottom: none; }
+.settings-row-label { font-size: .8125rem; font-weight: 500; color: var(--text-primary); }
+.settings-row-hint { font-size: .75rem; color: var(--text-muted); margin-top: 2px; }
+.settings-row-control { display: flex; align-items: center; gap: 10px; }
+.settings-row-control .f-sel { min-width: 160px; }
+.settings-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: var(--dds-spacing-lg); }
+.settings-check-row { display: flex; align-items: center; gap: 8px; font-size: .8125rem; color: var(--text-primary); padding: 6px 0; }
+.settings-check-row input { cursor: pointer; }
+
+/* ===== Alert preference matrix (Settings > Alert Preferences) ===== */
+.alert-pref-row { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: var(--dds-spacing-md); padding: 10px 0; border-bottom: 1px solid var(--border); }
+.alert-pref-row:last-child { border-bottom: none; }
+.alert-pref-name { font-size: .8125rem; font-weight: 500; color: var(--text-primary); }
+.alert-pref-check { display: flex; align-items: center; gap: 6px; font-size: .75rem; color: var(--text-secondary); white-space: nowrap; }
+@media (max-width: 700px) { .alert-pref-row { grid-template-columns: 1fr; gap: 6px; } }
+
+/* ===== Data status card (Settings > Data & Refresh) ===== */
+.data-status-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--dds-spacing-md); }
+@media (max-width: 900px) { .data-status-grid { grid-template-columns: repeat(2, 1fr); } }
+.data-status-item-label { font-size: .6875rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin-bottom: 4px; }
+.data-status-item-value { font-size: .9375rem; font-weight: 600; color: var(--text-primary); }
+
+/* ===== Notification severity styling — shared by the bell dropdown panel and the
+   full Notification History page/My Alerts list ===== */
+.notif-item { display: flex; gap: 10px; padding: 12px 14px; border-left: 3px solid transparent; border-bottom: 1px solid var(--border); position: relative; }
+.notif-item:last-child { border-bottom: none; }
+.notif-item.unread { background: var(--bg-filter); }
+.notif-item.critical { border-left-color: var(--dds-red-60); }
+.notif-item.warning { border-left-color: var(--dds-orange-60); }
+.notif-item.info { border-left-color: var(--dds-blue-60); }
+.notif-item.success { border-left-color: var(--dds-green-60); }
+.notif-dot-ic { font-size: 14px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+.notif-body { flex: 1; min-width: 0; }
+.notif-title-row { display: flex; align-items: center; gap: 6px; }
+.notif-title { font-size: .8125rem; font-weight: 700; color: var(--text-primary); }
+.notif-type-tag { font-size: .625rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; padding: 1px 6px; border-radius: 999px; }
+.notif-type-tag.critical { background: var(--dds-red-10); color: var(--dds-red-70); }
+.notif-type-tag.warning { background: var(--dds-orange-10); color: var(--dds-orange-70); }
+.notif-type-tag.info { background: var(--dds-blue-10); color: var(--dds-blue-70); }
+.notif-type-tag.success { background: var(--dds-green-10); color: var(--dds-green-70); }
+[data-theme="dark"] .notif-type-tag.critical { background: rgba(255,128,128,.16); color: var(--dds-red-30); }
+[data-theme="dark"] .notif-type-tag.warning { background: rgba(255,152,0,.18); color: var(--dds-orange-30); }
+[data-theme="dark"] .notif-type-tag.info { background: rgba(49,162,227,.16); color: var(--dds-blue-30); }
+[data-theme="dark"] .notif-type-tag.success { background: rgba(166,207,74,.16); color: var(--dds-green-30); }
+.notif-msg { font-size: .75rem; color: var(--text-secondary); margin: 3px 0 5px; line-height: 1.45; }
+.notif-meta-row { display: flex; align-items: center; gap: 10px; font-size: .6875rem; color: var(--text-muted); }
+.notif-unread-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--dds-blue-60); flex-shrink: 0; margin-top: 5px; }
+.notif-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* ===== Bell icon + dropdown panel ===== */
+.notif-bell-wrap { position: relative; }
+.notif-badge { position: absolute; top: 2px; right: 2px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: var(--dds-red-60); color: #fff; font-size: .625rem; font-weight: 700; display: flex; align-items: center; justify-content: center; line-height: 1; }
+.notif-panel { position: absolute; top: calc(100% + 8px); right: 0; width: 380px; max-width: calc(100vw - 32px); background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--dds-radius-md); box-shadow: var(--dds-elevation-4); z-index: 80; display: flex; flex-direction: column; max-height: 520px; }
+.notif-panel-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.notif-panel-title { font-size: .9375rem; font-weight: 700; color: var(--text-primary); }
+.notif-panel-mark { font-size: .75rem; font-weight: 500; color: var(--dds-blue-60); background: none; border: none; cursor: pointer; padding: 0; font-family: inherit; }
+.notif-panel-tabs { display: flex; gap: 4px; padding: 8px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; overflow-x: auto; }
+.notif-panel-list { overflow-y: auto; flex: 1; }
+.notif-panel-empty { padding: 30px 14px; text-align: center; color: var(--text-muted); font-size: .8125rem; }
+.notif-panel-foot { padding: 10px 14px; border-top: 1px solid var(--border); text-align: center; flex-shrink: 0; }
+.notif-panel-foot button { background: none; border: none; color: var(--dds-blue-60); font-size: .8125rem; font-weight: 500; cursor: pointer; font-family: inherit; }
+.notif-panel-foot button:hover { text-decoration: underline; }
+
+/* ===== My Alerts ===== */
+.alert-card { display: flex; align-items: center; justify-content: space-between; gap: var(--dds-spacing-md); padding: 14px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.alert-card:last-child { border-bottom: none; }
+.alert-card-main { min-width: 0; }
+.alert-card-name { font-size: .875rem; font-weight: 700; color: var(--text-primary); }
+.alert-card-sub { font-size: .75rem; color: var(--text-secondary); margin-top: 1px; }
+.alert-card-meta { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 6px; }
+.alert-card-meta-item { font-size: .6875rem; color: var(--text-muted); }
+.alert-card-meta-item strong { color: var(--text-primary); font-weight: 600; }
+.alert-card-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+/* ===== Create/Edit Alert modal form ===== */
+.alert-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--dds-spacing-md); }
+@media (max-width: 560px) { .alert-form-grid { grid-template-columns: 1fr; } }
+.alert-form-field { display: flex; flex-direction: column; gap: .3rem; }
+.alert-form-field > label { font-size: .75rem; color: var(--text-secondary); font-weight: 500; }
+.alert-form-field > input, .alert-form-field > select {
+  height: var(--dds-field-h-sm); padding: 0 .65rem; border-radius: var(--dds-radius-sm); font: inherit; font-size: .875rem;
+  border: 1px solid var(--border-strong); background: var(--bg-card); color: var(--text-primary);
+}
+.alert-form-field > input:focus, .alert-form-field > select:focus { outline: none; border-color: var(--dds-blue-60); box-shadow: 0 0 0 2px rgba(6,114,203,.15); }
+.alert-form-checks { display: flex; gap: 16px; flex-wrap: wrap; }
