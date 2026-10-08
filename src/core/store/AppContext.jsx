@@ -6,7 +6,7 @@ import { loadNotifications, saveNotifications, loadAlerts, saveAlerts } from '..
 
 export const AppContext = createContext(null)
 
-export const NO_FILTER_TABS = ['reports', 'calendar', 'fiscalCalendar', 'glossary', 'notifications', 'settings', 'userUsage']
+export const NO_FILTER_TABS = ['reports', 'calendar', 'fiscalCalendar', 'glossary', 'notifications', 'settings', 'userUsage', 'forecastLedger']
 
 const BREADCRUMBS = {
   cco: 'Performance Reports › CCO Overview',
