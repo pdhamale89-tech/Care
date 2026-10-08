@@ -26,6 +26,27 @@ export function issueTypeBarConfig(labels, actual, unit = '', colors = DEFAULT_C
   }
 }
 
+// Grouped (non-stacked) bar chart — each dataset renders as its own side-by-side bar
+// per category with a data label above it, vs. stackedBarConfig's part-of-whole
+// centered segment labels. Used where categories need an at-a-glance per-series compare.
+export function groupedBarConfig(labels, datasets, unit = '') {
+  return {
+    data: {
+      labels,
+      datasets: datasets.map((d) => ({ ...d, borderRadius: 4, datalabels: barDataLabels(unit) })),
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: LEGEND_BOTTOM,
+      scales: {
+        x: { grid: { display: false } },
+        y: { beginAtZero: true, grace: '15%', ticks: { callback: (v) => v + unit } },
+      },
+    },
+  }
+}
+
 export function stackedBarConfig(labels, datasets, unit = '') {
   return {
     data: {

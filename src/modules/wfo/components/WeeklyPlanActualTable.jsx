@@ -3,6 +3,12 @@ import { fmt } from '../lib/mockGenerators.js'
 import { computeWeeklyPlanActual } from '../lib/weeklyPlanActual.js'
 import InfoBtn from '../../../shared/components/InfoBtn.jsx'
 
+// Within ±10% of plan (i.e. 90%–110%) reads as on-track (green); outside that band —
+// either direction — is flagged amber rather than the old binary >=100% pos/neg split.
+function pctClass(v) {
+  return Math.abs(v - 100) >= 10 ? 'mtx-amber' : 'mtx-pos'
+}
+
 export default function WeeklyPlanActualTable({ regions, quarter, region, onRegionChange }) {
   const { quarterLabel, weeks, rows } = useMemo(() => computeWeeklyPlanActual(region, quarter), [region, quarter])
 
@@ -50,9 +56,9 @@ export default function WeeklyPlanActualTable({ regions, quarter, region, onRegi
               <tr key={'pct-' + r.key} className="wpa-row-pct">
                 {i === 0 && <th className="wpa-group-label" rowSpan={rows.length}>%</th>}
                 <th>{r.label}</th>
-                {r.pctVals.map((v, wi) => <td key={wi} className={v >= 100 ? 'mtx-pos' : 'mtx-neg'}>{v}%</td>)}
-                <td className={r.pctQtd >= 100 ? 'mtx-pos' : 'mtx-neg'}>{r.pctQtd}%</td>
-                <td className={r.pctQtd >= 100 ? 'mtx-pos' : 'mtx-neg'}>{r.pctQtd}%</td>
+                {r.pctVals.map((v, wi) => <td key={wi} className={pctClass(v)}>{v}%</td>)}
+                <td className={pctClass(r.pctQtd)}>{r.pctQtd}%</td>
+                <td className={pctClass(r.pctQtd)}>{r.pctQtd}%</td>
               </tr>
             ))}
           </tbody>

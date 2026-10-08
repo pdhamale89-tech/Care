@@ -547,6 +547,7 @@ tr.group-row td { background: var(--table-header); font-weight: 700; color: var(
 .mtx-tbl tbody th { text-align: left; font-weight: 500; color: var(--text-primary); background: var(--bg-card); }
 .mtx-tbl td.mtx-pos { background: var(--dds-green-60); color: #fff; font-weight: 500; }
 .mtx-tbl td.mtx-neg { background: var(--dds-red-60); color: #fff; font-weight: 500; }
+.mtx-tbl td.mtx-amber { background: var(--dds-yellow-70); color: #fff; font-weight: 500; }
 .mtx-overall-row th { background: var(--bg-filter); font-weight: 700; border-top: 2px solid var(--text-primary); }
 .mtx-overall-row td { border-top: 2px solid var(--text-primary); }
 
