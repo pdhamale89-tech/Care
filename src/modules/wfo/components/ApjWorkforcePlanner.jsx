@@ -345,6 +345,11 @@ export default function ApjWorkforcePlanner() {
   // now (Actual's columns will diverge from Forecast's later), kept in one place so the
   // table markup isn't duplicated between the two.
   function renderOrdersTable() {
+    // Forecast drops the four bidirectional "result" columns (Case Rate %, Cases, TCD,
+    // Headcount) — Actual keeps the full editable set. Column count varies accordingly
+    // (12 for Actual, 8 for Forecast), so colSpans below are computed, not hard-coded.
+    const showActualOnly = dataView === 'actual'
+    const colCount = showActualOnly ? 12 : 8
     return (
       <div className="tw" style={{ padding: '0 18px' }}>
         <table>
@@ -353,17 +358,21 @@ export default function ApjWorkforcePlanner() {
               <th style={{ textAlign: 'left' }}>Country</th>
               <th>GS Orders</th><th>CS Orders</th><th>Total</th>
               <th>GS Rate %</th><th>CS Rate %</th>
-              <th>Case Rate % <InfoBtn tip="<strong>Bidirectional</strong>Type a blended Case Rate directly — Total Cases is back-derived (Orders unchanged) and the GS/CS Rate % split is scaled proportionally to match." /></th>
-              <th>Cases <InfoBtn tip="<strong>Bidirectional</strong>Type Total Cases directly — Case Rate reverse-calculates from it (Orders unchanged)." /></th>
+              {showActualOnly && (
+                <>
+                  <th>Case Rate % <InfoBtn tip="<strong>Bidirectional</strong>Type a blended Case Rate directly — Total Cases is back-derived (Orders unchanged) and the GS/CS Rate % split is scaled proportionally to match." /></th>
+                  <th>Cases <InfoBtn tip="<strong>Bidirectional</strong>Type Total Cases directly — Case Rate reverse-calculates from it (Orders unchanged)." /></th>
+                </>
+              )}
               <th>CPSR</th>
-              <th>TCD <InfoBtn tip="<strong>Bidirectional</strong>Type Total Contacts (TCD) directly — CPSR reverse-calculates from it (Cases and Case Rate unchanged)." /></th>
+              {showActualOnly && <th>TCD <InfoBtn tip="<strong>Bidirectional</strong>Type Total Contacts (TCD) directly — CPSR reverse-calculates from it (Cases and Case Rate unchanged)." /></th>}
               <th>CRW</th>
-              <th>Headcount <InfoBtn tip="<strong>Bidirectional</strong>Type Headcount directly — CRW reverse-calculates from it (TCD, Cases and Case Rate unchanged)." /></th>
+              {showActualOnly && <th>Headcount <InfoBtn tip="<strong>Bidirectional</strong>Type Headcount directly — CRW reverse-calculates from it (TCD, Cases and Case Rate unchanged)." /></th>}
             </tr>
           </thead>
           <tbody>
             {countries.length === 0 && (
-              <tr><td colSpan={12} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No APJ countries match the current Sub Region/Country filter selection.</td></tr>
+              <tr><td colSpan={colCount} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No APJ countries match the current Sub Region/Country filter selection.</td></tr>
             )}
             {countries.map((c) => {
               const o = currentData[c.id].quarters[qk] || { gs: 0, cs: 0 }
@@ -381,12 +390,16 @@ export default function ApjWorkforcePlanner() {
                   <td><strong>{f0(gv + cv)}</strong></td>
                   <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} min={0} value={p.gsRate ? Number((p.gsRate * 100).toFixed(3)) : ''} onChange={(e) => updPar(c.id, 'gsRate', e.target.value)} /></td>
                   <td>{c.hasCS ? <input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} min={0} value={p.csRate ? Number((p.csRate * 100).toFixed(3)) : ''} onChange={(e) => updPar(c.id, 'csRate', e.target.value)} /> : <span style={{ color: 'var(--text-muted)' }}>N/A</span>}</td>
-                  <td><input className="wis-num-input" style={{ width: 60 }} type="number" step={0.01} min={0} value={r.cr ? Number((r.cr * 100).toFixed(3)) : ''} onChange={(e) => updCaseRatePct(c.id, e.target.value)} /></td>
-                  <td><input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={Math.round(r.totCs)} onChange={(e) => updCases(c.id, e.target.value)} /></td>
+                  {showActualOnly && (
+                    <>
+                      <td><input className="wis-num-input" style={{ width: 60 }} type="number" step={0.01} min={0} value={r.cr ? Number((r.cr * 100).toFixed(3)) : ''} onChange={(e) => updCaseRatePct(c.id, e.target.value)} /></td>
+                      <td><input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={Math.round(r.totCs)} onChange={(e) => updCases(c.id, e.target.value)} /></td>
+                    </>
+                  )}
                   <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} min={0} value={p.cpsr || ''} onChange={(e) => updPar(c.id, 'cpsr', e.target.value)} /></td>
-                  <td><input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={Math.round(r.totTCD)} onChange={(e) => updTcd(c.id, e.target.value)} /></td>
+                  {showActualOnly && <td><input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={Math.round(r.totTCD)} onChange={(e) => updTcd(c.id, e.target.value)} /></td>}
                   <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={1} min={0} value={p.crw || ''} onChange={(e) => updPar(c.id, 'crw', e.target.value)} /></td>
-                  <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={1} min={0} value={r.hc} onChange={(e) => updHc(c.id, e.target.value)} /></td>
+                  {showActualOnly && <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={1} min={0} value={r.hc} onChange={(e) => updHc(c.id, e.target.value)} /></td>}
                 </tr>
               )
             })}
@@ -397,12 +410,16 @@ export default function ApjWorkforcePlanner() {
                 <td>{f0(countries.reduce((s, c) => s + (currentData[c.id].quarters[qk]?.cs || 0), 0))}</td>
                 <td>{f0(countries.reduce((s, c) => s + (currentData[c.id].quarters[qk]?.gs || 0) + (currentData[c.id].quarters[qk]?.cs || 0), 0))}</td>
                 <td colSpan={2}></td>
-                <td>{fp(allForQ.totals.cr)}</td>
-                <td>{f0(allForQ.totals.totCs)}</td>
+                {showActualOnly && (
+                  <>
+                    <td>{fp(allForQ.totals.cr)}</td>
+                    <td>{f0(allForQ.totals.totCs)}</td>
+                  </>
+                )}
                 <td>{f2(allForQ.totals.cpsr)}</td>
-                <td>{f0(allForQ.totals.totTCD)}</td>
+                {showActualOnly && <td>{f0(allForQ.totals.totTCD)}</td>}
                 <td>—</td>
-                <td>{f0(allForQ.totals.hc)}</td>
+                {showActualOnly && <td>{f0(allForQ.totals.hc)}</td>}
               </tr>
             )}
           </tbody>
