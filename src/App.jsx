@@ -17,6 +17,7 @@ import { getColors } from './shared/themes/colors.js'
 // for cco/outage/epiHc, so nothing here is new/invented business copy.
 const PAGE_META = {
   cco: { title: 'CCO Overview', description: 'Weekly and quarterly SLA, volume, and backlog performance.' },
+  forecastLedger: { title: 'Forecast Variance Ledger', description: 'Chronological Actual vs Forecast variance record by metric and period.' },
   outage: { title: 'Outage Report', description: 'Agent schedule adherence and unplanned-outage breakdowns by manager.' },
   epiHc: { title: 'Epi HC', description: 'Workforce analytics — growth, tenure, sourcing mix, span of control, and risk.' },
   reports: { title: 'Reports', description: 'Linked reporting shortcuts for voice queue, agent and Genesys skill data.' },

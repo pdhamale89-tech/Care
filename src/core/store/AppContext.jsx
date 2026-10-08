@@ -10,6 +10,7 @@ export const NO_FILTER_TABS = ['reports', 'calendar', 'fiscalCalendar', 'glossar
 
 const BREADCRUMBS = {
   cco: 'Performance Reports › CCO Overview',
+  forecastLedger: 'Performance Reports › Forecast Variance Ledger',
   outage: 'Workforce Reports › Outage Report',
   epiHc: 'Workforce Reports › Epi HC',
   apjPlanner: 'Planning › What-If Simulator',

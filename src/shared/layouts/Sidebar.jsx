@@ -6,6 +6,7 @@ const NAV_SECTIONS = [
     label: 'Performance Reports',
     items: [
       { id: 'cco', label: 'CCO Overview', icon: 'dashboards' },
+      { id: 'forecastLedger', label: 'Forecast Variance Ledger', icon: 'document' },
     ],
   },
   {

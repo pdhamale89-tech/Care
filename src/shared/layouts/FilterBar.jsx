@@ -29,10 +29,12 @@ export default function FilterBar() {
 
   const countries = countriesForRegions(activeRegions)
   const isApj = currentTab === 'apjPlanner'
-  const isCco = currentTab === 'cco' || isApj
-  // Weekly/Quarterly is a CCO Overview-only concept — APJ Workforce Planner has its
-  // own Fiscal Quarter-driven period selector instead.
-  const showViewToggle = currentTab === 'cco'
+  // Forecast Variance Ledger reads the same ccoFilters/ccoView as CCO Overview — the two
+  // pages share one filtered scope, just rendered as a dashboard vs. a record ledger.
+  const isCco = currentTab === 'cco' || currentTab === 'forecastLedger' || isApj
+  // Weekly/Quarterly is a CCO Overview/Forecast Variance Ledger concept — APJ Workforce
+  // Planner has its own Fiscal Quarter-driven period selector instead.
+  const showViewToggle = currentTab === 'cco' || currentTab === 'forecastLedger'
   const isOutage = currentTab === 'outage'
   const isEpicenter = currentTab === 'epiHc'
   // CCO Overview and APJ Workforce Planner show the same filter set (Fiscal

@@ -1,4 +1,5 @@
 import CcoDashboard from '../modules/wfo/components/CcoDashboard.jsx'
+import ForecastVarianceLedger from '../modules/wfo/components/ForecastVarianceLedger.jsx'
 import OutageReport from '../modules/wfo/components/OutageReport.jsx'
 import EpiHc from '../modules/wfo/components/EpiHc.jsx'
 import Reports from '../modules/wfo/components/Reports.jsx'
@@ -13,6 +14,7 @@ import Notifications from '../modules/wfo/components/Notifications.jsx'
 // back to CCO Overview (unknown id) or render ComingSoonTab via COMING_SOON_TITLES below.
 export const ROUTES = {
   cco: CcoDashboard,
+  forecastLedger: ForecastVarianceLedger,
   outage: OutageReport,
   epiHc: EpiHc,
   apjPlanner: ApjWorkforcePlanner,
