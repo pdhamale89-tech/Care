@@ -441,8 +441,7 @@ export default function ApjWorkforcePlanner() {
                 <strong style={{ color: 'var(--text-primary)' }}>Data Filter By: </strong>{dataFilterByLabel}
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" className="btn btn-sm btn-neutral" onClick={() => setActiveTab('results')}>View Results →</button>
-                <button type="button" className="btn btn-sm btn-primary" onClick={() => setActiveTab('whatif')}>What-If Analysis →</button>
+                <button type="button" className="btn btn-sm btn-primary" onClick={() => setActiveTab('results')}>View Results →</button>
                 <button
                   type="button" className="btn btn-sm btn-neutral"
                   onClick={() => {
