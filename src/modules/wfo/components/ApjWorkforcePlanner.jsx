@@ -4,7 +4,7 @@ import { useApp } from '../../../core/hooks/useApp.js'
 import { getColors } from '../../../shared/themes/colors.js'
 import {
   activeQuartersFromFilter, buildCountryList, buildFilteredData,
-  calcAllCountries, calcCountry, applyCasesDriver, applyTcdDriver, applyHcDriver, f0, f1, f2, fp,
+  calcAllCountries, calcCountry, applyCasesDriver, applyTcdDriver, applyHcDriver, f0, f1, fp,
 } from '../lib/apjWorkforceData.js'
 import InfoBtn from '../../../shared/components/InfoBtn.jsx'
 import Icon from '../../../shared/components/Icon.jsx'
@@ -396,7 +396,7 @@ export default function ApjWorkforcePlanner() {
                       <td><input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={Math.round(r.totCs)} onChange={(e) => updCases(c.id, e.target.value)} /></td>
                     </>
                   )}
-                  <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={0.01} min={0} value={p.cpsr || ''} onChange={(e) => updPar(c.id, 'cpsr', e.target.value)} /></td>
+                  <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={0.1} min={0} value={p.cpsr ? Number(p.cpsr.toFixed(1)) : ''} onChange={(e) => updPar(c.id, 'cpsr', e.target.value)} /></td>
                   {showActualOnly && <td><input className="wis-num-input" style={{ width: 72 }} type="number" step={1} min={0} value={Math.round(r.totTCD)} onChange={(e) => updTcd(c.id, e.target.value)} /></td>}
                   <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={1} min={0} value={p.crw || ''} onChange={(e) => updPar(c.id, 'crw', e.target.value)} /></td>
                   {showActualOnly && <td><input className="wis-num-input" style={{ width: 56 }} type="number" step={1} min={0} value={r.hc} onChange={(e) => updHc(c.id, e.target.value)} /></td>}
@@ -416,7 +416,7 @@ export default function ApjWorkforcePlanner() {
                     <td>{f0(allForQ.totals.totCs)}</td>
                   </>
                 )}
-                <td>{f2(allForQ.totals.cpsr)}</td>
+                <td>{f1(allForQ.totals.cpsr)}</td>
                 {showActualOnly && <td>{f0(allForQ.totals.totTCD)}</td>}
                 <td>—</td>
                 {showActualOnly && <td>{f0(allForQ.totals.hc)}</td>}
@@ -479,7 +479,7 @@ export default function ApjWorkforcePlanner() {
             <div className="kpi-card"><div className="kpi-label">Total Orders</div><div className="kpi-value">{f0(dSel.totO)}</div></div>
             <div className="kpi-card"><div className="kpi-label">Case Rate</div><div className="kpi-value">{(dSel.cr * 100).toFixed(1)}%</div></div>
             <div className="kpi-card"><div className="kpi-label">Total Cases</div><div className="kpi-value">{f0(dSel.totCs)}</div></div>
-            <div className="kpi-card"><div className="kpi-label">CPSR</div><div className="kpi-value">{f2(dSel.cpsr)}</div></div>
+            <div className="kpi-card"><div className="kpi-label">CPSR</div><div className="kpi-value">{f1(dSel.cpsr)}</div></div>
             <div className="kpi-card"><div className="kpi-label">Total Contacts</div><div className="kpi-value">{f0(dSel.totTCD)}</div></div>
             <div className="kpi-card"><div className="kpi-label">HC Required</div><div className="kpi-value">{f0(dSel.hc)}</div></div>
           </div>
@@ -510,7 +510,7 @@ export default function ApjWorkforcePlanner() {
                         <td style={{ textAlign: 'left' }}><span className="pill-tag" style={{ marginRight: 8 }}>{c.cc}</span>{c.name}</td>
                         <td>{f0(r.gsO)}</td><td>{c.hasCS ? f0(r.csO) : '—'}</td><td><strong>{f0(r.totO)}</strong></td>
                         {showDet && <><td>{f0(r.gsCs)}</td><td>{c.hasCS ? f0(r.csCs) : '—'}</td></>}
-                        <td><strong>{f0(r.totCs)}</strong></td><td>{fp(r.cr)}</td><td>{f0(r.totTCD)}</td><td>{f2(r.cpsr)}</td><td>{f1(r.crw)}</td>
+                        <td><strong>{f0(r.totCs)}</strong></td><td>{fp(r.cr)}</td><td>{f0(r.totTCD)}</td><td>{f1(r.cpsr)}</td><td>{f1(r.crw)}</td>
                         <td><strong>{f0(r.hc)}</strong></td>
                       </tr>
                     )
@@ -520,7 +520,7 @@ export default function ApjWorkforcePlanner() {
                       <td style={{ textAlign: 'left' }}>GRAND TOTAL</td>
                       <td>{f0(allForQ.totals.gsO)}</td><td>{f0(allForQ.totals.csO)}</td><td>{f0(allForQ.totals.totO)}</td>
                       {showDet && <><td>{f0(allForQ.totals.gsCs)}</td><td>{f0(allForQ.totals.csCs)}</td></>}
-                      <td>{f0(allForQ.totals.totCs)}</td><td>{fp(allForQ.totals.cr)}</td><td>{f0(allForQ.totals.totTCD)}</td><td>{f2(allForQ.totals.cpsr)}</td><td>—</td>
+                      <td>{f0(allForQ.totals.totCs)}</td><td>{fp(allForQ.totals.cr)}</td><td>{f0(allForQ.totals.totTCD)}</td><td>{f1(allForQ.totals.cpsr)}</td><td>—</td>
                       <td>{f0(allForQ.totals.hc)}</td>
                     </tr>
                   )}
@@ -648,7 +648,7 @@ export default function ApjWorkforcePlanner() {
                   const pctChange = m.bv === 0 ? 0 : Math.abs((diff / m.bv) * 100)
                   let bvF, svF
                   if (m.fmt === 'pct') { bvF = m.bv.toFixed(1) + '%'; svF = m.sv.toFixed(1) + '%' }
-                  else if (m.fmt === 'dec') { bvF = f2(m.bv); svF = f2(m.sv) }
+                  else if (m.fmt === 'dec') { bvF = f1(m.bv); svF = f1(m.sv) }
                   else { bvF = f0(m.bv); svF = f0(m.sv) }
                   return (
                     <div className="kpi-card" key={m.label}>
